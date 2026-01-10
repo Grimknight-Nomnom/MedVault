@@ -18,11 +18,11 @@
                 <ul class="navbar-nav ms-auto">
                     @auth
                         @if(Auth::user()->role === 'admin')
-                            <li class="nav-item"><a class="nav-link" href="#">Inventory</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#">Appointments</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('admin.medicines.index') }}">Inventory</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('admin.appointments.index') }}">Appointments</a></li>
                         @else
-                            <li class="nav-item"><a class="nav-link" href="#">My Records</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#">Book Appointment</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('appointments.index') }}">My Appointments</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('appointments.create') }}">Book Appointment</a></li>
                         @endif
                         
                         <li class="nav-item ms-2">
