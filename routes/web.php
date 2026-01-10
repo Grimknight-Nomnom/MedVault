@@ -23,6 +23,9 @@ Route::get('/register', function() {
 
 // -- Protected Routes (Only accessible if logged in) --
 Route::middleware(['auth'])->group(function () {
+
+    // Patient: View History
+    Route::get('/my-medical-records', [App\Http\Controllers\MedicalRecordController::class, 'myRecords'])->name('patient.records');
     
     // Patient Dashboard
     Route::get('/dashboard', function () {
@@ -54,6 +57,10 @@ Route::middleware(['auth'])->group(function () {
         // Appointment Management Routes (NEW)
         Route::get('/appointments', [AppointmentController::class, 'adminIndex'])->name('admin.appointments.index');
         Route::patch('/appointments/{id}', [AppointmentController::class, 'updateStatus'])->name('admin.appointments.update');
+
+        // Admin: Create Medical Record
+        Route::get('/appointments/{id}/diagnose', [App\Http\Controllers\MedicalRecordController::class, 'create'])->name('admin.records.create');
+        Route::post('/appointments/{id}/diagnose', [App\Http\Controllers\MedicalRecordController::class, 'store'])->name('admin.records.store');
     });
 
 });

@@ -1,43 +1,49 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="row justify-content-center mt-5">
-    <div class="col-md-4">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center">
-                <h4>Login to MedVault</h4>
-            </div>
-            <div class="card-body">
+<div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                    <h3 class="fw-bold text-dark">Welcome Back</h3>
+                    <p class="text-muted">Secure Login to MedVault</p>
+                </div>
+
                 <form action="{{ route('login.post') }}" method="POST">
                     @csrf
                     
-                    <div class="mb-3">
-                        <label>Email Address</label>
-                        <input type="email" name="email" class="form-control" required value="{{ old('email') }}">
+                    <div class="form-floating mb-3">
+                        <input type="email" name="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+                        <label for="floatingInput">Email Address</label>
                     </div>
 
-                    <div class="mb-3">
-                        <label>Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                    <div class="form-floating mb-4">
+                        <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Password" required>
+                        <label for="floatingPassword">Password</label>
                     </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Login</button>
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-3">
+                            Login to Account
+                        </button>
                     </div>
                 </form>
-                
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">New Patient? <a href="{{ route('register') }}" class="text-primary fw-bold text-decoration-none">Create Account</a></small>
+                </div>
+
                 @if ($errors->any())
-                    <div class="alert alert-danger mt-3">
-                        <ul class="mb-0">
+                    <div class="alert alert-danger mt-4 small">
+                        <ul class="mb-0 ps-3">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
                     </div>
                 @endif
-            </div>
-            <div class="card-footer text-center">
-                <small>Don't have an account? <a href="{{ route('register') }}">Register</a></small>
             </div>
         </div>
     </div>

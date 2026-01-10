@@ -55,12 +55,7 @@
                             @endif
 
                             @if($apt->status == 'approved')
-                            <form action="{{ route('admin.appointments.update', $apt->id) }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="status" value="completed">
-                                <button class="btn btn-primary btn-sm">Complete</button>
-                            </form>
+                                <a href="{{ route('admin.records.create', $apt->id) }}" class="btn btn-primary btn-sm">Diagnose & Complete</a>
                             @endif
                         </div>
                     </td>
