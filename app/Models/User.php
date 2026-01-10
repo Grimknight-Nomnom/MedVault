@@ -17,12 +17,16 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',   // Renamed from name
+        'middle_name',
+        'last_name',    // New field
+        'age',
+        'usernumber',
         'email',
         'password',
-        'role',     // Added
-        'phone',    // Added
-        'address',  // Added
+        'role',
+        'phone',
+        'address',
     ];
 
     /**
@@ -46,6 +50,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} " . ($this->middle_name ? "{$this->middle_name} " : "") . $this->last_name;
     }
 
     // -- Relationships --

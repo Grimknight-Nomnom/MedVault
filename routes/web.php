@@ -3,11 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MedicineController;
-use App\Http\Controllers\AppointmentController; // Import this!
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\MedicalRecordController; // Ensure this is imported
 
-// Landing Page (Redirect to Login for now)
+// Landing Page (Show the welcome view)
 Route::get('/', function () {
-    return redirect()->route('login');
+    return view('welcome');
 });
 
 // -- Authentication Routes --
@@ -15,17 +16,16 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// -- Registration Placeholder --
-Route::get('/register', function() {
-    return "Registration Page Coming Soon";
-})->name('register');
+// -- Registration Routes (UPDATED) --
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
 
 // -- Protected Routes (Only accessible if logged in) --
 Route::middleware(['auth'])->group(function () {
 
     // Patient: View History
-    Route::get('/my-medical-records', [App\Http\Controllers\MedicalRecordController::class, 'myRecords'])->name('patient.records');
+    Route::get('/my-medical-records', [MedicalRecordController::class, 'myRecords'])->name('patient.records');
     
     // Patient Dashboard
     Route::get('/dashboard', function () {
@@ -54,13 +54,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/medicines', [MedicineController::class, 'store'])->name('admin.medicines.store');
         Route::delete('/medicines/{id}', [MedicineController::class, 'destroy'])->name('admin.medicines.delete');
 
-        // Appointment Management Routes (NEW)
+        // Appointment Management Routes
         Route::get('/appointments', [AppointmentController::class, 'adminIndex'])->name('admin.appointments.index');
         Route::patch('/appointments/{id}', [AppointmentController::class, 'updateStatus'])->name('admin.appointments.update');
 
         // Admin: Create Medical Record
-        Route::get('/appointments/{id}/diagnose', [App\Http\Controllers\MedicalRecordController::class, 'create'])->name('admin.records.create');
-        Route::post('/appointments/{id}/diagnose', [App\Http\Controllers\MedicalRecordController::class, 'store'])->name('admin.records.store');
+        Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
+        Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
     });
 
 });
