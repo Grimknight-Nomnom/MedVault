@@ -9,11 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Rename 'name' to 'first_name'
+            // 1. Rename 'name' to 'first_name'
             $table->renameColumn('name', 'first_name');
-            
-            // Add 'last_name' after the new 'first_name' column
-            $table->string('last_name')->after('name'); 
+        });
+
+        // 2. Add 'last_name' in a separate block to ensure 'first_name' exists
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('last_name')->after('first_name');
         });
     }
 

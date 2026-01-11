@@ -10,18 +10,19 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('medicines', function (Blueprint $table) {
-        $table->id();
-        $table->string('name');
-        $table->string('brand')->nullable();
-        $table->string('category'); // e.g., 'Antibiotic', 'Painkiller'
-        $table->integer('stock_quantity');
-        $table->decimal('price', 10, 2); // Precision for currency
-        $table->date('expiry_date');
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('medicines', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('brand')->nullable();
+            $table->string('category'); 
+            $table->integer('stock_quantity');
+            // Price column removed
+            $table->date('expiry_date');
+            $table->timestamps();
+        });
+    }
+
     /**
      * Reverse the migrations.
      */

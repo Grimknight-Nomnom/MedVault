@@ -12,7 +12,11 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin User
         User::create([
-            'name' => 'Super Admin',
+            'first_name' => 'Super',
+            'last_name' => 'Admin',
+            'middle_name' => null,
+            'age' => 30,
+            'usernumber' => '001', // Unique 3-digit code
             'email' => 'admin@clinic.com',
             'password' => Hash::make('password123'),
             'role' => 'admin',
@@ -22,7 +26,11 @@ class DatabaseSeeder extends Seeder
 
         // Create a Test Patient
         User::create([
-            'name' => 'John Doe',
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'middle_name' => 'A.',
+            'age' => 25,
+            'usernumber' => '101', // Unique 3-digit code
             'email' => 'patient@gmail.com',
             'password' => Hash::make('password123'),
             'role' => 'user',

@@ -74,4 +74,22 @@
         </div>
     </div>
 </div>
+
+<div class="col-md-4 mb-4">
+    <div class="card shadow-sm border-0 h-100">
+        <div class="card-body text-center">
+            <h5 class="card-title text-muted fw-bold">Total Appointments (Today)</h5>
+            @php
+                // Fetch count directly for the dashboard view
+                $todayCount = \App\Models\Appointment::whereDate('appointment_date', \Carbon\Carbon::today())->count();
+            @endphp
+            <h2 class="display-4 fw-bold text-primary">{{ $todayCount }}</h2>
+            <p class="text-muted">Scheduled for {{ date('M d, Y') }}</p>
+            <a href="{{ route('admin.appointments.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+                View Calendar
+            </a>
+        </div>
+    </div>
+</div>
+
 @endsection
