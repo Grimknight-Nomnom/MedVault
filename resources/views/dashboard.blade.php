@@ -7,8 +7,8 @@
             <div class="card-body p-5">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h1 class="display-6 fw-bold">Hello, {{ Auth::user()->name }}!</h1>
-                        <p class="lead mb-4">Welcome to your personal health dashboard. Track your appointments and view medical history securely.</p>
+                        <h1 class="display-6 fw-bold">Hello, {{ Auth::user()->first_name }}!</h1>
+                        <p class="lead mb-4">Welcome to the Barangay Looc Clinic Dashboard. Track your appointments and view medical history securely.</p>
                         <a href="{{ route('appointments.create') }}" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill shadow-sm">
                             <i class="fas fa-plus-circle me-2"></i>Book New Appointment
                         </a>
@@ -23,27 +23,40 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card h-100 shadow-sm hover-shadow transition">
-            <div class="card-body text-center p-5">
+            <div class="card-body text-center p-4">
                 <div class="mb-3 text-success">
                     <i class="fas fa-file-medical-alt fa-3x"></i>
                 </div>
                 <h4 class="fw-bold">Medical Records</h4>
-                <p class="text-muted">View your diagnosis history and prescriptions from your doctor.</p>
+                <p class="text-muted small">View your diagnosis history and prescriptions.</p>
                 <a href="{{ route('patient.records') }}" class="btn btn-outline-success w-100 mt-2">View Records</a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body text-center p-5">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm hover-shadow transition">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-info">
+                    <i class="fas fa-id-card fa-3x"></i>
+                </div>
+                <h4 class="fw-bold">Personal Records</h4>
+                <p class="text-muted small">Update your demographics and medical history.</p>
+                <a href="{{ route('profile.edit') }}" class="btn btn-outline-info w-100 mt-2">Update Profile</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm hover-shadow transition">
+            <div class="card-body text-center p-4">
                 <div class="mb-3 text-warning">
                     <i class="fas fa-calendar-check fa-3x"></i>
                 </div>
                 <h4 class="fw-bold">My Appointments</h4>
-                <p class="text-muted">Check status of your requests or view past visit history.</p>
+                <p class="text-muted small">Check status of your requests or view history.</p>
                 <a href="{{ route('appointments.index') }}" class="btn btn-outline-warning w-100 mt-2 text-dark">Check Status</a>
             </div>
         </div>

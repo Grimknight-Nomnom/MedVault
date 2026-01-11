@@ -8,14 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // We use Schema::table since the table exists
         Schema::table('appointments', function (Blueprint $table) {
-            // 1. Change to DATE (removes time component)
+            // 1. Ensure date type (removes time if present)
             $table->date('appointment_date')->change();
             
-            // 2. Add queue_number column
-            $table->integer('queue_number')->after('appointment_date');
+            // 2. Add queue_number if it doesn't exist
+            if (!Schema::hasColumn('appointments', 'queue_number')) {
+                $table->integer('queue_number')->after('appointment_date');
+            }
 
-            // 3. Add Unique Constraint (No duplicate queue numbers on same day)
+            // 3. Add Unique Constraint
+            // We drop it first in case it exists to avoid errors, then re-add
+            // $table->dropUnique(['appointment_date', 'queue_number']); // Uncomment if re-running on existing data
             $table->unique(['appointment_date', 'queue_number']);
         });
     }

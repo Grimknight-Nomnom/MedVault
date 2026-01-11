@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\MedicalRecordController;
+use App\Http\Controllers\ProfileController; // Added this
 
 // Landing Page
 Route::get('/', function () {
@@ -24,6 +25,11 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 // -- Protected Routes --
 Route::middleware(['auth'])->group(function () {
 
+    // -- Profile Routes (NEW) --
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // API for Calendar
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
 
     // Patient: View History
@@ -50,13 +56,12 @@ Route::middleware(['auth'])->group(function () {
     // -- ADMIN GROUP ROUTES --
     Route::prefix('admin')->group(function () {
         
-        // --- Medicine Inventory Routes (UPDATED) ---
+        // --- Medicine Inventory Routes ---
         Route::get('/medicines', [MedicineController::class, 'index'])->name('admin.medicines.index');
         Route::post('/medicines', [MedicineController::class, 'store'])->name('admin.medicines.store');
         Route::get('/medicines/create', [MedicineController::class, 'create'])->name('admin.medicines.create');
         Route::delete('/medicines/{id}', [MedicineController::class, 'destroy'])->name('admin.medicines.delete');
         
-        // New Routes for Refactored Medicine Module
         Route::get('/medicines/history', [MedicineController::class, 'history'])->name('admin.medicines.history');
         Route::get('/medicines/{id}/edit', [MedicineController::class, 'edit'])->name('admin.medicines.edit');
         Route::put('/medicines/{id}', [MedicineController::class, 'update'])->name('admin.medicines.update');
