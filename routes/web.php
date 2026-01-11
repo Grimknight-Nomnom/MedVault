@@ -12,6 +12,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Inside the Route::middleware(['auth'])->group(...)
+Route::get('/medicines-availability', [MedicineController::class, 'patientIndex'])->name('patient.medicines.index');
+
 // routes/web.php
 Route::get('/admin/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
 

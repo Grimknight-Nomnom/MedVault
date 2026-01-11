@@ -77,6 +77,17 @@ for ($i = 5; $i >= 0; $i--) {
     ));
 }
 
+// app/Http/Controllers/MedicineController.php
+public function patientIndex(Request $request)
+{
+    $query = Medicine::query();
+    if ($request->filled('search')) {
+        $query->where('name', 'like', "%{$request->search}%");
+    }
+    $medicines = $query->orderBy('name')->paginate(10);
+    return view('patient.medicines.index', compact('medicines'));
+}
+
 public function getHistoricalReport(Request $request)
 {
     $month = $request->query('month');

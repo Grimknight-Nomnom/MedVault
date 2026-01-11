@@ -1,64 +1,125 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card bg-primary text-white border-0 rounded-3 overflow-hidden" style="background: linear-gradient(45deg, #0d6efd, #0dcaf0);">
-            <div class="card-body p-5">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h1 class="display-6 fw-bold">Hello, {{ Auth::user()->first_name }}!</h1>
-                        <p class="lead mb-4">Welcome to the Barangay Looc Clinic Dashboard. Track your appointments and view medical history securely.</p>
-                        <a href="{{ route('appointments.create') }}" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill shadow-sm">
-                            <i class="fas fa-plus-circle me-2"></i>Book New Appointment
-                        </a>
-                    </div>
-                    <div class="col-md-4 text-center d-none d-md-block">
-                        <i class="fas fa-user-injured fa-6x text-white opacity-50"></i>
+<style>
+    /* Professional Light Green Clinic Theme */
+    body { background-color: #f0fdf4; } /* Soft bg-green-50 */
+    
+    .card { 
+        border: none; 
+        border-radius: 1.25rem; 
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover { 
+        transform: translateY(-8px); 
+        shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+
+    .btn-green-primary {
+        background-color: #16a34a; /* Tailwind green-600 */
+        border-color: #16a34a;
+        color: white;
+        font-weight: 600;
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+    }
+
+    .btn-green-primary:hover {
+        background-color: #15803d;
+        border-color: #15803d;
+        color: white;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+
+    .icon-box {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        border-radius: 1rem;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-success text-white border-0 shadow-lg" style="background: linear-gradient(135deg, #16a34a, #4ade80);">
+                <div class="card-body p-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-8 text-center text-md-start">
+                            <h1 class="display-5 fw-bold mb-3">Hello, {{ Auth::user()->first_name }}!</h1>
+                            <p class="lead mb-4 opacity-90">Manage your health and check for available free medications in real-time.</p>
+                            <a href="{{ route('appointments.create') }}" class="btn btn-light text-success fw-bold px-4 py-2 rounded-pill shadow-sm">
+                                <i class="fas fa-plus-circle me-2"></i>Book New Appointment
+                            </a>
+                        </div>
+                        <div class="col-md-4 text-center d-none d-md-block">
+                            <i class="fas fa-heartbeat fa-6x opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-top border-4 border-info">
+                <div class="card-body text-center p-4 d-flex flex-column">
+                    <div class="icon-box bg-info bg-opacity-10 text-info">
+                        <i class="fas fa-user-circle fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Personal Records</h4>
+                    <p class="text-muted small mb-4">Update your profile, contact details, and basic demographics.</p>
+                    <div class="mt-auto">
+                        <a href="{{ route('profile.edit') }}" class="btn btn-outline-info w-100 rounded-pill fw-bold">Update Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="col-md-4">
+    <div class="card h-100 shadow-sm border-top border-4 border-success">
+        <div class="card-body text-center p-4 d-flex flex-column">
+            <div class="icon-box bg-success bg-opacity-10 text-success">
+                <i class="fas fa-pills fa-3x"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Medicines</h4>
+            <p class="text-muted small mb-4">View list of medicine possible available for free at our clinic.</p>
+            
+   <div class="mt-auto">
+    <a href="{{ route('patient.medicines.index') }}" class="btn btn-outline-success w-100 mt-2 rounded-pill fw-bold">
+        <i class="fas fa-search me-2"></i>Check Medicine
+    </a>
+</div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm hover-shadow transition">
-            <div class="card-body text-center p-4">
-                <div class="mb-3 text-success">
-                    <i class="fas fa-file-medical-alt fa-3x"></i>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-top border-4 border-warning">
+                <div class="card-body text-center p-4 d-flex flex-column">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-calendar-alt fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">My Appointments</h4>
+                    <p class="text-muted small mb-4">Track your upcoming check-ups or view your visitation history.</p>
+                    <div class="mt-auto">
+                        <a href="{{ route('appointments.index') }}" class="btn btn-outline-warning text-dark w-100 rounded-pill fw-bold">View Schedule</a>
+                    </div>
                 </div>
-                <h4 class="fw-bold">Medical Records</h4>
-                <p class="text-muted small">View your diagnosis history and prescriptions.</p>
-                <a href="{{ route('patient.records') }}" class="btn btn-outline-success w-100 mt-2">View Records</a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm hover-shadow transition">
-            <div class="card-body text-center p-4">
-                <div class="mb-3 text-info">
-                    <i class="fas fa-id-card fa-3x"></i>
-                </div>
-                <h4 class="fw-bold">Personal Records</h4>
-                <p class="text-muted small">Update your demographics and medical history.</p>
-                <a href="{{ route('profile.edit') }}" class="btn btn-outline-info w-100 mt-2">Update Profile</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm hover-shadow transition">
-            <div class="card-body text-center p-4">
-                <div class="mb-3 text-warning">
-                    <i class="fas fa-calendar-check fa-3x"></i>
-                </div>
-                <h4 class="fw-bold">My Appointments</h4>
-                <p class="text-muted small">Check status of your requests or view history.</p>
-                <a href="{{ route('appointments.index') }}" class="btn btn-outline-warning w-100 mt-2 text-dark">Check Status</a>
-            </div>
+    <div class="row mt-5 justify-content-center">
+        <div class="col-md-4">
+            <a href="{{ route('patient.records') }}" class="btn btn-link text-success text-decoration-none fw-bold d-block text-center">
+                <i class="fas fa-history me-2"></i>View Full Medical History
+            </a>
         </div>
     </div>
 </div>
