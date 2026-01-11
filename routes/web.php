@@ -24,6 +24,8 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 // -- Protected Routes --
 Route::middleware(['auth'])->group(function () {
 
+    Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
+
     // Patient: View History
     Route::get('/my-medical-records', [MedicalRecordController::class, 'myRecords'])->name('patient.records');
     
