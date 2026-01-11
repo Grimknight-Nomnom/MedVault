@@ -120,7 +120,7 @@
         bootstrapModal.show();
 
         // 2. Fetch Data
-        fetch(`{{ route('appointments.slots') }}?date=${date}`)
+        fetch(`{{ route('api.appointments.slots') }}?date=${date}`)
             .then(res => res.json())
             .then(data => {
                 title.innerText = data.date_formatted;

@@ -32,10 +32,18 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Expiry Date</label>
-                        <input type="date" name="expiry_date" class="form-control" required>
-                    </div>
+<div class="mb-3">
+    <label for="expiry_date" class="form-label fw-bold">Expiry Date (Month & Year)</label>
+    <input type="month" 
+           name="expiry_date" 
+           id="expiry_date" 
+           class="form-control @error('expiry_date') is-invalid @enderror" 
+           required>
+    <div class="form-text">Pick the month and year of expiration. The day will default to the 1st.</div>
+    @error('expiry_date')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
 
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('admin.medicines.index') }}" class="btn btn-secondary">Cancel</a>
