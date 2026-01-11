@@ -12,6 +12,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// routes/web.php
+Route::get('/admin/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
+
 // --- Authentication ---
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');

@@ -74,34 +74,52 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100 border-top border-4 border-dark">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-history me-2"></i>Historical Peek</h5>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="historyDetailsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-list me-1"></i> Details
-                        </button>
-                        <ul id="activityLogContainer" class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="historyDetailsDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
-                            </ul>
-                    </div>
-                </div>
-                <div class="card-body text-center">
-                    <p id="formattedDate" class="fw-bold text-muted mb-4">-</p>
-                    <div class="row mb-4">
-                        <div class="col-6 border-end">
-                            <h2 id="releaseCount" class="fw-bold text-primary mb-0">0</h2>
-                            <small class="text-uppercase text-muted fw-bold">Released</small>
-                        </div>
-                        <div class="col-6">
-                            <h2 id="expiryCount" class="fw-bold text-danger mb-0">0</h2>
-                            <small class="text-uppercase text-muted fw-bold">Expired</small>
-                        </div>
-                    </div>
-                    <canvas id="peekChart" style="max-height: 150px;"></canvas>
-                </div>
+       <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100 border-top border-4 border-dark">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-history me-2"></i>Historical Peek</h5>
+            
+            <div class="d-flex gap-1">
+                <select id="reportMonth" class="form-select form-select-sm border-0 bg-light" style="width: 100px;">
+                    @foreach(range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
+                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                        </option>
+                    @endforeach
+                </select>
+                <select id="reportYear" class="form-select form-select-sm border-0 bg-light" style="width: 80px;">
+                    @foreach(range(date('Y')-1, date('Y')+1) as $y)
+                        <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="dropdown ms-2">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="historyDetailsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-list me-1"></i> Details
+                </button>
+                <ul id="activityLogContainer" class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="historyDetailsDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                    </ul>
             </div>
         </div>
+        <div class="card-body text-center">
+            <p id="formattedDate" class="fw-bold text-muted mb-4">-</p>
+            <div class="row mb-4">
+                <div class="col-6 border-end">
+                    <h2 id="releaseCount" class="fw-bold text-primary mb-0">0</h2>
+                    <small class="text-uppercase text-muted fw-bold">Released</small>
+                </div>
+                <div class="col-6">
+                    <h2 id="expiryCount" class="fw-bold text-danger mb-0">0</h2>
+                    <small class="text-uppercase text-muted fw-bold">Expired</small>
+                </div>
+            </div>
+            <canvas id="peekChart" style="max-height: 150px;"></canvas>
+        </div>
+    </div>
+</div>
     </div>
 
     <div class="row g-4">
@@ -160,25 +178,32 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // Global variable to hold the Doughnut chart instance so we can destroy/recreate it
     let peekChart;
 
+    /**
+     * Function to fetch data via AJAX and update the "Historical Peek" section
+     */
     function updatePeekReport() {
         const month = document.getElementById('reportMonth').value;
         const year = document.getElementById('reportYear').value;
         const logContainer = document.getElementById('activityLogContainer');
 
+        // Ensure the API route matches your web.php definition
         fetch(`{{ route('admin.report.api') }}?month=${month}&year=${year}`)
             .then(res => res.json())
             .then(data => {
+                // 1. Update the Summary Text Counts
                 document.getElementById('releaseCount').innerText = data.releases;
                 document.getElementById('expiryCount').innerText = data.expirations;
                 document.getElementById('formattedDate').innerText = data.formatted_date;
 
-                // Build Log HTML via Javascript (Cannot use Blade here)
+                // 2. Build the Activity Log HTML dynamically
                 let logHtml = `<li class="dropdown-header fw-bold text-uppercase border-bottom pb-2 mb-2">Monthly Activity Log</li>`;
                 
-                if (data.details.length > 0) {
+                if (data.details && data.details.length > 0) {
                     data.details.forEach(log => {
                         const isReleased = log.action === 'Released';
                         logHtml += `
@@ -192,7 +217,7 @@
                                         </p>
                                     </div>
                                     <span class="badge ${isReleased ? 'bg-primary' : 'bg-danger'} rounded-pill">
-                                        ${log.qty}
+                                        ${Math.abs(log.qty)}
                                     </span>
                                 </div>
                             </li>`;
@@ -202,7 +227,7 @@
                 }
                 logContainer.innerHTML = logHtml;
 
-                // Update Doughnut Chart
+                // 3. Update/Recreate the Doughnut Chart
                 if (peekChart) peekChart.destroy();
                 const ctx = document.getElementById('peekChart').getContext('2d');
                 peekChart = new Chart(ctx, {
@@ -212,15 +237,25 @@
                         datasets: [{
                             data: [data.releases, data.expirations],
                             backgroundColor: ['#0d6efd', '#dc3545'],
+                            borderWidth: 0
                         }]
                     },
-                    options: { plugins: { legend: { display: false } }, cutout: '70%', responsive: true }
+                    options: { 
+                        plugins: { legend: { display: false } }, 
+                        cutout: '70%', 
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
                 });
-            });
+            })
+            .catch(error => console.error('Error fetching historical report:', error));
     }
 
+    /**
+     * Initialize Charts on Page Load
+     */
     document.addEventListener('DOMContentLoaded', function () {
-        // Initial Trend Chart
+        // --- 1. Static Trend Chart (Last 6 Months) ---
         new Chart(document.getElementById('trendsChart'), {
             type: 'line',
             data: {
@@ -230,6 +265,7 @@
                         label: 'Releases',
                         data: {!! json_encode($releasesData) !!},
                         borderColor: '#0d6efd',
+                        backgroundColor: '#0d6efd',
                         tension: 0.3,
                         fill: false
                     },
@@ -237,16 +273,25 @@
                         label: 'Expirations',
                         data: {!! json_encode($expirationsData) !!},
                         borderColor: '#ffc107',
+                        backgroundColor: '#ffc107',
                         tension: 0.3,
                         fill: false
                     }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
         });
 
+        // --- 2. Initialize the Historical Peek Data ---
         updatePeekReport();
 
+        // --- 3. Event Listeners for Selectors ---
         document.getElementById('reportMonth').addEventListener('change', updatePeekReport);
         document.getElementById('reportYear').addEventListener('change', updatePeekReport);
     });

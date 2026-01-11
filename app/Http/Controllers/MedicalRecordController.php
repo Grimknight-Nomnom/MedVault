@@ -23,32 +23,32 @@ class MedicalRecordController extends Controller
     /**
      * ADMIN: Save the diagnosis and finalize the appointment.
      */
-    public function store(Request $request, $appointment_id)
-    {
-        // 1. Validation
-        $request->validate([
-            'diagnosis' => 'required|string',
-            'prescription' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
+public function store(Request $request, $appointment_id)
+{
+    $request->validate([
+        'diagnosis' => 'required|string',
+        'prescription' => 'nullable|string',
+        'notes' => 'nullable|string',
+    ]);
 
-        $appointment = Appointment::findOrFail($appointment_id);
+$appointment = Appointment::findOrFail($appointment_id);
 
-        // 2. Create the Medical Record tied to the patient (user_id)
-        MedicalRecord::create([
-            'user_id' => $appointment->user_id, 
-            'appointment_id' => $appointment->id,
-            'diagnosis' => $request->diagnosis,
-            'prescription' => $request->prescription,
-            'notes' => $request->notes,
-        ]);
+    // Create the Medical Record permanently
+    MedicalRecord::create([
+        'user_id' => $appointment->user_id,
+        'appointment_id' => $appointment->id,
+        'diagnosis' => $request->diagnosis,
+        'prescription' => $request->prescription,
+        'notes' => $request->notes,
+    ]);
 
-        // 3. Status Transition: Change from 'pending' (or current status) to 'completed'
-        $appointment->update(['status' => 'completed']);
+// Transition the appointment to 'completed' status
+    $appointment->update(['status' => 'completed']);
 
-        return redirect()->route('admin.appointments.index')
-            ->with('success', 'Medical record saved and appointment completed!');
-    }
+    // Redirect with the updated success message
+    return redirect()->route('admin.appointments.index')
+        ->with('success', 'Medical record saved and appointment marked as completed.');
+}
 
     /**
      * PATIENT: View their own medical history.
