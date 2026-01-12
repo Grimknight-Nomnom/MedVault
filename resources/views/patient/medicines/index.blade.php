@@ -60,6 +60,7 @@
             </table>
         </div>
     </div>
+    
     <div class="mt-4">
         {{ $medicines->links() }}
     </div>

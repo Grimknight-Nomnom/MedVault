@@ -10,6 +10,34 @@ use Carbon\Carbon;
 class AppointmentController extends Controller
 {
     // ==========================================
+    //  HELPER: Check Profile Completeness
+    // ==========================================
+    private function isProfileIncomplete()
+    {
+        $user = Auth::user();
+
+        // List of strictly required Demographic fields
+        // Note: middle_name is excluded from strict blocking as it's optional for many
+        $requiredFields = [
+            'first_name', 
+            'last_name', 
+            'date_of_birth', 
+            'gender', 
+            'civil_status', 
+            'address', 
+            'phone' // Mapped to contact_number
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (empty($user->$field)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // ==========================================
     //  PATIENT METHODS
     // ==========================================
 
@@ -18,7 +46,13 @@ class AppointmentController extends Controller
      */
     public function create()
     {
-        // 1. RESTRICTION: Check for ongoing appointments
+        // 1. RESTRICTION: Check Profile Completeness
+        if ($this->isProfileIncomplete()) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Profile Incomplete: Please fill out your Personal Records (Demographics and Medical History) before booking an appointment.');
+        }
+
+        // 2. RESTRICTION: Check for ongoing appointments
         $hasActive = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->exists();
@@ -28,7 +62,7 @@ class AppointmentController extends Controller
                 ->with('error', 'You have an ongoing appointment. You cannot book another until your current appointment is completed.');
         }
 
-        // 2. Build Calendar
+        // 3. Build Calendar
         $date = Carbon::now();
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
@@ -130,7 +164,13 @@ class AppointmentController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. RESTRICTION: Check for ongoing appointments again
+        // 1. RESTRICTION: Check Profile Completeness
+        if ($this->isProfileIncomplete()) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Profile Incomplete: Please fill out your Personal Records before booking.');
+        }
+
+        // 2. RESTRICTION: Check for ongoing appointments
         $hasActive = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->exists();

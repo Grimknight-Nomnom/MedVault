@@ -52,9 +52,26 @@
                 <ul class="navbar-nav ms-auto align-items-center">
                     @auth
                         @if(Auth::user()->role === 'admin')
-                            <li class="nav-item"><a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="fas fa-chart-line me-1"></i> Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('admin.medicines.index') }}"><i class="fas fa-pills me-1"></i> Inventory</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('admin.appointments.index') }}"><i class="fas fa-calendar-check me-1"></i> Appointments</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                                    <i class="fas fa-chart-line me-1"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.medicines.index') }}">
+                                    <i class="fas fa-pills me-1"></i> Inventory
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.appointments.index') }}">
+                                    <i class="fas fa-calendar-check me-1"></i> Appointments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.patients.index') }}">
+                                    <i class="fas fa-users me-1"></i> Patients
+                                </a>
+                            </li>
                         @else
                             <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}"><i class="fas fa-home me-1"></i> Home</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ route('patient.records') }}"><i class="fas fa-file-medical me-1"></i> Records</a></li>

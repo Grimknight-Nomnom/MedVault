@@ -6,6 +6,7 @@ use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminController;
 
 // --- Public Routes ---
 // FIXED: Added ->name('welcome') so the "Back to Home" button works
@@ -76,5 +77,11 @@ Route::middleware(['auth'])->group(function () {
         // Medical Record / Diagnosis
         Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
         Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
+
+        // Patient Management (NEW)
+        Route::controller(AdminController::class)->group(function () {
+            Route::get('/patients', 'indexPatients')->name('admin.patients.index');
+            Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
+        });
     });
 });

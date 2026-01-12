@@ -47,20 +47,22 @@
         </div>
 
 <div class="col-md-4">
-            <div class="card h-100 border-0 border-start border-4 border-success shadow-sm">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                    <div>
-                        <p class="text-muted mb-1 fw-bold text-uppercase small">Registered Patients</p>
-                        <h3 class="fw-bold mb-0">{{ \App\Models\User::where('role', 'user')->count() }}</h3>
-                        <span class="text-muted small">Active Accounts</span>
-                    </div>
-                    <div class="bg-success bg-opacity-10 p-3 rounded-circle">
-                        <i class="fas fa-users fa-2x text-success"></i>
-                    </div>
-                </div>
+    <div class="card h-100 border-0 border-start border-4 border-success shadow-sm">
+        <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+                <p class="text-muted mb-1 fw-bold text-uppercase small">Registered Patients</p>
+                <h3 class="fw-bold mb-0">{{ \App\Models\User::where('role', 'user')->count() }}</h3>
+                
+                <a href="{{ route('admin.patients.index') }}" class="text-success text-decoration-none small fw-bold stretched-link">
+                    View Active Accounts
+                </a>
+            </div>
+            <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                <i class="fas fa-users fa-2x text-success"></i>
             </div>
         </div>
     </div>
+</div>
 
     <div class="row g-4 mb-4">
         <div class="col-lg-8">

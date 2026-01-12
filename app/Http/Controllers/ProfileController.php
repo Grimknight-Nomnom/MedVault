@@ -25,21 +25,24 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
+            // Demographics
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'date_of_birth' => 'nullable|date',
-            'age' => 'nullable|integer|min:0',
-            'gender' => 'nullable|string',
-            'civil_status' => 'nullable|string',
+            'date_of_birth' => 'required|date',
+            'age' => 'required|integer|min:0',
+            'gender' => 'required|string|in:Male,Female,Other',
+            'civil_status' => 'required|string|in:Single,Married,Widowed,Separated',
+            'phone' => 'required|string|max:20', // Contact Number
+            'address' => 'required|string|max:500',
+
+            // Medical History
             'allergies' => 'nullable|string',
             'current_medication' => 'nullable|string',
             'existing_medical_conditions' => 'nullable|string',
         ]);
 
-        // Handle Checkboxes manually
+        // Handle Checkboxes manually for Programs
         $user->is_philhealth_member = $request->has('is_philhealth_member');
         $user->is_senior_citizen_or_pwd = $request->has('is_senior_citizen_or_pwd');
 
@@ -47,6 +50,7 @@ class ProfileController extends Controller
         $user->fill($validated);
         $user->save();
 
-        return redirect()->route('dashboard')->with('success', 'Personal record updated successfully.');
+        // Redirect back to dashboard to prompt them to book if they were blocked before
+        return redirect()->route('dashboard')->with('success', 'Personal records updated successfully. You may now book an appointment.');
     }
 }
