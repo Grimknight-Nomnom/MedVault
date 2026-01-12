@@ -8,15 +8,10 @@ use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\ProfileController;
 
 // --- Public Routes ---
+// FIXED: Added ->name('welcome') so the "Back to Home" button works
 Route::get('/', function () {
     return view('welcome');
-});
-
-// Inside the Route::middleware(['auth'])->group(...)
-Route::get('/medicines-availability', [MedicineController::class, 'patientIndex'])->name('patient.medicines.index');
-
-// routes/web.php
-Route::get('/admin/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
+})->name('welcome');
 
 // --- Authentication ---
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -40,20 +35,27 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/my-medical-records', [MedicalRecordController::class, 'myRecords'])->name('patient.records');
 
+    // Patient Medicines
+    Route::get('/medicines-availability', [MedicineController::class, 'patientIndex'])->name('patient.medicines.index');
+
     // Patient Appointments
     Route::get('/my-appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/book-appointment', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/book-appointment', [AppointmentController::class, 'store'])->name('appointments.store');
 
-    // API Helpers
+    // API Helpers (AJAX)
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
     Route::get('/api/admin/monthly-report', [MedicineController::class, 'getMonthlyReport'])->name('admin.report.api');
 
     // --- Admin Routes Group ---
     Route::prefix('admin')->group(function () {
         
-        // Dashboard (Points to MedicineController for reporting data)
+        // Dashboard
         Route::get('/dashboard', [MedicineController::class, 'adminDashboard'])->name('admin.dashboard');
+
+        // Historical Report (AJAX)
+        // Note: Inside 'admin' prefix, this becomes /admin/historical-report
+        Route::get('/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
 
         // Medicine Inventory Management
         Route::controller(MedicineController::class)->group(function () {

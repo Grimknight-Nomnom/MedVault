@@ -3,47 +3,75 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MedVault - Secure Medical History</title>
+    <title>MedVault - Barangay Looc Clinic</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        green: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a', // Primary
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Instrument Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
-        body { font-family: 'Instrument Sans', sans-serif; }
-        /* Smooth scrolling for anchor links */
         html { scroll-behavior: smooth; }
-        /* Hide scrollbar for clean look in some elements */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="antialiased bg-white text-gray-900 selection:bg-indigo-100 selection:text-indigo-700">
+<body class="antialiased bg-white text-gray-900 selection:bg-green-100 selection:text-green-700">
 
-    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-green-100 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
-                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">M</div>
+                    <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md group">
+                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12h2l2-3 2 6 2-3h2"></path>
+                        </svg>
+                    </div>
                     <span class="font-bold text-xl tracking-tight text-gray-900">MedVault</span>
                 </div>
 
                 <div class="hidden md:flex space-x-8">
-                    <a href="#features" class="text-gray-600 hover:text-indigo-600 font-medium transition">Features</a>
-                    <a href="#how-it-works" class="text-gray-600 hover:text-indigo-600 font-medium transition">How it Works</a>
-                    <a href="#faq" class="text-gray-600 hover:text-indigo-600 font-medium transition">FAQs</a>
+                    <a href="#home" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Home</a>
+                    <a href="#about" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">About Us</a>
+                    <a href="#details" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Details</a>
+                    <a href="#staff" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Staff</a>
                 </div>
 
                 <div class="flex items-center gap-4">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="text-sm font-medium text-gray-700 hover:text-indigo-600">Dashboard</a>
+                            <a href="{{ url('/dashboard') }}" class="text-sm font-medium text-green-700 hover:text-green-800">Dashboard</a>
                         @else
-                            <a href="{{ route('login') }}" class="hidden md:block text-sm font-medium text-gray-600 hover:text-indigo-600 transition">Log in</a>
+                            <a href="{{ route('login') }}" class="hidden md:block text-sm font-medium text-gray-600 hover:text-green-600 transition">Log in</a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-indigo-200">
+                                <a href="{{ route('register') }}" class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-green-200">
                                     Get Started
                                 </a>
                             @endif
@@ -54,236 +82,246 @@
         </div>
     </nav>
 
-    <section class="relative pt-20 pb-24 lg:pt-32 lg:pb-40 overflow-hidden">
+    <section id="home" class="relative pt-20 pb-24 lg:pt-32 lg:pb-40 overflow-hidden bg-white">
         <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0">
-            <div class="absolute top-0 left-1/4 w-72 h-72 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-            <div class="absolute top-0 right-1/4 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div class="absolute top-0 right-0 w-1/2 h-full bg-green-50/50 skew-x-12 opacity-70"></div>
+            <div class="absolute top-20 left-10 w-72 h-72 bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
         </div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-            <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 mb-6 leading-[1.1]">
+            <span class="inline-block py-1 px-3 rounded-full bg-green-50 text-green-700 text-sm font-semibold mb-6 border border-green-100">
+                Welcome to Community Healthcare
+            </span>
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
                 Your Health Journey, <br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">One Secure Vault.</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800">Barangay Looc Clinic</span>
             </h1>
             
-            <p class="mt-4 text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-                Stop losing track of your prescriptions and records. Securely store, manage, and access your medical history anytime, anywhere.
+            <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-4xl mx-auto mb-10 leading-relaxed">
+                At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community. Led by Dr. Adelinno Labro and supported by our dedicated team of skilled nurses and staff, we prioritize patient safety, confidentiality, and personalized care. With a strong emphasis on accuracy and professionalism in all our services, you can trust us to meet your health needs with integrity and excellence.
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-                <a href="{{ route('register') }}" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    Get Started for Free
+                @if (Route::has('register'))
+                <a href="{{ route('register') }}" class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full shadow-lg hover:shadow-green-200/50 hover:-translate-y-1 transition-all duration-300">
+                    Get Started
                 </a>
-                <a href="#how-it-works" class="px-8 py-4 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all">
+                @endif
+                <a href="#about" class="px-8 py-4 bg-white border-2 border-green-600 text-green-700 font-semibold rounded-full hover:bg-green-50 transition-all">
                     Learn More
                 </a>
             </div>
+        </div>
+    </section>
 
-            <div class="relative mx-auto max-w-5xl rounded-2xl border border-gray-200 bg-white/50 backdrop-blur-xl p-2 shadow-2xl">
-                <div class="aspect-[16/9] rounded-xl bg-gray-100 overflow-hidden relative group cursor-default">
-                    <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                         <div class="text-center">
-                            <svg class="w-16 h-16 mx-auto text-indigo-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <span class="text-gray-400 font-medium text-lg">Dashboard Preview</span>
-                         </div>
+    <section id="about" class="py-24 bg-green-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">About Us</h2>
+                <div class="w-20 h-1.5 bg-green-500 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 text-lg text-gray-700 leading-relaxed">
+                    <p>
+                        In the 1980s, the City Health Office of Calamba was established by the barangay captain of Looc, aiming to enhance community health services. While it has become a vital resource for local residents, one of its biggest challenges is fostering effective communication with patients. Many individuals struggle to fully understand the information provided, often due to varying levels of health literacy. The dedicated staff work hard to adapt their communication methods, utilizing visual aids and simplified language, yet the persistent gap in understanding highlights the need for ongoing training and resources to ensure all patients can grasp essential health information.
+                    </p>
+                    <p>
+                        The Barangay Looc Clinic, situated in Barangay Looc, Calamba, Laguna, serves as a vital healthcare resource for the local community, providing essential services such as free medical checkups and, when available, complementary medications. This community clinic is focused on delivering accessible healthcare, particularly to residents who may not have the means to visit larger facilities.
+                    </p>
+                </div>
+
+                <div class="relative">
+                    <div class="absolute inset-0 bg-green-600 rounded-2xl rotate-3 opacity-20"></div>
+                    <div class="relative bg-white p-2 rounded-2xl shadow-xl">
+                        <div class="aspect-[4/3] rounded-xl bg-gray-200 flex items-center justify-center overflow-hidden">
+                            <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="py-10 border-y border-gray-100 bg-gray-50/50">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">Trusted by Patients & Clinics for Privacy</p>
-            <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-                <div class="flex items-center gap-2 text-xl font-bold text-gray-700"><span class="w-6 h-6 bg-gray-400 rounded-full"></span> MediCare</div>
-                <div class="flex items-center gap-2 text-xl font-bold text-gray-700"><span class="w-6 h-6 bg-gray-400 rounded-full"></span> HealthPoint</div>
-                <div class="flex items-center gap-2 text-xl font-bold text-gray-700"><span class="w-6 h-6 bg-gray-400 rounded-full"></span> SecureDocs</div>
-                <div class="flex items-center gap-2 text-xl font-bold text-gray-700"><span class="w-6 h-6 bg-gray-400 rounded-full"></span> ClinicOne</div>
-            </div>
-        </div>
-    </section>
-
-    <section id="how-it-works" class="py-24 bg-white">
+    <section id="details" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Simplify Your Health in 3 Steps</h2>
-                <p class="text-lg text-gray-600">No complex onboarding. Just secure, simple management.</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Our Core Values</h2>
+                <p class="text-gray-600 text-lg">Guiding principles that drive our service to the community.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-                <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-indigo-100 to-transparent -z-10"></div>
-
-                <div class="relative bg-white p-6 rounded-2xl border border-transparent hover:border-gray-100 hover:shadow-xl transition-all duration-300 group text-center">
-                    <div class="w-16 h-16 mx-auto bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 group-hover:scale-110 transition-transform">1</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Create Your Vault</h3>
-                    <p class="text-gray-600 leading-relaxed">Sign up in seconds and build your personal health profile. It's your digital filing cabinet.</p>
-                </div>
-
-                <div class="relative bg-white p-6 rounded-2xl border border-transparent hover:border-gray-100 hover:shadow-xl transition-all duration-300 group text-center">
-                    <div class="w-16 h-16 mx-auto bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 group-hover:scale-110 transition-transform">2</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Upload Records</h3>
-                    <p class="text-gray-600 leading-relaxed">Snap a photo of prescriptions or upload lab PDFs. We digitize and organize them for you.</p>
-                </div>
-
-                <div class="relative bg-white p-6 rounded-2xl border border-transparent hover:border-gray-100 hover:shadow-xl transition-all duration-300 group text-center">
-                    <div class="w-16 h-16 mx-auto bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 group-hover:scale-110 transition-transform">3</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Access Anywhere</h3>
-                    <p class="text-gray-600 leading-relaxed">Retrieve your history during doctor visits or emergencies from any device, securely.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="features" class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why MedVault?</h2>
-                <p class="text-lg text-gray-600">Designed for patients who want peace of mind, not administrative headaches.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Medicine Inventory</h3>
-                    <p class="text-gray-600">Track your current stock. Get notified before you run out of essential maintenance meds.</p>
-                </div>
-
-                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-gray-100 border-t-4 border-t-green-500">
                     <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Appointment Tracker</h3>
-                    <p class="text-gray-600">Never miss a check-up. Log upcoming visits and keep notes on doctor's advice.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Mission</h3>
+                    <p class="text-gray-600 text-lg">Provide efficient, effective, and quality public health Care.</p>
                 </div>
 
-                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-gray-100 border-t-4 border-t-green-500">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Encrypted Privacy</h3>
-                    <p class="text-gray-600">Your health data is sensitive. We use industry-standard encryption to keep it yours.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Vision</h3>
+                    <p class="text-gray-600 text-lg">A healthy City, A Healthy Community With A Health population.</p>
                 </div>
 
-                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-gray-100 border-t-4 border-t-green-500">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Digital Prescriptions</h3>
-                    <p class="text-gray-600">Stop carrying crumpled papers. Show your digital prescription at the pharmacy.</p>
-                </div>
-                
-                 <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
-                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Family Profiles</h3>
-                    <p class="text-gray-600">Manage the health records of your children or elderly parents from one account.</p>
-                </div>
-
-                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex items-center justify-center bg-indigo-50">
-                    <div class="text-center">
-                        <h3 class="text-xl font-bold text-indigo-900 mb-3">Ready to organize?</h3>
-                        <a href="{{ route('register') }}" class="inline-flex items-center text-indigo-600 font-semibold hover:underline">
-                            Create Free Account &rarr;
-                        </a>
-                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Goal</h3>
+                    <p class="text-gray-600 text-lg">To Improve Health Status of all Calambunos.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="faq" class="py-24 bg-white">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6">
-            <h2 class="text-3xl font-bold text-gray-900 mb-12 text-center">Frequently Asked Questions</h2>
-            
-            <div class="space-y-4">
-                <details class="group bg-gray-50 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer open:bg-white open:shadow-lg open:ring-1 open:ring-black/5 transition-all duration-300">
-                    <summary class="flex items-center justify-between text-lg font-semibold text-gray-900">
-                        Is my medical data safe?
-                        <span class="ml-4 flex-shrink-0 transition duration-300 group-open:-rotate-180">
-                            <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                        </span>
-                    </summary>
-                    <div class="mt-4 text-gray-600 leading-relaxed">
-                        Absolutely. We use enterprise-grade encryption for all data storage. Your records are only accessible by you and authorized users you explicitly share them with.
-                    </div>
-                </details>
+    <section id="staff" class="py-24 bg-green-50/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-16">Our Dedicated Staff</h2>
 
-                <details class="group bg-gray-50 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer open:bg-white open:shadow-lg open:ring-1 open:ring-black/5 transition-all duration-300">
-                    <summary class="flex items-center justify-between text-lg font-semibold text-gray-900">
-                        Can I upload PDF lab results?
-                        <span class="ml-4 flex-shrink-0 transition duration-300 group-open:-rotate-180">
-                            <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                        </span>
-                    </summary>
-                    <div class="mt-4 text-gray-600 leading-relaxed">
-                        Yes! MedVault supports image files (JPG, PNG) and PDF documents. You can categorize them by date or doctor name for easy retrieval.
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
-                </details>
+                    <h3 class="text-xl font-bold text-green-700">Dr. Adelinno Labro</h3>
+                    <p class="text-gray-500 font-medium">Doctor</p>
+                </div>
 
-                <details class="group bg-gray-50 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer open:bg-white open:shadow-lg open:ring-1 open:ring-black/5 transition-all duration-300">
-                    <summary class="flex items-center justify-between text-lg font-semibold text-gray-900">
-                        Is MedVault free to use?
-                        <span class="ml-4 flex-shrink-0 transition duration-300 group-open:-rotate-180">
-                            <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                        </span>
-                    </summary>
-                    <div class="mt-4 text-gray-600 leading-relaxed">
-                        The core features—storing records, tracking medicines, and appointments—are completely free for individual users.
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
-                </details>
+                    <h3 class="text-xl font-bold text-green-700">John Paul Dela Cruz</h3>
+                    <p class="text-gray-500 font-medium">Nurse</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Krystal Mae Anarna</h3>
+                    <p class="text-gray-500 font-medium">Nurse</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Elena Divina</h3>
+                    <p class="text-gray-500 font-medium">Nutrition Scholar</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Nena Alcaraz</h3>
+                    <p class="text-gray-500 font-medium">Nutrition Scholar</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Lolita Mane</h3>
+                    <p class="text-gray-500 font-medium">Nutrition Scholar</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Christine Manalac</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Roberta Manlapaz</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Fia Delima</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Corazon Alcala</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Roberta Alintanahin</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Precila Magpantay</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Charmaine Dazo</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Evangeline Ignacio</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-700">Marites Ilanes</h3>
+                    <p class="text-gray-500 font-medium">Health Workers</p>
+                </div>
+
             </div>
         </div>
     </section>
 
-    <footer class="bg-gray-900 text-gray-300 py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div class="col-span-1 md:col-span-1">
-                <div class="flex items-center gap-2 mb-4 text-white">
-                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold">M</div>
-                    <span class="font-bold text-xl">MedVault</span>
+<footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12h2l2-3 2 6 2-3h2"></path>
+                    </svg>
                 </div>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    Empowering patients to take control of their medical history. Secure, simple, and always accessible.
-                </p>
+                <span class="font-bold text-xl">MedVault</span>
             </div>
             
-            <div>
-                <h4 class="text-white font-semibold mb-4">Product</h4>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-indigo-400 transition">Features</a></li>
-                    <li><a href="#" class="hover:text-indigo-400 transition">Security</a></li>
-                    <li><a href="#" class="hover:text-indigo-400 transition">Pricing</a></li>
-                </ul>
-            </div>
-            
-            <div>
-                <h4 class="text-white font-semibold mb-4">Company</h4>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-indigo-400 transition">About Us</a></li>
-                    <li><a href="#" class="hover:text-indigo-400 transition">Careers</a></li>
-                    <li><a href="#" class="hover:text-indigo-400 transition">Privacy Policy</a></li>
-                </ul>
-            </div>
-            
-            <div>
-                <h4 class="text-white font-semibold mb-4">Get in touch</h4>
-                <ul class="space-y-2 text-sm">
-                    <li>support@medvault.com</li>
-                    <li>+1 (555) 123-4567</li>
-                    <li class="flex gap-4 mt-4">
-                        <a href="#" class="text-gray-400 hover:text-white"><span class="sr-only">Facebook</span>FB</a>
-                        <a href="#" class="text-gray-400 hover:text-white"><span class="sr-only">Twitter</span>TW</a>
-                        <a href="#" class="text-gray-400 hover:text-white"><span class="sr-only">Instagram</span>IG</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="border-t border-gray-800 mt-12 pt-8 text-center text-sm text-gray-500">
-            &copy; {{ date('Y') }} MedVault. All rights reserved.
+            <p class="text-gray-400 text-sm">
+                &copy; {{ date('Y') }} Barangay Looc Clinic. All rights reserved.
+            </p>
         </div>
     </footer>
 </body>
