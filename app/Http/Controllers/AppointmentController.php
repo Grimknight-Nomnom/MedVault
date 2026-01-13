@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -16,8 +17,6 @@ class AppointmentController extends Controller
     {
         $user = Auth::user();
 
-        // List of strictly required Demographic fields
-        // Note: middle_name is excluded from strict blocking as it's optional for many
         $requiredFields = [
             'first_name', 
             'last_name', 
@@ -25,7 +24,7 @@ class AppointmentController extends Controller
             'gender', 
             'civil_status', 
             'address', 
-            'phone' // Mapped to contact_number
+            'phone'
         ];
 
         foreach ($requiredFields as $field) {
@@ -41,28 +40,22 @@ class AppointmentController extends Controller
     //  PATIENT METHODS
     // ==========================================
 
-    /**
-     * Patient: Display the Booking Calendar
-     */
     public function create()
     {
-        // 1. RESTRICTION: Check Profile Completeness
         if ($this->isProfileIncomplete()) {
             return redirect()->route('profile.edit')
-                ->with('error', 'Profile Incomplete: Please fill out your Personal Records (Demographics and Medical History) before booking an appointment.');
+                ->with('error', 'Profile Incomplete: Please fill out your Personal Records before booking.');
         }
 
-        // 2. RESTRICTION: Check for ongoing appointments
         $hasActive = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->exists();
 
         if ($hasActive) {
             return redirect()->route('dashboard')
-                ->with('error', 'You have an ongoing appointment. You cannot book another until your current appointment is completed.');
+                ->with('error', 'You have an ongoing appointment.');
         }
 
-        // 3. Build Calendar
         $date = Carbon::now();
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
@@ -112,9 +105,6 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('calendar', 'date'));
     }
 
-    /**
-     * Patient API: Get Slots for Modal
-     */
     public function getSlots(Request $request)
     {
         $date = $request->query('date');
@@ -159,18 +149,13 @@ class AppointmentController extends Controller
         ]);
     }
 
-    /**
-     * Patient: Store Appointment
-     */
     public function store(Request $request)
     {
-        // 1. RESTRICTION: Check Profile Completeness
         if ($this->isProfileIncomplete()) {
             return redirect()->route('profile.edit')
-                ->with('error', 'Profile Incomplete: Please fill out your Personal Records before booking.');
+                ->with('error', 'Profile Incomplete.');
         }
 
-        // 2. RESTRICTION: Check for ongoing appointments
         $hasActive = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->exists();
@@ -188,10 +173,14 @@ class AppointmentController extends Controller
         $date = $request->appointment_date;
         $userId = Auth::id();
 
+        // --- RESTRICTION: One appointment per day (unless cancelled) ---
         $exists = Appointment::where('appointment_date', $date)
-                    ->where('user_id', $userId)->exists();
+                    ->where('user_id', $userId)
+                    ->where('status', '!=', 'cancelled') // Allow re-booking if cancelled
+                    ->exists();
+
         if ($exists) {
-            return back()->withErrors(['msg' => 'You already have an appointment today.']);
+            return back()->withErrors(['msg' => 'You already have an appointment scheduled for this date.']);
         }
 
         $count = Appointment::where('appointment_date', $date)->count();
@@ -261,5 +250,47 @@ class AppointmentController extends Controller
         $appointment->update(['status' => $request->status]);
 
         return back()->with('success', 'Appointment status updated to ' . ucfirst($request->status));
+    }
+
+    public function adminCreate()
+    {
+        $patients = User::where('role', 'user')
+            ->orderBy('last_name')
+            ->get();
+            
+        return view('admin.appointments.create', compact('patients'));
+    }
+
+    public function adminStore(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'appointment_date' => 'required|date|after_or_equal:today',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        // --- NEW RESTRICTION: Check if patient already has appointment on this day ---
+        $exists = Appointment::where('user_id', $request->user_id)
+            ->where('appointment_date', $request->appointment_date)
+            ->where('status', '!=', 'cancelled') // Ignore cancelled appointments
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors(['user_id' => 'This patient already has an appointment on this date.'])
+                         ->withInput();
+        }
+
+        $maxQueue = Appointment::where('appointment_date', $request->appointment_date)->max('queue_number') ?? 0;
+
+        Appointment::create([
+            'user_id' => $request->user_id,
+            'appointment_date' => $request->appointment_date,
+            'queue_number' => $maxQueue + 1,
+            'status' => 'pending', // Pending as requested
+            'reason' => $request->reason,
+        ]);
+
+        return redirect()->route('admin.appointments.index')
+            ->with('success', 'Appointment created successfully (Pending Approval).');
     }
 }

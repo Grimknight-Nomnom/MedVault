@@ -66,6 +66,15 @@ Route::middleware(['auth'])->group(function () {
     // --- Admin Routes Group ---
     Route::prefix('admin')->group(function () {
         
+
+    Route::get('/appointments', [AppointmentController::class, 'adminIndex'])->name('admin.appointments.index');
+    
+    // NEW: Manual Appointment Creation Routes
+    Route::get('/appointments/create', [AppointmentController::class, 'adminCreate'])->name('admin.appointments.create');
+    Route::post('/appointments', [AppointmentController::class, 'adminStore'])->name('admin.appointments.store');
+    
+    Route::patch('/appointments/{id}', [AppointmentController::class, 'updateStatus'])->name('admin.appointments.update');
+    
         // Dashboard
         Route::get('/dashboard', [MedicineController::class, 'adminDashboard'])->name('admin.dashboard');
 

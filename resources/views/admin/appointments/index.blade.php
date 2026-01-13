@@ -2,15 +2,24 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">Manage Appointments</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-primary mb-0">Manage Appointments</h2>
+
+    <div class="d-flex align-items-center gap-3">
+        
         <div class="btn-group shadow-sm">
-            <a href="{{ route('admin.appointments.index', ['date' => $date->copy()->subMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary">&larr; Prev</a>
-            <button type="button" class="btn btn-outline-secondary disabled fw-bold px-4 text-dark">
+            <a href="{{ route('admin.appointments.index', ['date' => $date->copy()->subMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary btn-sm" title="Previous Month">&larr;</a>
+            <span class="btn btn-outline-secondary disabled fw-bold text-dark px-3">
                 {{ $date->format('F Y') }}
-            </button>
-            <a href="{{ route('admin.appointments.index', ['date' => $date->copy()->addMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary">Next &rarr;</a>
+            </span>
+            <a href="{{ route('admin.appointments.index', ['date' => $date->copy()->addMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary btn-sm" title="Next Month">&rarr;</a>
         </div>
+
+        <a href="{{ route('admin.appointments.create') }}" class="btn btn-primary d-flex align-items-center shadow-sm">
+            <i class="fas fa-plus-circle me-2"></i> New Appointment
+        </a>
+    </div>
+</div>
     </div>
 
     <div class="card shadow-sm border-0">
@@ -77,7 +86,9 @@
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold" id="modalDateTitle">Appointments</h5>
+                
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+
             </div>
             <div class="modal-body p-0">
                 <div class="table-responsive">
@@ -94,6 +105,7 @@
                             </tbody>
                     </table>
                 </div>
+                
                 <div id="emptyState" class="text-center py-5 d-none">
                     <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
                     <p class="text-muted mb-0">No appointments found for this day.</p>
