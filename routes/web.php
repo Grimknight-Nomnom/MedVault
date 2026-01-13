@@ -7,9 +7,9 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PasswordResetController; // Added this import
 
 // --- Public Routes ---
-// FIXED: Added ->name('welcome') so the "Back to Home" button works
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
@@ -21,6 +21,21 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+// --- Password Reset Routes (Public) ---
+Route::controller(PasswordResetController::class)->group(function () {
+    // Step 1: Enter Email
+    Route::get('/forgot-password', 'showLinkRequestForm')->name('password.request');
+    Route::post('/forgot-password', 'sendResetCode')->name('password.email');
+    
+    // Step 2: Verify Code
+    Route::get('/verify-code', 'showVerifyCodeForm')->name('password.verify');
+    Route::post('/verify-code', 'verifyCode')->name('password.verify.post');
+    
+    // Step 3: Set New Password
+    Route::get('/reset-password', 'showResetForm')->name('password.reset');
+    Route::post('/reset-password', 'resetPassword')->name('password.update');
+});
 
 // --- Protected Routes (Requires Login) ---
 Route::middleware(['auth'])->group(function () {
@@ -55,7 +70,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [MedicineController::class, 'adminDashboard'])->name('admin.dashboard');
 
         // Historical Report (AJAX)
-        // Note: Inside 'admin' prefix, this becomes /admin/historical-report
         Route::get('/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
 
         // Medicine Inventory Management
@@ -78,7 +92,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
         Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
 
-        // Patient Management (NEW)
+        // Patient Management
         Route::controller(AdminController::class)->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
