@@ -9,6 +9,11 @@ class AppointmentSetting extends Model
 {
     use HasFactory;
 
-    // Added 'label' to the list
-    protected $fillable = ['date', 'max_appointments', 'is_closed', 'label'];
+    // IMPORTANT: Add 'label' here so it saves to the database
+    protected $fillable = [
+        'date', 
+        'max_appointments', 
+        'is_closed', 
+        'label' 
+    ];
 }

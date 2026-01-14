@@ -106,6 +106,10 @@
                             if (!empty($day['label'])) {
                                 $bgClass = 'bg-special';
                                 $labelText = $day['label'];
+                                // Special default for pregnancy text
+                                if(Illuminate\Support\Str::contains(Illuminate\Support\Str::lower($day['label']), 'pregnancy')) {
+                                    $bgClass = 'bg-pregnancy';
+                                }
                             } elseif ($dayOfWeek == 0 || $dayOfWeek == 6) { // Sun/Sat
                                 $bgClass = 'bg-area';
                                 $labelText = 'Area';
@@ -145,7 +149,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-success text-white">
@@ -204,7 +208,7 @@
         const form = document.getElementById('bookingForm');
         const statusDiv = document.getElementById('modalStatus');
         const emptyMsg = document.getElementById('emptyQueueMsg');
-        const inputDate = document.getElementById('inputDate'); // Get input element
+        const inputDate = document.getElementById('inputDate'); 
         
         // Reset UI
         title.innerText = 'Checking availability...';
@@ -213,7 +217,7 @@
         if(form) form.classList.add('d-none');
         emptyMsg.classList.add('d-none');
         
-        // FIX: Only set value if the input exists
+        // Safe assignment
         if (inputDate) {
             inputDate.value = date;
         }
@@ -243,7 +247,11 @@
                     });
                 }
 
-                if (data.user_has_booking) {
+                // --- RESTRICTION HANDLING ---
+                if (data.is_restricted) {
+                    // Show restriction message, do NOT show form
+                    statusDiv.innerHTML = `<div class="alert alert-danger text-center small fw-bold border-danger border-2 bg-danger-subtle"><i class="fas fa-ban me-1"></i> ${data.restriction_message}</div>`;
+                } else if (data.user_has_booking) {
                     statusDiv.innerHTML = `<div class="alert alert-warning text-center small fw-bold">You already have a booking on this day.</div>`;
                 } else if (data.is_full) {
                     statusDiv.innerHTML = `<div class="alert alert-danger text-center small fw-bold">Fully Booked.</div>`;

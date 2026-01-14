@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Str; // REQUIRED: Import Str for text matching
 
 class AppointmentController extends Controller
 {
@@ -50,7 +51,6 @@ class AppointmentController extends Controller
             ->pluck('total', 'appointment_date')
             ->toArray();
 
-        // UPDATED: Fetch full settings keyed by date
         $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
             ->get()
             ->keyBy('date');
@@ -67,7 +67,6 @@ class AppointmentController extends Controller
             $currentDate = $startOfMonth->copy()->setDay($day)->format('Y-m-d');
             $count = $dbCounts[$currentDate] ?? 0;
             
-            // Get setting for this day
             $daySetting = $settings->get($currentDate);
             $maxLimit = $daySetting ? $daySetting->max_appointments : 30;
             $customLabel = $daySetting ? $daySetting->label : null;
@@ -91,7 +90,7 @@ class AppointmentController extends Controller
                 'day' => $day,
                 'count' => $count,
                 'max' => $maxLimit,
-                'label' => $customLabel, // Pass label to view
+                'label' => $customLabel,
                 'is_full' => $isFull,
                 'is_past' => $isPast,
                 'status_class' => $statusClass,
@@ -110,6 +109,20 @@ class AppointmentController extends Controller
         $user = Auth::user();
         $appointments = Appointment::with('user')->where('appointment_date', $date)->orderBy('queue_number')->get();
         $maxLimit = $this->getMaxSlots($date);
+
+        // --- RESTRICTION LOGIC START ---
+        $setting = AppointmentSetting::where('date', $date)->first();
+        $isRestricted = false;
+        $restrictionMessage = '';
+
+        if ($setting && $setting->label && Str::contains(Str::lower($setting->label), 'pregnancy')) {
+            $gender = Str::lower(trim($user->gender ?? ''));
+            if ($gender !== 'female') {
+                $isRestricted = true;
+                $restrictionMessage = "This date is reserved for Pregnancy checkups (Females Only).";
+            }
+        }
+        // --- RESTRICTION LOGIC END ---
 
         $maskedData = $appointments->map(function ($app) use ($user) {
             $isMe = $app->user_id === $user->id;
@@ -130,7 +143,9 @@ class AppointmentController extends Controller
             'is_full' => $count >= $maxLimit,
             'user_has_booking' => $appointments->contains('user_id', $user->id),
             'next_queue' => $count + 1,
-            'appointments' => $maskedData
+            'appointments' => $maskedData,
+            'is_restricted' => $isRestricted, // Must pass this to view
+            'restriction_message' => $restrictionMessage
         ]);
     }
 
@@ -143,9 +158,18 @@ class AppointmentController extends Controller
         $request->validate(['appointment_date' => 'required|date|after_or_equal:today', 'reason' => 'required|string|max:500']);
         
         $date = $request->appointment_date;
-        $userId = Auth::id();
+        $user = Auth::user();
 
-        if (Appointment::where('user_id', $userId)->whereIn('status', ['pending', 'approved'])->exists()) {
+        // --- SERVER-SIDE RESTRICTION CHECK ---
+        $setting = AppointmentSetting::where('date', $date)->first();
+        if ($setting && $setting->label && Str::contains(Str::lower($setting->label), 'pregnancy')) {
+            $gender = Str::lower(trim($user->gender ?? ''));
+            if ($gender !== 'female') {
+                return back()->withErrors(['msg' => 'Access Denied: This date is reserved for Pregnancy checkups (Females Only).']);
+            }
+        }
+
+        if (Appointment::where('user_id', $user->id)->whereIn('status', ['pending', 'approved'])->exists()) {
             return redirect()->route('dashboard')->with('error', 'You already have an active appointment.');
         }
 
@@ -158,7 +182,7 @@ class AppointmentController extends Controller
 
         $maxQueue = Appointment::where('appointment_date', $date)->max('queue_number') ?? 0;
         Appointment::create([
-            'user_id' => $userId,
+            'user_id' => $user->id,
             'appointment_date' => $date,
             'queue_number' => $maxQueue + 1,
             'reason' => $request->reason,
@@ -188,7 +212,6 @@ class AppointmentController extends Controller
             return Carbon::parse($app->appointment_date)->format('Y-m-d');
         });
 
-        // UPDATED: Fetch full settings keyed by date
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
         $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
@@ -198,20 +221,19 @@ class AppointmentController extends Controller
         return view('admin.appointments.index', compact('appointmentsByDate', 'date', 'appointments', 'settings'));
     }
 
-    // UPDATED: Save Label and Limit
     public function updateDailyLimit(Request $request)
     {
         $request->validate([
             'date' => 'required|date',
             'limit' => 'required|integer|min:0|max:200',
-            'label' => 'nullable|string|max:50' // New Validation
+            'label' => 'nullable|string|max:50'
         ]);
 
         AppointmentSetting::updateOrCreate(
             ['date' => $request->date],
             [
                 'max_appointments' => $request->limit,
-                'label' => $request->label // Save Label
+                'label' => $request->label
             ]
         );
 
