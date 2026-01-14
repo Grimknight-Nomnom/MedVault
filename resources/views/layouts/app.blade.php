@@ -74,8 +74,10 @@
                             </li>
                         @else
                             <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}"><i class="fas fa-home me-1"></i> Home</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('patient.records') }}"><i class="fas fa-file-medical me-1"></i> Records</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ route('appointments.index') }}"><i class="fas fa-history me-1"></i> History</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('profile.edit') }}"><i class="fas fa-user-circle me-1"></i> Profile</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('patient.records') }}"><i class="fas fa-file-medical me-1"></i> Medical History</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('patient.medicines.index') }}"><i class="fas fa-pills me-1"></i> Medicines</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ route('appointments.index') }}"><i class="fas fa-calendar-alt me-1"></i> Appointments</a></li>
                         @endif
                         
                         <li class="nav-item ms-3">

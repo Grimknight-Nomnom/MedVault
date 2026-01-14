@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\AppointmentSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,51 +11,34 @@ use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
-    // ==========================================
-    //  HELPER: Check Profile Completeness
-    // ==========================================
+    // --- HELPER: Get Max Slots ---
+    private function getMaxSlots($date)
+    {
+        $setting = AppointmentSetting::where('date', $date)->first();
+        return $setting ? $setting->max_appointments : 30;
+    }
+
     private function isProfileIncomplete()
     {
         $user = Auth::user();
-
-        $requiredFields = [
-            'first_name', 
-            'last_name', 
-            'date_of_birth', 
-            'gender', 
-            'civil_status', 
-            'address', 
-            'phone'
-        ];
-
+        $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'civil_status', 'address', 'phone'];
         foreach ($requiredFields as $field) {
-            if (empty($user->$field)) {
-                return true;
-            }
+            if (empty($user->$field)) return true;
         }
-
         return false;
     }
 
-    // ==========================================
-    //  PATIENT METHODS
-    // ==========================================
+    // ================= PATIENT METHODS =================
 
     public function create()
     {
         if ($this->isProfileIncomplete()) {
-            return redirect()->route('profile.edit')
-                ->with('error', 'Profile Incomplete: Please fill out your Personal Records before booking.');
+            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete.');
         }
 
-        $hasActive = Appointment::where('user_id', Auth::id())
+        $hasActiveAppointment = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->exists();
-
-        if ($hasActive) {
-            return redirect()->route('dashboard')
-                ->with('error', 'You have an ongoing appointment.');
-        }
 
         $date = Carbon::now();
         $startOfMonth = $date->copy()->startOfMonth();
@@ -65,6 +49,11 @@ class AppointmentController extends Controller
             ->groupBy('appointment_date')
             ->pluck('total', 'appointment_date')
             ->toArray();
+
+        // UPDATED: Fetch full settings keyed by date
+        $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->keyBy('date');
 
         $calendar = [];
         $today = Carbon::today()->format('Y-m-d');
@@ -77,7 +66,13 @@ class AppointmentController extends Controller
         for ($day = 1; $day <= $endOfMonth->day; $day++) {
             $currentDate = $startOfMonth->copy()->setDay($day)->format('Y-m-d');
             $count = $dbCounts[$currentDate] ?? 0;
-            $isFull = $count >= 30;
+            
+            // Get setting for this day
+            $daySetting = $settings->get($currentDate);
+            $maxLimit = $daySetting ? $daySetting->max_appointments : 30;
+            $customLabel = $daySetting ? $daySetting->label : null;
+
+            $isFull = $count >= $maxLimit;
             $isPast = $currentDate < $today;
 
             if ($isPast) {
@@ -88,13 +83,15 @@ class AppointmentController extends Controller
                 $badgeClass = 'bg-danger';
             } else {
                 $statusClass = 'bg-white border hover-shadow text-dark'; 
-                $badgeClass = ($count > 20) ? 'bg-warning text-dark' : 'bg-success';
+                $badgeClass = ($count > ($maxLimit * 0.7)) ? 'bg-warning text-dark' : 'bg-success';
             }
 
             $calendar[] = [
                 'date' => $currentDate,
                 'day' => $day,
                 'count' => $count,
+                'max' => $maxLimit,
+                'label' => $customLabel, // Pass label to view
                 'is_full' => $isFull,
                 'is_past' => $isPast,
                 'status_class' => $statusClass,
@@ -102,32 +99,21 @@ class AppointmentController extends Controller
             ];
         }
 
-        return view('appointments.create', compact('calendar', 'date'));
+        return view('appointments.create', compact('calendar', 'date', 'hasActiveAppointment'));
     }
 
     public function getSlots(Request $request)
     {
         $date = $request->query('date');
-        $user = Auth::user();
-
         if (!$date) return response()->json(['error' => 'Date required'], 400);
 
-        $appointments = Appointment::with('user')
-            ->where('appointment_date', $date)
-            ->orderBy('queue_number')
-            ->get();
+        $user = Auth::user();
+        $appointments = Appointment::with('user')->where('appointment_date', $date)->orderBy('queue_number')->get();
+        $maxLimit = $this->getMaxSlots($date);
 
         $maskedData = $appointments->map(function ($app) use ($user) {
             $isMe = $app->user_id === $user->id;
-            
-            if ($isMe) {
-                $name = $app->user->first_name . ' ' . $app->user->last_name;
-            } else {
-                $f = substr($app->user->first_name ?? '', 0, 1);
-                $l = substr($app->user->last_name ?? '', 0, 1);
-                $name = "{$f}*** {$l}***";
-            }
-
+            $name = $isMe ? $app->user->first_name . ' ' . $app->user->last_name : substr($app->user->first_name ?? '', 0, 1) . "*** " . substr($app->user->last_name ?? '', 0, 1) . "***";
             return [
                 'queue' => $app->queue_number,
                 'name' => $name,
@@ -137,13 +123,12 @@ class AppointmentController extends Controller
         });
 
         $count = $appointments->count();
-        $userHasBooking = $appointments->contains('user_id', $user->id);
-
         return response()->json([
             'date_formatted' => Carbon::parse($date)->format('F j, Y'),
             'slots_taken' => $count,
-            'is_full' => $count >= 30,
-            'user_has_booking' => $userHasBooking,
+            'max_limit' => $maxLimit,
+            'is_full' => $count >= $maxLimit,
+            'user_has_booking' => $appointments->contains('user_id', $user->id),
             'next_queue' => $count + 1,
             'appointments' => $maskedData
         ]);
@@ -152,84 +137,50 @@ class AppointmentController extends Controller
     public function store(Request $request)
     {
         if ($this->isProfileIncomplete()) {
-            return redirect()->route('profile.edit')
-                ->with('error', 'Profile Incomplete.');
+            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete.');
         }
 
-        $hasActive = Appointment::where('user_id', Auth::id())
-            ->whereIn('status', ['pending', 'approved'])
-            ->exists();
-
-        if ($hasActive) {
-            return redirect()->route('dashboard')
-                ->with('error', 'Action Denied: You already have an active appointment.');
-        }
-
-        $request->validate([
-            'appointment_date' => 'required|date|after_or_equal:today',
-            'reason' => 'required|string|max:500',
-        ]);
-
+        $request->validate(['appointment_date' => 'required|date|after_or_equal:today', 'reason' => 'required|string|max:500']);
+        
         $date = $request->appointment_date;
         $userId = Auth::id();
 
-        // --- RESTRICTION: One appointment per day (unless cancelled) ---
-        $exists = Appointment::where('appointment_date', $date)
-                    ->where('user_id', $userId)
-                    ->where('status', '!=', 'cancelled') // Allow re-booking if cancelled
-                    ->exists();
-
-        if ($exists) {
-            return back()->withErrors(['msg' => 'You already have an appointment scheduled for this date.']);
+        if (Appointment::where('user_id', $userId)->whereIn('status', ['pending', 'approved'])->exists()) {
+            return redirect()->route('dashboard')->with('error', 'You already have an active appointment.');
         }
 
         $count = Appointment::where('appointment_date', $date)->count();
-        if ($count >= 30) {
+        $maxLimit = $this->getMaxSlots($date);
+
+        if ($count >= $maxLimit) {
             return back()->withErrors(['msg' => 'Date is fully booked.']);
         }
 
         $maxQueue = Appointment::where('appointment_date', $date)->max('queue_number') ?? 0;
-        $queueNumber = $maxQueue + 1;
-
         Appointment::create([
             'user_id' => $userId,
             'appointment_date' => $date,
-            'queue_number' => $queueNumber,
+            'queue_number' => $maxQueue + 1,
             'reason' => $request->reason,
             'status' => 'pending'
         ]);
 
-        return redirect()->route('appointments.index')
-            ->with('success', "Booked successfully! Your Queue Number is #{$queueNumber}");
-    }
-    
-    public function index()
-    {
-        $appointments = Appointment::where('user_id', Auth::id())
-                        ->orderBy('appointment_date', 'desc')->get();
-        return view('appointments.index', compact('appointments'));
+        return redirect()->route('appointments.index')->with('success', "Booked successfully!");
     }
 
-    // ==========================================
-    //  ADMIN METHODS
-    // ==========================================
+    // ================= ADMIN METHODS =================
 
     public function adminIndex(Request $request)
     {
         $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
-        $year = $date->year;
-        $month = $date->month;
-
+        
         $appointments = Appointment::with('user')
-            ->whereYear('appointment_date', $year)
-            ->whereMonth('appointment_date', $month)
-            ->orderBy('appointment_date')
-            ->orderBy('queue_number')
+            ->whereYear('appointment_date', $date->year)
+            ->whereMonth('appointment_date', $date->month)
             ->get();
 
         $appointments->transform(function($app) {
             $app->patient_name = $app->user ? ($app->user->first_name . ' ' . $app->user->last_name) : 'Unknown';
-            $app->email = $app->user->email ?? 'N/A';
             return $app;
         });
 
@@ -237,60 +188,69 @@ class AppointmentController extends Controller
             return Carbon::parse($app->appointment_date)->format('Y-m-d');
         });
 
-        return view('admin.appointments.index', compact('appointmentsByDate', 'date', 'appointments'));
+        // UPDATED: Fetch full settings keyed by date
+        $startOfMonth = $date->copy()->startOfMonth();
+        $endOfMonth = $date->copy()->endOfMonth();
+        $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->keyBy('date');
+
+        return view('admin.appointments.index', compact('appointmentsByDate', 'date', 'appointments', 'settings'));
     }
 
-    public function updateStatus(Request $request, $id)
+    // UPDATED: Save Label and Limit
+    public function updateDailyLimit(Request $request)
     {
         $request->validate([
-            'status' => 'required|in:pending,approved,completed,cancelled'
+            'date' => 'required|date',
+            'limit' => 'required|integer|min:0|max:200',
+            'label' => 'nullable|string|max:50' // New Validation
         ]);
 
+        AppointmentSetting::updateOrCreate(
+            ['date' => $request->date],
+            [
+                'max_appointments' => $request->limit,
+                'label' => $request->label // Save Label
+            ]
+        );
+
+        return back()->with('success', 'Settings updated for ' . $request->date);
+    }
+
+    public function index() {
+        $appointments = Appointment::where('user_id', Auth::id())->orderBy('appointment_date', 'desc')->get();
+        return view('appointments.index', compact('appointments'));
+    }
+    public function updateStatus(Request $request, $id) {
         $appointment = Appointment::findOrFail($id);
         $appointment->update(['status' => $request->status]);
-
-        return back()->with('success', 'Appointment status updated to ' . ucfirst($request->status));
+        return back()->with('success', 'Status updated.');
     }
-
-    public function adminCreate()
-    {
-        $patients = User::where('role', 'user')
-            ->orderBy('last_name')
-            ->get();
-            
+    public function adminCreate() {
+        $patients = User::where('role', 'user')->orderBy('last_name')->get();
         return view('admin.appointments.create', compact('patients'));
     }
-
-    public function adminStore(Request $request)
-    {
+    public function adminStore(Request $request) {
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'appointment_date' => 'required|date|after_or_equal:today',
             'reason' => 'required|string|max:255',
         ]);
-
-        // --- NEW RESTRICTION: Check if patient already has appointment on this day ---
         $exists = Appointment::where('user_id', $request->user_id)
             ->where('appointment_date', $request->appointment_date)
-            ->where('status', '!=', 'cancelled') // Ignore cancelled appointments
-            ->exists();
-
+            ->where('status', '!=', 'cancelled')->exists();
         if ($exists) {
-            return back()->withErrors(['user_id' => 'This patient already has an appointment on this date.'])
-                         ->withInput();
+            return back()->withErrors(['user_id' => 'This patient already has an appointment on this date.'])->withInput();
         }
-
         $maxQueue = Appointment::where('appointment_date', $request->appointment_date)->max('queue_number') ?? 0;
-
         Appointment::create([
             'user_id' => $request->user_id,
             'appointment_date' => $request->appointment_date,
             'queue_number' => $maxQueue + 1,
-            'status' => 'pending', // Pending as requested
+            'status' => 'pending',
             'reason' => $request->reason,
         ]);
-
-        return redirect()->route('admin.appointments.index')
-            ->with('success', 'Appointment created successfully (Pending Approval).');
+        return redirect()->route('admin.appointments.index')->with('success', 'Created.');
     }
 }

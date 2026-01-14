@@ -1,37 +1,141 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    /* Specific Day Colors */
+    .bg-area { background-color: #dcfce7; color: #166534; } /* Light Green (Sun/Sat) */
+    .bg-pregnancy { background-color: #fce7f3; color: #9d174d; } /* Light Pink (Tue) */
+    .bg-immunization { background-color: #e0f2fe; color: #075985; } /* Light Blue (Wed) */
+    .bg-special { background-color: #fef9c3; color: #854d0e; } /* Light Yellow (Custom) */
+    .bg-normal { background-color: #ffffff; color: #333; } /* White (Normal) */
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    }
+    .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        text-align: center;
+        font-weight: bold;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+    .day-cell {
+        height: 110px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px;
+        position: relative;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .day-cell:not(.disabled):hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-color: var(--bs-primary) !important;
+        cursor: pointer;
+        z-index: 2;
+    }
+    .day-cell.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background-color: #f8f9fa !important;
+    }
+    .day-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+
 <div class="container py-4">
-    <div class="card shadow border-0">
-        <div class="card-body">
+    <div class="mb-4">
+        <a href="{{ route('dashboard') }}" class="text-decoration-none text-success small fw-bold">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card shadow border-0 rounded-4">
+        <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-primary mb-0">
+                <h2 class="fw-bold text-success mb-0">
                     {{ $date->format('F Y') }}
                 </h2>
-                <a href="{{ route('appointments.index') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-history me-1"></i> My History
-                </a>
+                <div class="d-none d-md-flex gap-3 small">
+                    <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle bg-area border me-1" style="width:10px;height:10px;"></span> Area</span>
+                    <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle bg-pregnancy border me-1" style="width:10px;height:10px;"></span> Pregnancy</span>
+                    <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle bg-immunization border me-1" style="width:10px;height:10px;"></span> Immunization</span>
+                    <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle bg-special border me-1" style="width:10px;height:10px;"></span> Special</span>
+                </div>
             </div>
 
-            <div class="calendar-grid mb-2 text-center fw-bold text-secondary text-uppercase small">
-                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            <div class="calendar-header">
+                <div class="text-danger">Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div class="text-danger">Sat</div>
             </div>
 
             <div class="calendar-grid">
                 @foreach($calendar as $day)
                     @if(is_null($day))
-                        <div class="p-4 bg-light rounded"></div>
+                        <div class="p-4 bg-light rounded border border-light"></div>
                     @else
-                        <div onclick="openModal('{{ $day['date'] }}', {{ $day['is_past'] ? 'true' : 'false' }})"
-                             class="day-cell position-relative p-2 border rounded {{ $day['status_class'] }}"
-                             style="height: 100px; {{ $day['is_past'] ? 'opacity: 0.6; pointer-events: none;' : 'cursor: pointer;' }}">
+                        @php
+                            $dayOfWeek = \Carbon\Carbon::parse($day['date'])->dayOfWeek;
+                            $bgClass = 'bg-normal';
+                            $labelText = 'Check-up'; 
+
+                            // Logic: Custom Label overrides everything
+                            if (!empty($day['label'])) {
+                                $bgClass = 'bg-special';
+                                $labelText = $day['label'];
+                            } elseif ($dayOfWeek == 0 || $dayOfWeek == 6) { // Sun/Sat
+                                $bgClass = 'bg-area';
+                                $labelText = 'Area';
+                            } elseif ($dayOfWeek == 2) { // Tue
+                                $bgClass = 'bg-pregnancy';
+                                $labelText = 'Pregnancy';
+                            } elseif ($dayOfWeek == 3) { // Wed
+                                $bgClass = 'bg-immunization';
+                                $labelText = 'Immunization';
+                            }
+                        @endphp
+
+                        <div onclick="openModal('{{ $day['date'] }}', {{ $day['is_past'] ? 'true' : 'false' }}, {{ $day['is_full'] ? 'true' : 'false' }})"
+                             class="day-cell {{ $day['is_past'] ? 'disabled' : $bgClass }}">
                             
-                            <span class="fw-bold fs-5 {{ $day['is_past'] ? 'text-muted' : 'text-dark' }}">{{ $day['day'] }}</span>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="fw-bold fs-5">{{ $day['day'] }}</span>
+                                <span class="day-label opacity-75" title="{{ $labelText }}">{{ $labelText }}</span>
+                            </div>
                             
-                            <div class="position-absolute bottom-0 end-0 p-2">
-                                <span class="badge rounded-pill {{ $day['badge_class'] }}">
-                                    {{ $day['is_full'] ? 'FULL' : $day['count'] . '/30' }}
-                                </span>
+                            <div class="mt-auto text-end">
+                                @if(!$day['is_past'])
+                                    @if($day['is_full'])
+                                        <span class="badge bg-danger">FULL</span>
+                                    @else
+                                        <span class="badge {{ $day['count'] > ($day['max'] * 0.7) ? 'bg-warning text-dark' : 'bg-success' }} rounded-pill">
+                                            {{ $day['max'] - $day['count'] }} Slots
+                                        </span>
+                                    @endif
+                                @endif
                             </div>
                         </div>
                     @endif
@@ -43,9 +147,9 @@
 
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalTitle">Loading...</h5>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalTitle">Booking Details</h5>
                 <button type="button" class="btn-close btn-close-white" onclick="closeModal()"></button>
             </div>
             
@@ -53,45 +157,37 @@
                 <div id="modalStatus" class="mb-3"></div>
 
                 <h6 class="text-uppercase text-muted fw-bold small">Current Queue</h6>
-                <div class="list-group mb-3 overflow-auto" style="max-height: 200px;" id="queueList">
-                    </div>
+                <div class="list-group mb-3 overflow-auto border rounded bg-light" style="max-height: 200px;" id="queueList"></div>
                 <div id="emptyQueueMsg" class="text-center text-muted small py-3 d-none">
-                    No bookings yet for this day.
+                    No bookings yet. Be the first!
                 </div>
 
-                <form id="bookingForm" action="{{ route('appointments.store') }}" method="POST" class="d-none mt-3 border-top pt-3">
-                    @csrf
-                    <input type="hidden" name="appointment_date" id="inputDate">
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Reason for Visit</label>
-                        <textarea name="reason" class="form-control" rows="2" required placeholder="Briefly describe symptoms..."></textarea>
+                @if(isset($hasActiveAppointment) && $hasActiveAppointment)
+                    <div class="alert alert-secondary text-center border-0 bg-light">
+                        <i class="fas fa-lock me-2"></i> You have an active appointment.
+                        <br><small class="text-muted">You cannot book another until it is completed.</small>
                     </div>
+                @else
+                    <form id="bookingForm" action="{{ route('appointments.store') }}" method="POST" class="d-none mt-3 border-top pt-3">
+                        @csrf
+                        <input type="hidden" name="appointment_date" id="inputDate">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Reason for Visit</label>
+                            <textarea name="reason" class="form-control bg-light" rows="2" required placeholder="Briefly describe your purpose..."></textarea>
+                        </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success fw-bold py-2">
-                            Book Queue #<span id="nextQueueNum"></span>
-                        </button>
-                    </div>
-                </form>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success fw-bold py-2 shadow-sm">
+                                Confirm Booking #<span id="nextQueueNum"></span>
+                            </button>
+                        </div>
+                    </form>
+                @endif
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 10px;
-    }
-    .day-cell:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-        transition: all 0.2s;
-        border-color: var(--bs-primary) !important;
-    }
-</style>
 
 <script>
     let bootstrapModal;
@@ -100,7 +196,7 @@
         bootstrapModal = new bootstrap.Modal(document.getElementById('bookingModal'));
     });
 
-    function openModal(date, isPast) {
+    function openModal(date, isPast, isFull) {
         if (isPast) return;
 
         const title = document.getElementById('modalTitle');
@@ -108,38 +204,38 @@
         const form = document.getElementById('bookingForm');
         const statusDiv = document.getElementById('modalStatus');
         const emptyMsg = document.getElementById('emptyQueueMsg');
+        const inputDate = document.getElementById('inputDate'); // Get input element
         
-        // 1. Reset UI
+        // Reset UI
         title.innerText = 'Checking availability...';
-        list.innerHTML = '';
+        list.innerHTML = '<div class="text-center py-3 text-muted">Loading...</div>';
         statusDiv.innerHTML = '';
-        form.classList.add('d-none');
+        if(form) form.classList.add('d-none');
         emptyMsg.classList.add('d-none');
-        document.getElementById('inputDate').value = date;
+        
+        // FIX: Only set value if the input exists
+        if (inputDate) {
+            inputDate.value = date;
+        }
         
         bootstrapModal.show();
 
-        // 2. Fetch Data
         fetch(`{{ route('api.appointments.slots') }}?date=${date}`)
             .then(res => res.json())
             .then(data => {
                 title.innerText = data.date_formatted;
+                list.innerHTML = '';
 
-                // 3. Populate Queue List
                 if (data.appointments.length === 0) {
                     emptyMsg.classList.remove('d-none');
                 } else {
                     data.appointments.forEach(appt => {
-                        // Highlight user's own appointment
-                        const activeClass = appt.is_me ? 'list-group-item-primary fw-bold' : '';
+                        const activeClass = appt.is_me ? 'list-group-item-success fw-bold' : '';
                         const badgeColor = appt.status === 'Approved' ? 'bg-success' : 'bg-warning text-dark';
                         
                         const item = `
                             <div class="list-group-item d-flex justify-content-between align-items-center ${activeClass}">
-                                <div>
-                                    <span class="badge bg-secondary rounded-pill me-2">#${appt.queue}</span>
-                                    ${appt.name}
-                                </div>
+                                <span><span class="badge bg-secondary rounded-pill me-2">#${appt.queue}</span> ${appt.name}</span>
                                 <span class="badge ${badgeColor}">${appt.status}</span>
                             </div>
                         `;
@@ -147,23 +243,22 @@
                     });
                 }
 
-                // 4. Determine Status
                 if (data.user_has_booking) {
-                    statusDiv.innerHTML = `<div class="alert alert-warning mb-0 text-center">You already have a booking on this day.</div>`;
+                    statusDiv.innerHTML = `<div class="alert alert-warning text-center small fw-bold">You already have a booking on this day.</div>`;
                 } else if (data.is_full) {
-                    statusDiv.innerHTML = `<div class="alert alert-danger mb-0 text-center">Fully Booked (30/30).</div>`;
+                    statusDiv.innerHTML = `<div class="alert alert-danger text-center small fw-bold">Fully Booked.</div>`;
                 } else {
-                    const slotsLeft = 30 - data.slots_taken;
-                    statusDiv.innerHTML = `<div class="alert alert-success py-2 text-center small mb-0">${slotsLeft} slots available</div>`;
-                    
-                    // Show Booking Form
-                    form.classList.remove('d-none');
-                    document.getElementById('nextQueueNum').innerText = data.next_queue;
+                    const slotsLeft = data.max_limit - data.slots_taken;
+                    statusDiv.innerHTML = `<div class="alert alert-success text-center small py-2 fw-bold">${slotsLeft} slots available</div>`;
+                    if(form) {
+                        form.classList.remove('d-none');
+                        document.getElementById('nextQueueNum').innerText = data.next_queue;
+                    }
                 }
             })
             .catch(err => {
                 console.error(err);
-                title.innerText = "Error loading data";
+                list.innerHTML = '<div class="text-danger text-center py-2">Failed to load data.</div>';
             });
     }
 

@@ -98,6 +98,32 @@
         </div>
     </div>
 
+    @if(isset($activeAppointment) && $activeAppointment)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 border-start border-5 border-primary shadow-sm">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-primary mb-1">
+                            <i class="fas fa-calendar-check me-2"></i>Active Appointment
+                        </h5>
+                        <p class="mb-0 text-muted">
+                            Scheduled for: <strong>{{ $activeAppointment->appointment_date->format('F d, Y') }}</strong>
+                        </p>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary mt-2">
+                            Status: {{ ucfirst($activeAppointment->status) }}
+                        </span>
+                    </div>
+                    <div class="text-center">
+                        <small class="text-uppercase text-muted fw-bold d-block">Your Queue</small>
+                        <h2 class="display-4 fw-bold text-primary mb-0">#{{ str_pad($activeAppointment->queue_number, 3, '0', STR_PAD_LEFT) }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="row g-4">
         <div class="col-md-4">
             <div class="card h-100 shadow-sm border-top border-4 border-info">

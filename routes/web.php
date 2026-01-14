@@ -1,13 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\PasswordResetController; // Added this import
+use App\Http\Controllers\PasswordResetController;
+use App\Models\Appointment; 
 
 // --- Public Routes ---
 Route::get('/', function () {
@@ -46,7 +48,13 @@ Route::middleware(['auth'])->group(function () {
 
     // Patient Dashboard & Records
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        // Fetch Active Appointment for the Dashboard Display
+        $activeAppointment = Appointment::where('user_id', Auth::id())
+            ->whereIn('status', ['pending', 'approved'])
+            ->latest('appointment_date')
+            ->first();
+
+        return view('dashboard', compact('activeAppointment'));
     })->name('dashboard');
     
     Route::get('/my-medical-records', [MedicalRecordController::class, 'myRecords'])->name('patient.records');
@@ -66,22 +74,27 @@ Route::middleware(['auth'])->group(function () {
     // --- Admin Routes Group ---
     Route::prefix('admin')->group(function () {
         
-
-    Route::get('/appointments', [AppointmentController::class, 'adminIndex'])->name('admin.appointments.index');
-    
-    // NEW: Manual Appointment Creation Routes
-    Route::get('/appointments/create', [AppointmentController::class, 'adminCreate'])->name('admin.appointments.create');
-    Route::post('/appointments', [AppointmentController::class, 'adminStore'])->name('admin.appointments.store');
-    
-    Route::patch('/appointments/{id}', [AppointmentController::class, 'updateStatus'])->name('admin.appointments.update');
-    
         // Dashboard
         Route::get('/dashboard', [MedicineController::class, 'adminDashboard'])->name('admin.dashboard');
 
         // Historical Report (AJAX)
         Route::get('/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
 
-        // Medicine Inventory Management
+        // --- Appointment Management ---
+        Route::controller(AppointmentController::class)->group(function () {
+            // 1. List Appointments
+            Route::get('/appointments', 'adminIndex')->name('admin.appointments.index');
+            Route::post('/appointments/limit', [AppointmentController::class, 'updateDailyLimit'])->name('admin.appointments.limit');
+            
+            // 2. Create Appointment (Walk-In)
+            Route::get('/appointments/create', 'adminCreate')->name('admin.appointments.create');
+            Route::post('/appointments', 'adminStore')->name('admin.appointments.store');
+            
+            // 3. Update Status
+            Route::patch('/appointments/{id}', 'updateStatus')->name('admin.appointments.update');
+        });
+
+        // --- Medicine Inventory Management ---
         Route::controller(MedicineController::class)->group(function () {
             Route::get('/medicines', 'index')->name('admin.medicines.index');
             Route::get('/medicines/create', 'create')->name('admin.medicines.create');
@@ -93,18 +106,14 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/medicines/{id}/release', 'release')->name('admin.medicines.release');
         });
 
-        // Appointment Management
-        Route::get('/appointments', [AppointmentController::class, 'adminIndex'])->name('admin.appointments.index');
-        Route::patch('/appointments/{id}', [AppointmentController::class, 'updateStatus'])->name('admin.appointments.update');
-
-        // Medical Record / Diagnosis
-        Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
-        Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
-
-        // Patient Management
+        // --- Patient Management ---
         Route::controller(AdminController::class)->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
         });
+
+        // --- Medical Record / Diagnosis ---
+        Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
+        Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
     });
 });
