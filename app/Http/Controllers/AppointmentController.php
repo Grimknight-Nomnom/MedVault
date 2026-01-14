@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use Illuminate\Support\Str; // REQUIRED: Import Str for text matching
+use Illuminate\Support\Str; 
 
 class AppointmentController extends Controller
 {
@@ -27,6 +27,34 @@ class AppointmentController extends Controller
             if (empty($user->$field)) return true;
         }
         return false;
+    }
+
+    // --- HELPER: Determine if a date is Restricted ---
+    private function isPregnancyRestricted($date, $user)
+    {
+        $setting = AppointmentSetting::where('date', $date)->first();
+        $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+        
+        // 1. Determine the Effective Label
+        $label = '';
+        
+        if ($setting && !empty($setting->label)) {
+            // Admin setting takes priority
+            $label = $setting->label;
+        } elseif ($dayOfWeek === Carbon::TUESDAY) {
+            // Default to Pregnancy on Tuesdays if no admin override
+            $label = 'Pregnancy';
+        }
+
+        // 2. Check Restriction
+        if (Str::contains(Str::lower($label), 'pregnancy')) {
+            $gender = Str::lower(trim($user->gender ?? ''));
+            if ($gender !== 'female') {
+                return true; // Restricted
+            }
+        }
+
+        return false; // Allowed
     }
 
     // ================= PATIENT METHODS =================
@@ -110,19 +138,9 @@ class AppointmentController extends Controller
         $appointments = Appointment::with('user')->where('appointment_date', $date)->orderBy('queue_number')->get();
         $maxLimit = $this->getMaxSlots($date);
 
-        // --- RESTRICTION LOGIC START ---
-        $setting = AppointmentSetting::where('date', $date)->first();
-        $isRestricted = false;
-        $restrictionMessage = '';
-
-        if ($setting && $setting->label && Str::contains(Str::lower($setting->label), 'pregnancy')) {
-            $gender = Str::lower(trim($user->gender ?? ''));
-            if ($gender !== 'female') {
-                $isRestricted = true;
-                $restrictionMessage = "This date is reserved for Pregnancy checkups (Females Only).";
-            }
-        }
-        // --- RESTRICTION LOGIC END ---
+        // --- CHECK RESTRICTION ---
+        $isRestricted = $this->isPregnancyRestricted($date, $user);
+        $restrictionMessage = $isRestricted ? "This date is reserved for Pregnancy checkups (Females Only)." : "";
 
         $maskedData = $appointments->map(function ($app) use ($user) {
             $isMe = $app->user_id === $user->id;
@@ -144,7 +162,7 @@ class AppointmentController extends Controller
             'user_has_booking' => $appointments->contains('user_id', $user->id),
             'next_queue' => $count + 1,
             'appointments' => $maskedData,
-            'is_restricted' => $isRestricted, // Must pass this to view
+            'is_restricted' => $isRestricted,
             'restriction_message' => $restrictionMessage
         ]);
     }
@@ -161,12 +179,8 @@ class AppointmentController extends Controller
         $user = Auth::user();
 
         // --- SERVER-SIDE RESTRICTION CHECK ---
-        $setting = AppointmentSetting::where('date', $date)->first();
-        if ($setting && $setting->label && Str::contains(Str::lower($setting->label), 'pregnancy')) {
-            $gender = Str::lower(trim($user->gender ?? ''));
-            if ($gender !== 'female') {
-                return back()->withErrors(['msg' => 'Access Denied: This date is reserved for Pregnancy checkups (Females Only).']);
-            }
+        if ($this->isPregnancyRestricted($date, $user)) {
+            return back()->withErrors(['msg' => 'Access Denied: This date is reserved for Pregnancy checkups (Females Only).']);
         }
 
         if (Appointment::where('user_id', $user->id)->whereIn('status', ['pending', 'approved'])->exists()) {
@@ -240,6 +254,7 @@ class AppointmentController extends Controller
         return back()->with('success', 'Settings updated for ' . $request->date);
     }
 
+    // Standard CRUD
     public function index() {
         $appointments = Appointment::where('user_id', Auth::id())->orderBy('appointment_date', 'desc')->get();
         return view('appointments.index', compact('appointments'));

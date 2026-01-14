@@ -3,62 +3,18 @@
 @section('content')
 <style>
     /* Specific Day Colors */
-    .bg-area { background-color: #dcfce7; color: #166534; } /* Light Green (Sun/Sat) */
-    .bg-pregnancy { background-color: #fce7f3; color: #9d174d; } /* Light Pink (Tue) */
-    .bg-immunization { background-color: #e0f2fe; color: #075985; } /* Light Blue (Wed) */
-    .bg-special { background-color: #fef9c3; color: #854d0e; } /* Light Yellow (Custom) */
-    .bg-normal { background-color: #ffffff; color: #333; } /* White (Normal) */
+    .bg-area { background-color: #dcfce7; color: #166534; } /* Light Green */
+    .bg-pregnancy { background-color: #fce7f3; color: #9d174d; } /* Light Pink */
+    .bg-immunization { background-color: #e0f2fe; color: #075985; } /* Light Blue */
+    .bg-special { background-color: #fef9c3; color: #854d0e; } /* Light Yellow */
+    .bg-normal { background-color: #ffffff; color: #333; } /* White */
 
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
-    }
-    .calendar-header {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
-        text-align: center;
-        font-weight: bold;
-        color: #6c757d;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        margin-bottom: 10px;
-    }
-    .day-cell {
-        height: 110px;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 8px;
-        position: relative;
-        transition: all 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-    .day-cell:not(.disabled):hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        border-color: var(--bs-primary) !important;
-        cursor: pointer;
-        z-index: 2;
-    }
-    .day-cell.disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        background-color: #f8f9fa !important;
-    }
-    .day-label {
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        margin-bottom: 4px;
-        display: block;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; font-weight: bold; color: #6c757d; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 10px; }
+    .day-cell { height: 110px; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px; position: relative; transition: all 0.2s ease; display: flex; flex-direction: column; justify-content: space-between; }
+    .day-cell:not(.disabled):hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-color: var(--bs-primary) !important; cursor: pointer; z-index: 2; }
+    .day-cell.disabled { opacity: 0.6; cursor: not-allowed; background-color: #f8f9fa !important; }
+    .day-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 
 <div class="container py-4">
@@ -71,9 +27,7 @@
     <div class="card shadow border-0 rounded-4">
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-success mb-0">
-                    {{ $date->format('F Y') }}
-                </h2>
+                <h2 class="fw-bold text-success mb-0">{{ $date->format('F Y') }}</h2>
                 <div class="d-none d-md-flex gap-3 small">
                     <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle bg-area border me-1" style="width:10px;height:10px;"></span> Area</span>
                     <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle bg-pregnancy border me-1" style="width:10px;height:10px;"></span> Pregnancy</span>
@@ -106,17 +60,17 @@
                             if (!empty($day['label'])) {
                                 $bgClass = 'bg-special';
                                 $labelText = $day['label'];
-                                // Special default for pregnancy text
+                                // Style override for pregnancy label
                                 if(Illuminate\Support\Str::contains(Illuminate\Support\Str::lower($day['label']), 'pregnancy')) {
                                     $bgClass = 'bg-pregnancy';
                                 }
-                            } elseif ($dayOfWeek == 0 || $dayOfWeek == 6) { // Sun/Sat
+                            } elseif ($dayOfWeek == 0 || $dayOfWeek == 6) { 
                                 $bgClass = 'bg-area';
                                 $labelText = 'Area';
-                            } elseif ($dayOfWeek == 2) { // Tue
+                            } elseif ($dayOfWeek == 2) { 
                                 $bgClass = 'bg-pregnancy';
                                 $labelText = 'Pregnancy';
-                            } elseif ($dayOfWeek == 3) { // Wed
+                            } elseif ($dayOfWeek == 3) { 
                                 $bgClass = 'bg-immunization';
                                 $labelText = 'Immunization';
                             }
@@ -208,7 +162,7 @@
         const form = document.getElementById('bookingForm');
         const statusDiv = document.getElementById('modalStatus');
         const emptyMsg = document.getElementById('emptyQueueMsg');
-        const inputDate = document.getElementById('inputDate'); 
+        const inputDate = document.getElementById('inputDate');
         
         // Reset UI
         title.innerText = 'Checking availability...';
@@ -217,8 +171,8 @@
         if(form) form.classList.add('d-none');
         emptyMsg.classList.add('d-none');
         
-        // Safe assignment
-        if (inputDate) {
+        // Ensure input exists
+        if(inputDate) {
             inputDate.value = date;
         }
         
@@ -247,9 +201,8 @@
                     });
                 }
 
-                // --- RESTRICTION HANDLING ---
+                // Restriction Logic
                 if (data.is_restricted) {
-                    // Show restriction message, do NOT show form
                     statusDiv.innerHTML = `<div class="alert alert-danger text-center small fw-bold border-danger border-2 bg-danger-subtle"><i class="fas fa-ban me-1"></i> ${data.restriction_message}</div>`;
                 } else if (data.user_has_booking) {
                     statusDiv.innerHTML = `<div class="alert alert-warning text-center small fw-bold">You already have a booking on this day.</div>`;
