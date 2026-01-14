@@ -15,8 +15,8 @@
         <span class="text-muted"><i class="far fa-clock me-1"></i> {{ date('F d, Y') }}</span>
     </div>
 
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
+<div class="row g-4 mb-5">
+        <div class="col-md-3"> {{-- Changed from col-md-4 --}}
             <div class="card h-100 border-0 border-start border-4 border-primary shadow-sm">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3"> {{-- Changed from col-md-4 --}}
             <div class="card h-100 border-0 border-start border-4 border-info shadow-sm">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
@@ -46,23 +46,41 @@
             </div>
         </div>
 
-<div class="col-md-4">
-    <div class="card h-100 border-0 border-start border-4 border-success shadow-sm">
-        <div class="card-body d-flex align-items-center justify-content-between">
-            <div>
-                <p class="text-muted mb-1 fw-bold text-uppercase small">Registered Patients</p>
-                <h3 class="fw-bold mb-0">{{ \App\Models\User::where('role', 'user')->count() }}</h3>
-                
-                <a href="{{ route('admin.patients.index') }}" class="text-success text-decoration-none small fw-bold stretched-link">
-                    View Active Accounts
-                </a>
+        <div class="col-md-3"> {{-- Changed from col-md-4 --}}
+            <div class="card h-100 border-0 border-start border-4 border-success shadow-sm">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1 fw-bold text-uppercase small">Registered Patients</p>
+                        <h3 class="fw-bold mb-0">{{ \App\Models\User::where('role', 'user')->count() }}</h3>
+                        <a href="{{ route('admin.patients.index') }}" class="text-success text-decoration-none small fw-bold stretched-link">
+                            View Accounts
+                        </a>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                        <i class="fas fa-users fa-2x text-success"></i>
+                    </div>
+                </div>
             </div>
-            <div class="bg-success bg-opacity-10 p-3 rounded-circle">
-                <i class="fas fa-users fa-2x text-success"></i>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card h-100 border-0 border-start border-4 border-warning shadow-sm">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1 fw-bold text-uppercase small">Announcements</p>
+                        {{-- Assuming you created the Announcement model in the previous steps --}}
+                        <h3 class="fw-bold mb-0">{{ \App\Models\Announcement::where('is_active', true)->count() }}</h3>
+                        <a href="{{ route('admin.announcements.index') }}" class="text-warning text-decoration-none small fw-bold">
+                            Manage Posts
+                        </a>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                        <i class="fas fa-bullhorn fa-2x text-warning"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <div class="row g-4 mb-4">
         <div class="col-lg-8">

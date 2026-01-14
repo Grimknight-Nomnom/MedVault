@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -26,6 +27,14 @@
                             700: '#15803d',
                             800: '#166534',
                             900: '#14532d',
+                        },
+                        // Added Teal for Announcement accents
+                        teal: {
+                            50: '#f0f9ff',
+                            100: '#ccfbf1',
+                            400: '#2dd4bf',
+                            600: '#0d9488',
+                            800: '#115e59',
                         }
                     },
                     fontFamily: {
@@ -40,6 +49,13 @@
         html { scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Line Clamp for Announcement Text */
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="antialiased bg-white text-gray-900 selection:bg-green-100 selection:text-green-700">
@@ -59,6 +75,7 @@
 
                 <div class="hidden md:flex space-x-8">
                     <a href="#home" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Home</a>
+                    <a href="#announcements" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Announcements</a>
                     <a href="#about" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">About Us</a>
                     <a href="#details" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Details</a>
                     <a href="#staff" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Staff</a>
@@ -82,6 +99,47 @@
         </div>
     </nav>
 
+    @if(isset($announcements) && $announcements->count() > 0)
+    <section id="announcements" class="py-12 bg-green-50 border-b border-green-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl">Latest Updates</h2>
+                <div class="w-16 h-1.5 bg-green-500 mx-auto rounded-full mt-2"></div>
+                <p class="mt-4 text-lg text-gray-600">Important news and events from Barangay Looc Clinic.</p>
+            </div>
+
+            <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                @foreach($announcements as $announcement)
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    @if($announcement->image_path)
+                        <div class="h-48 w-full bg-gray-100 relative group">
+                            <img src="{{ asset('storage/' . $announcement->image_path) }}" alt="{{ $announcement->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                            <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                        </div>
+                    @else
+                        <div class="h-48 w-full bg-green-50 flex items-center justify-center border-b border-green-100">
+                            <svg class="w-16 h-16 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                        </div>
+                    @endif
+                    
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ $announcement->created_at->format('M d, Y') }}
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3 leading-tight">{{ $announcement->title }}</h3>
+                        <p class="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+                            {{ $announcement->description }}
+                        </p>
+                        </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
     <section id="home" class="relative pt-20 pb-24 lg:pt-32 lg:pb-40 overflow-hidden bg-white">
         <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0">
             <div class="absolute top-0 right-0 w-1/2 h-full bg-green-50/50 skew-x-12 opacity-70"></div>
@@ -98,7 +156,7 @@
             </h1>
             
             <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-4xl mx-auto mb-10 leading-relaxed">
-                At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community. Led by Dr. Adelinno Labro and supported by our dedicated team of skilled nurses and staff, we prioritize patient safety, confidentiality, and personalized care. With a strong emphasis on accuracy and professionalism in all our services, you can trust us to meet your health needs with integrity and excellence.
+                At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community. Led by Dr. Adelinno Labro and supported by our dedicated team of skilled nurses and staff, we prioritize patient safety, confidentiality, and personalized care.
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
@@ -114,7 +172,7 @@
         </div>
     </section>
 
-    <section id="about" class="py-24 bg-green-50">
+    <section id="about" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">About Us</h2>
@@ -124,7 +182,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div class="space-y-6 text-lg text-gray-700 leading-relaxed">
                     <p>
-                        In the 1980s, the City Health Office of Calamba was established by the barangay captain of Looc, aiming to enhance community health services. While it has become a vital resource for local residents, one of its biggest challenges is fostering effective communication with patients. Many individuals struggle to fully understand the information provided, often due to varying levels of health literacy. The dedicated staff work hard to adapt their communication methods, utilizing visual aids and simplified language, yet the persistent gap in understanding highlights the need for ongoing training and resources to ensure all patients can grasp essential health information.
+                        In the 1980s, the City Health Office of Calamba was established by the barangay captain of Looc, aiming to enhance community health services. While it has become a vital resource for local residents, one of its biggest challenges is fostering effective communication with patients. Many individuals struggle to fully understand the information provided, often due to varying levels of health literacy.
                     </p>
                     <p>
                         The Barangay Looc Clinic, situated in Barangay Looc, Calamba, Laguna, serves as a vital healthcare resource for the local community, providing essential services such as free medical checkups and, when available, complementary medications. This community clinic is focused on delivering accessible healthcare, particularly to residents who may not have the means to visit larger facilities.
@@ -143,7 +201,7 @@
         </div>
     </section>
 
-    <section id="details" class="py-24 bg-white">
+    <section id="details" class="py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Our Core Values</h2>
@@ -183,7 +241,7 @@
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-16">Our Dedicated Staff</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -191,7 +249,7 @@
                     <p class="text-gray-500 font-medium">Doctor</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -199,7 +257,7 @@
                     <p class="text-gray-500 font-medium">Nurse</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -207,7 +265,7 @@
                     <p class="text-gray-500 font-medium">Nurse</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -215,7 +273,7 @@
                     <p class="text-gray-500 font-medium">Nutrition Scholar</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -223,7 +281,7 @@
                     <p class="text-gray-500 font-medium">Nutrition Scholar</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -231,83 +289,83 @@
                     <p class="text-gray-500 font-medium">Nutrition Scholar</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Christine Manalac</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Roberta Manlapaz</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Fia Delima</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Corazon Alcala</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Roberta Alintanahin</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Precila Magpantay</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Charmaine Dazo</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Evangeline Ignacio</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Marites Ilanes</h3>
-                    <p class="text-gray-500 font-medium">Health Workers</p>
+                    <p class="text-gray-500 font-medium">Health Worker</p>
                 </div>
 
             </div>
         </div>
     </section>
 
-<footer class="bg-gray-900 text-white py-12">
+    <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold">

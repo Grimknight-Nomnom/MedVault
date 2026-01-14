@@ -9,11 +9,15 @@ use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PasswordResetController;
-use App\Models\Appointment; 
+use App\Http\Controllers\AdminAnnouncementController; // Added Import
+use App\Models\Appointment;
+use App\Models\Announcement; // Added Import
 
 // --- Public Routes ---
 Route::get('/', function () {
-    return view('welcome');
+    // Fetch active announcements for the homepage
+    $announcements = Announcement::where('is_active', true)->latest()->get();
+    return view('welcome', compact('announcements'));
 })->name('welcome');
 
 // --- Authentication ---
@@ -26,15 +30,12 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 
 // --- Password Reset Routes (Public) ---
 Route::controller(PasswordResetController::class)->group(function () {
-    // Step 1: Enter Email
     Route::get('/forgot-password', 'showLinkRequestForm')->name('password.request');
     Route::post('/forgot-password', 'sendResetCode')->name('password.email');
     
-    // Step 2: Verify Code
     Route::get('/verify-code', 'showVerifyCodeForm')->name('password.verify');
     Route::post('/verify-code', 'verifyCode')->name('password.verify.post');
     
-    // Step 3: Set New Password
     Route::get('/reset-password', 'showResetForm')->name('password.reset');
     Route::post('/reset-password', 'resetPassword')->name('password.update');
 });
@@ -46,9 +47,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    // Patient Dashboard & Records
+    // Patient Dashboard
     Route::get('/dashboard', function () {
-        // Fetch Active Appointment for the Dashboard Display
         $activeAppointment = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->latest('appointment_date')
@@ -67,30 +67,41 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/book-appointment', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/book-appointment', [AppointmentController::class, 'store'])->name('appointments.store');
 
-    // API Helpers (AJAX)
+    // API Helpers
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
     Route::get('/api/admin/monthly-report', [MedicineController::class, 'getMonthlyReport'])->name('admin.report.api');
 
     // --- Admin Routes Group ---
-    Route::prefix('admin')->group(function () {
+    // Note: Ensure your User model has an 'isAdmin' check or use 'can:admin' middleware if set up
+    Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
         // Dashboard
         Route::get('/dashboard', [MedicineController::class, 'adminDashboard'])->name('admin.dashboard');
 
-        // Historical Report (AJAX)
+        // Historical Report
         Route::get('/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
+
+        // --- Announcement Management (NEW) ---
+        Route::resource('announcements', AdminAnnouncementController::class)
+            ->names([
+                'index' => 'admin.announcements.index',
+                'create' => 'admin.announcements.create',
+                'store' => 'admin.announcements.store',
+                'edit' => 'admin.announcements.edit',
+                'update' => 'admin.announcements.update',
+                'destroy' => 'admin.announcements.delete',
+            ]);
 
         // --- Appointment Management ---
         Route::controller(AppointmentController::class)->group(function () {
-            // 1. List Appointments
             Route::get('/appointments', 'adminIndex')->name('admin.appointments.index');
-            Route::post('/appointments/limit', [AppointmentController::class, 'updateDailyLimit'])->name('admin.appointments.limit');
+            Route::post('/appointments/limit', 'updateDailyLimit')->name('admin.appointments.limit');
             
-            // 2. Create Appointment (Walk-In)
+            // Create Walk-In
             Route::get('/appointments/create', 'adminCreate')->name('admin.appointments.create');
             Route::post('/appointments', 'adminStore')->name('admin.appointments.store');
             
-            // 3. Update Status
+            // Update Status
             Route::patch('/appointments/{id}', 'updateStatus')->name('admin.appointments.update');
         });
 
