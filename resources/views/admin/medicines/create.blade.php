@@ -26,6 +26,10 @@
                                 <option value="Drops">Drops</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+    <label for="description" class="form-label fw-bold">Description / Usage Instructions</label>
+    <textarea name="description" id="description" class="form-control" rows="3" placeholder="e.g. Take after meals. Used for headaches.">{{ old('description') }}</textarea>
+</div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Stock Quantity</label>
                             <input type="number" name="stock_quantity" class="form-control" required>
@@ -39,7 +43,7 @@
            id="expiry_date" 
            class="form-control @error('expiry_date') is-invalid @enderror" 
            required>
-    <div class="form-text">Pick the month and year of expiration. The day will default to the 1st.</div>
+    <div class="form-text">Pick the month and year of expiration.</div>
     @error('expiry_date')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror

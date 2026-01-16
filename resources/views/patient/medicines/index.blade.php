@@ -34,29 +34,47 @@
                         <th class="text-center">Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse($medicines as $med)
-                    <tr>
-                        <td class="ps-4 fw-bold text-dark">{{ $med->name }}</td>
-                        <td class="text-muted small">{{ $med->category }}</td>
-                        <td class="text-center">
-                            @if($med->stock_quantity > 0)
-                                <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill">
-                                    <i class="fas fa-check-circle me-1"></i> Available
-                                </span>
-                            @else
-                                <span class="badge bg-danger-subtle text-danger border border-danger px-3 rounded-pill">
-                                    <i class="fas fa-times-circle me-1"></i> Out of Stock
-                                </span>
-                            @endif
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3" class="text-center py-5 text-muted">No medicines found matching your search.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
+<tbody>
+    @forelse($medicines as $med)
+    <tr>
+        <td class="ps-4">
+            {{-- Use $med here instead of $medicine --}}
+            <div class="fw-bold text-dark">{{ $med->name }}</div>
+            
+            {{-- Description Section --}}
+            @if($med->description)
+                <div class="small text-muted mt-1" style="max-width: 300px; line-height: 1.2;">
+                    <i class="fas fa-info-circle me-1 text-primary"></i> {{ $med->description }}
+                </div>
+            @else
+                <div class="small text-muted fst-italic mt-1">No description available.</div>
+            @endif
+        </td>
+        
+        <td>
+            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3">
+                {{ $med->category }}
+            </span>
+        </td>
+        
+        <td class="text-center">
+            @if($med->stock_quantity > 0)
+                <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill">
+                    <i class="fas fa-check-circle me-1"></i> Available
+                </span>
+            @else
+                <span class="badge bg-danger-subtle text-danger border border-danger px-3 rounded-pill">
+                    <i class="fas fa-times-circle me-1"></i> Out of Stock
+                </span>
+            @endif
+        </td>
+    </tr>
+    @empty
+    <tr>
+        <td colspan="3" class="text-center py-5 text-muted">No medicines found matching your search.</td>
+    </tr>
+    @endforelse
+</tbody>
             </table>
         </div>
     </div>

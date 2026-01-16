@@ -52,7 +52,6 @@
                             <p class="text-teal-100/80 text-sm leading-relaxed mt-1">Create once, use forever. Your history stays with you even if you change doctors.</p>
                         </div>
                     </div>
-
                     <div class="flex items-start gap-4">
                         <div class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10 mt-1">
                             <span class="text-teal-300 font-bold text-sm">2</span>
@@ -60,16 +59,6 @@
                         <div>
                             <h3 class="font-bold text-lg text-white">Digital Prescriptions</h3>
                             <p class="text-teal-100/80 text-sm leading-relaxed mt-1">Instant access to your prescriptions. No more lost papers at the pharmacy.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10 mt-1">
-                            <span class="text-teal-300 font-bold text-sm">3</span>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-lg text-white">Family Profiles</h3>
-                            <p class="text-teal-100/80 text-sm leading-relaxed mt-1">Manage accounts for your children or elderly parents from a single dashboard.</p>
                         </div>
                     </div>
                 </div>
@@ -98,10 +87,18 @@
                         <span class="font-bold text-xl text-gray-900">Barangay Looc Clinic</span>
                     </div>
 
-                    <div class="mb-10">
+                    <div class="mb-8">
                         <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Create your account</h2>
                         <p class="mt-2 text-gray-500">Fill in your details to generate your secure Medical ID.</p>
                     </div>
+
+                    {{-- Global Error Message (Duplicate Warning will appear here via 'email' key) --}}
+                    @if($errors->has('email'))
+                        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
+                            <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <p class="text-sm text-red-800 font-medium">{{ $errors->first('email') }}</p>
+                        </div>
+                    @endif
 
                     <form method="POST" action="{{ route('register.post') }}" class="space-y-6">
                         @csrf
@@ -129,14 +126,20 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div class="space-y-1.5">
-                                    <label class="block text-sm font-semibold text-gray-700">Age</label>
-                                    <input type="number" name="age" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('age') }}">
-                                    @error('age') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                    <label class="block text-sm font-semibold text-gray-700">Date of Birth</label>
+                                    <input type="date" name="date_of_birth" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('date_of_birth') }}">
+                                    @error('date_of_birth') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="space-y-1.5">
-                                    <label class="block text-sm font-semibold text-gray-700">Phone Number</label>
-                                    <input type="text" name="phone" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('phone') }}">
+                                    <label class="block text-sm font-semibold text-gray-700">Age</label>
+                                    <input type="number" name="age" required min="0" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('age') }}">
+                                    @error('age') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                                 </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-semibold text-gray-700">Phone Number</label>
+                                <input type="text" name="phone" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('phone') }}">
                             </div>
 
                             <div class="space-y-1.5">
@@ -151,7 +154,9 @@
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Email Address</label>
                                 <input type="email" name="email" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('email') }}">
-                                @error('email') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                {{-- We handled the global email error above, but keep this for standard validation --}}
+                                @if(!$errors->has('email')) 
+                                    @endif
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

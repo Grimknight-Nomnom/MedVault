@@ -66,13 +66,14 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function register(Request $request)
+public function register(Request $request)
     {
-        // 1. Validate New Fields
+        // 1. Validate Fields (Added date_of_birth for the duplicate check)
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
+            'date_of_birth' => 'required|date', // Required for identification
             'age' => 'required|integer|min:1|max:120',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
@@ -80,16 +81,32 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // 2. Generate Unique 3-Digit User Number
+        // 2. DUPLICATE ACCOUNT PREVENTION
+        // Check if a user exists with the same name details and birth date
+        $duplicateUser = User::where('first_name', $request->first_name)
+            ->where('last_name', $request->last_name)
+            ->where('date_of_birth', $request->date_of_birth)
+            // We verify middle_name specifically to distinguish between people with common names
+            ->where('middle_name', $request->middle_name) 
+            ->first();
+
+        if ($duplicateUser) {
+            return back()->withErrors([
+                'email' => "It looks like you already have an account with us. Please log in or use the 'Forgot Password' feature to recover your account."
+            ])->withInput();
+        }
+
+        // 3. Generate Unique 3-Digit User Number
         do {
             $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
         } while (User::where('usernumber', $randomNumber)->exists());
 
-        // 3. Create User
+        // 4. Create User
         User::create([
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'],
             'last_name' => $validated['last_name'],
+            'date_of_birth' => $validated['date_of_birth'], // Make sure to save this
             'age' => $validated['age'],
             'phone' => $validated['phone'],
             'address' => $validated['address'],
@@ -99,7 +116,7 @@ class AuthController extends Controller
             'role' => 'user',
         ]);
 
-        // 4. Redirect
+        // 5. Redirect
         return redirect()->route('login')->with('success', 
             "Registration successful! Your User Number is: {$randomNumber}. Please log in using this number or your email.");
     }

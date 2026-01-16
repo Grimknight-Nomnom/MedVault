@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Medicine extends Model
 {
-    protected $fillable = [
+protected $fillable = [
         'name',
         'brand',
         'category',
+        'description', // <--- ADD THIS LINE
         'stock_quantity',
         'price',
         'expiry_date'

@@ -33,6 +33,7 @@ class ProfileController extends Controller
             'age' => 'required|integer|min:0',
             'gender' => 'required|string|in:Male,Female,Other',
             'civil_status' => 'required|string|in:Single,Married,Widowed,Separated',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'required|string|max:20', // Contact Number
             'address' => 'required|string|max:500',
 

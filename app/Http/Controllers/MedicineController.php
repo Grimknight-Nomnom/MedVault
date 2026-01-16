@@ -200,18 +200,20 @@ public function getMonthlyReport(Request $request)
 
     public function store(Request $request)
     {
-        $request->validate([
+$request->validate([
             'name' => 'required|string|max:255',
             'category' => 'required|string',
+            'description' => 'nullable|string', // <--- Add Validation
             'stock_quantity' => 'required|integer|min:0',
             'expiry_date' => 'required', 
         ]);
 
-        $expiryDate = $request->expiry_date . '-01';
+$expiryDate = $request->expiry_date . '-01';
 
         $medicine = Medicine::create([
             'name' => $request->name,
             'category' => $request->category,
+            'description' => $request->description, // <--- Save it here
             'stock_quantity' => $request->stock_quantity,
             'expiry_date' => $expiryDate,
         ]);
@@ -227,11 +229,12 @@ public function getMonthlyReport(Request $request)
         return view('admin.medicines.edit', compact('medicine'));
     }
 
-    public function update(Request $request, $id)
+public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'required|string',
+            'description' => 'nullable|string', // <--- Add Validation
             'stock_quantity' => 'required|integer|min:0',
             'expiry_date' => 'required',
         ]);
@@ -243,6 +246,7 @@ public function getMonthlyReport(Request $request)
         $medicine->update([
             'name' => $request->name,
             'category' => $request->category,
+            'description' => $request->description, // <--- Save it here
             'stock_quantity' => $request->stock_quantity,
             'expiry_date' => $expiryDate,
         ]);

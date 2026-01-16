@@ -73,6 +73,14 @@
                                 </div>
 
                                 <div class="col-md-6">
+    <label class="form-label fw-bold">Email Address <span class="text-danger">*</span></label>
+    <div class="input-group">
+        <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
+        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+    </div>
+</div>
+
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold">Contact Number <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light"><i class="fas fa-phone"></i></span>
