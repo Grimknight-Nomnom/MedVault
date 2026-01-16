@@ -121,6 +121,7 @@ Route::middleware(['auth'])->group(function () {
         Route::controller(AdminController::class)->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
+            Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
         });
 
         // --- Medical Record / Diagnosis ---

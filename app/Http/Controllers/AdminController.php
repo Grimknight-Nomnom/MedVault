@@ -50,4 +50,23 @@ class AdminController extends Controller
 
         return view('admin.patients.show', compact('patient', 'consultations'));
     }
+
+    /**
+     * Remove the specified patient from storage.
+     */
+    public function destroy($id)
+    {
+        // 1. Find the patient (ensure we only delete users with role 'user')
+        $patient = User::where('role', 'user')->findOrFail($id);
+
+        // 2. Delete the record
+        // Note: If you have foreign key constraints (like appointments), 
+        // ensure your database is set to ON DELETE CASCADE, 
+        // or manually delete related records here first.
+        $patient->delete();
+
+        // 3. Redirect back with a success message
+        return redirect()->route('admin.patients.index')
+            ->with('success', 'Patient account deleted successfully.');
+    }
 }

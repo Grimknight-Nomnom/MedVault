@@ -51,23 +51,23 @@
                     @if(is_null($day))
                         <div class="p-4 bg-light rounded border border-light"></div>
                     @else
+
                         @php
                             $dayOfWeek = \Carbon\Carbon::parse($day['date'])->dayOfWeek;
                             $bgClass = 'bg-normal';
                             $labelText = 'Check-up'; 
 
-                            // Logic: Custom Label overrides everything
                             if (!empty($day['label'])) {
                                 $bgClass = 'bg-special';
                                 $labelText = $day['label'];
-                                // Style override for pregnancy label
                                 if(Illuminate\Support\Str::contains(Illuminate\Support\Str::lower($day['label']), 'pregnancy')) {
                                     $bgClass = 'bg-pregnancy';
                                 }
                             } elseif ($dayOfWeek == 0 || $dayOfWeek == 6) { 
                                 $bgClass = 'bg-area';
                                 $labelText = 'Area';
-                            } elseif ($dayOfWeek == 2) { 
+                            } elseif ($dayOfWeek == 2 || $dayOfWeek == 4) { 
+                                // CHANGED: 2 (Tue) OR 4 (Thu) = Pregnancy
                                 $bgClass = 'bg-pregnancy';
                                 $labelText = 'Pregnancy';
                             } elseif ($dayOfWeek == 3) { 

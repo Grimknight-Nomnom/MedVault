@@ -12,11 +12,17 @@ use Illuminate\Support\Str;
 
 class AppointmentController extends Controller
 {
-    // --- HELPER: Get Max Slots ---
-    private function getMaxSlots($date)
+private function getMaxSlots($date)
     {
         $setting = AppointmentSetting::where('date', $date)->first();
-        return $setting ? $setting->max_appointments : 30;
+        
+        // If admin set a custom limit, use it.
+        if ($setting) {
+            return $setting->max_appointments;
+        }
+        
+        // Default Logic: Wednesday = 50, Others = 30
+        return Carbon::parse($date)->dayOfWeek === Carbon::WEDNESDAY ? 50 : 30;
     }
 
     private function isProfileIncomplete()
@@ -29,37 +35,33 @@ class AppointmentController extends Controller
         return false;
     }
 
-    // --- HELPER: Determine if a date is Restricted ---
-    private function isPregnancyRestricted($date, $user)
+private function isPregnancyRestricted($date, $user)
     {
         $setting = AppointmentSetting::where('date', $date)->first();
         $dayOfWeek = Carbon::parse($date)->dayOfWeek;
         
-        // 1. Determine the Effective Label
         $label = '';
         
         if ($setting && !empty($setting->label)) {
-            // Admin setting takes priority
             $label = $setting->label;
-        } elseif ($dayOfWeek === Carbon::TUESDAY) {
-            // Default to Pregnancy on Tuesdays if no admin override
+        } elseif ($dayOfWeek === Carbon::TUESDAY || $dayOfWeek === Carbon::THURSDAY) { 
+            // RESTRICTION: Tuesday OR Thursday = Pregnancy
             $label = 'Pregnancy';
         }
 
-        // 2. Check Restriction
-        if (Str::contains(Str::lower($label), 'pregnancy')) {
+if (Str::contains(Str::lower($label), 'pregnancy')) {
             $gender = Str::lower(trim($user->gender ?? ''));
             if ($gender !== 'female') {
-                return true; // Restricted
+                return true; 
             }
         }
 
-        return false; // Allowed
+        return false; 
     }
 
     // ================= PATIENT METHODS =================
 
-    public function create()
+public function create()
     {
         if ($this->isProfileIncomplete()) {
             return redirect()->route('profile.edit')->with('error', 'Profile Incomplete.');
@@ -87,16 +89,23 @@ class AppointmentController extends Controller
         $today = Carbon::today()->format('Y-m-d');
         $startDayOfWeek = $startOfMonth->dayOfWeek;
 
+        // Fill empty slots for previous month days
         for ($i = 0; $i < $startDayOfWeek; $i++) {
             $calendar[] = null;
         }
 
+        // Loop through days of the month
         for ($day = 1; $day <= $endOfMonth->day; $day++) {
             $currentDate = $startOfMonth->copy()->setDay($day)->format('Y-m-d');
             $count = $dbCounts[$currentDate] ?? 0;
             
+            // --- FIX: THIS LINE WAS MISSING OR BROKEN ---
             $daySetting = $settings->get($currentDate);
-            $maxLimit = $daySetting ? $daySetting->max_appointments : 30;
+            
+            // Logic: Wednesday = 50, Others = 30
+            $defaultLimit = Carbon::parse($currentDate)->dayOfWeek === Carbon::WEDNESDAY ? 50 : 30;
+            $maxLimit = $daySetting ? $daySetting->max_appointments : $defaultLimit;
+            
             $customLabel = $daySetting ? $daySetting->label : null;
 
             $isFull = $count >= $maxLimit;

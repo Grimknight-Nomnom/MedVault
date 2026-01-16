@@ -1,15 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-<script src="https://cdn.tailwindcss.com"></script>
-
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">Registered Patients</h2>
             <p class="text-muted small">Manage and view patient records.</p>
         </div>
-        {{-- Search Form preserved --}}
         <form action="{{ route('admin.patients.index') }}" method="GET" class="d-flex gap-2">
             <input type="text" name="search" class="form-control border-success shadow-none" 
                    placeholder="Search Name or ID..." value="{{ request('search') }}" style="width: 250px;">
@@ -28,8 +25,6 @@
                         <tr class="text-uppercase small text-muted">
                             <th class="py-3 ps-4">User ID</th>
                             <th class="py-3">Patient Name</th>
-                            <th class="py-3">Age / Gender</th>
-                            <th class="py-3">Contact</th>
                             <th class="py-3 text-end pe-4">Action</th>
                         </tr>
                     </thead>
@@ -37,29 +32,15 @@
                         @forelse($patients as $patient)
                         <tr>
                             <td class="ps-4 fw-bold text-success">#{{ $patient->usernumber }}</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark">{{ $patient->first_name }} {{ $patient->last_name }}</div>
-                                        <div class="small text-muted">Joined {{ $patient->created_at->format('M Y') }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge bg-light text-dark border">{{ $patient->age ?? 'N/A' }} y/o</span>
-                                <span class="badge {{ $patient->gender == 'Male' ? 'bg-info bg-opacity-10 text-info' : 'bg-danger bg-opacity-10 text-danger' }} border ms-1">{{ $patient->gender ?? '-' }}</span>
-                            </td>
-                            <td class="small text-muted"><i class="fas fa-phone me-1"></i> {{ $patient->phone ?? 'N/A' }}</td>
+                            <td>{{ $patient->first_name }} {{ $patient->last_name }}</td>
                             <td class="text-end pe-4">
                                 <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold me-1">
                                     View
                                 </a>
                                 
+                                {{-- Trigger the Bootstrap Delete Modal --}}
                                 <button type="button" 
-                                    onclick="openDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
+                                    onclick="openBootstrapDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
                                     class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -67,19 +48,45 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">No patients found.</td>
+                            <td colspan="3" class="text-center py-5 text-muted">No patients found.</td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
-        @if($patients->hasPages())
-        <div class="card-footer bg-white border-0 py-3">{{ $patients->links() }}</div>
-        @endif
     </div>
 </div>
 
-@include('components.delete-modal')
+{{-- GLOBAL BOOTSTRAP DELETE MODAL --}}
+<div class="modal fade" id="bootstrapDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p id="deleteModalBodyMessage">Are you sure you want to delete this record?</p>
+            </div>
+            <div class="modal-footer bg-light justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <form id="bootstrapDeleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger px-4 fw-bold">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script>
+    function openBootstrapDeleteModal(actionUrl, message) {
+        document.getElementById('bootstrapDeleteForm').action = actionUrl;
+        document.getElementById('deleteModalBodyMessage').innerText = message;
+        var deleteModal = new bootstrap.Modal(document.getElementById('bootstrapDeleteModal'));
+        deleteModal.show();
+    }
+</script>
 @endsection

@@ -22,7 +22,7 @@
     <div class="d-flex gap-3 small mb-3 justify-content-end align-items-center flex-wrap">
         <span class="badge bg-white text-dark border">Normal Check-up</span>
         <span class="badge" style="background-color: #dcfce7; color: #166534;">Area (Sun/Sat)</span>
-        <span class="badge" style="background-color: #fce7f3; color: #9d174d;">Pregnancy (Tue)</span>
+        <span class="badge" style="background-color: #fce7f3; color: #9d174d;">Pregnancy (Tue/Thu)</span>
         <span class="badge" style="background-color: #e0f2fe; color: #075985;">Immunization (Wed)</span>
         <span class="badge" style="background-color: #fef9c3; color: #854d0e;">Special/Custom</span>
     </div>
@@ -78,7 +78,8 @@
                                                 $label = $customLabel;
                                             } elseif ($dayOfWeek == 0 || $dayOfWeek == 6) { 
                                                 $bgColor = '#dcfce7'; $label = 'Area';
-                                            } elseif ($dayOfWeek == 2) { 
+                                            } elseif ($dayOfWeek == 2 || $dayOfWeek == 4) { 
+                                                // CHANGED: Added || $dayOfWeek == 4 (Thursday)
                                                 $bgColor = '#fce7f3'; $label = 'Pregnancy';
                                             } elseif ($dayOfWeek == 3) { 
                                                 $bgColor = '#e0f2fe'; $label = 'Immunization';
