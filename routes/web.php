@@ -15,7 +15,6 @@ use App\Models\Announcement;
 
 // --- Public Routes ---
 Route::get('/', function () {
-    // Fetch active announcements for the homepage
     $announcements = Announcement::where('is_active', true)->latest()->get();
     return view('welcome', compact('announcements'));
 })->name('welcome');
@@ -28,14 +27,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-// --- Password Reset Routes (Public) ---
+// --- Password Reset Routes ---
 Route::controller(PasswordResetController::class)->group(function () {
     Route::get('/forgot-password', 'showLinkRequestForm')->name('password.request');
     Route::post('/forgot-password', 'sendResetCode')->name('password.email');
-    
     Route::get('/verify-code', 'showVerifyCodeForm')->name('password.verify');
     Route::post('/verify-code', 'verifyCode')->name('password.verify.post');
-    
     Route::get('/reset-password', 'showResetForm')->name('password.reset');
     Route::post('/reset-password', 'resetPassword')->name('password.update');
 });
@@ -49,13 +46,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Patient Dashboard
     Route::get('/dashboard', function () {
-        // 1. Auto-complete past appointments (yesterday or older)
         Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '<', now()->startOfDay())
             ->update(['status' => 'completed']);
 
-        // 2. Fetch the remaining active appointment (if any)
         $activeAppointment = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->latest('appointment_date')
@@ -65,33 +60,33 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
     
     Route::get('/my-medical-records', [MedicalRecordController::class, 'myRecords'])->name('patient.records');
-
-    // Patient Medicines
     Route::get('/medicines-availability', [MedicineController::class, 'patientIndex'])->name('patient.medicines.index');
 
     // Patient Appointments
     Route::get('/my-appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/book-appointment', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/book-appointment', [AppointmentController::class, 'store'])->name('appointments.store');
-    
-    // NEW: Delete Appointment Route
     Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
 
-    // API Helpers
+    // API Helpers (Patient side)
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
-    Route::get('/api/admin/monthly-report', [MedicineController::class, 'getMonthlyReport'])->name('admin.report.api');
+    // REMOVED: The old 'admin.report.api' route was here. It is now correctly placed in the admin group below.
 
     // --- Admin Routes Group ---
-    // Note: Ensure your User model has an 'isAdmin' check or use 'can:admin' middleware if set up
     Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
         // Dashboard
         Route::get('/dashboard', [MedicineController::class, 'adminDashboard'])->name('admin.dashboard');
 
-        // Historical Report
+        // NEW: Corrected API Routes for Charts
+        // We removed '/admin' from the string because prefix('admin') adds it automatically.
+        Route::get('/api/trends', [MedicineController::class, 'getTrendsData'])->name('admin.trends.api');
+        Route::get('/api/report', [MedicineController::class, 'getPeekData'])->name('admin.report.api');
+
+        // Historical Report Page (Full Page)
         Route::get('/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
 
-        // --- Announcement Management ---
+        // Announcements
         Route::resource('announcements', AdminAnnouncementController::class)
             ->names([
                 'index' => 'admin.announcements.index',
@@ -102,20 +97,16 @@ Route::middleware(['auth'])->group(function () {
                 'destroy' => 'admin.announcements.delete',
             ]);
 
-        // --- Appointment Management ---
+        // Appointments
         Route::controller(AppointmentController::class)->group(function () {
             Route::get('/appointments', 'adminIndex')->name('admin.appointments.index');
             Route::post('/appointments/limit', 'updateDailyLimit')->name('admin.appointments.limit');
-            
-            // Create Walk-In
             Route::get('/appointments/create', 'adminCreate')->name('admin.appointments.create');
             Route::post('/appointments', 'adminStore')->name('admin.appointments.store');
-            
-            // Update Status
             Route::patch('/appointments/{id}', 'updateStatus')->name('admin.appointments.update');
         });
 
-        // --- Medicine Inventory Management ---
+        // Medicine Inventory
         Route::controller(MedicineController::class)->group(function () {
             Route::get('/medicines', 'index')->name('admin.medicines.index');
             Route::get('/medicines/create', 'create')->name('admin.medicines.create');
@@ -127,14 +118,14 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/medicines/{id}/release', 'release')->name('admin.medicines.release');
         });
 
-        // --- Patient Management ---
+        // Patients
         Route::controller(AdminController::class)->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
         });
 
-        // --- Medical Record / Diagnosis ---
+        // Records
         Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
         Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
     });

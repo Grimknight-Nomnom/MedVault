@@ -10,174 +10,147 @@ use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-
 class MedicineController extends Controller
 {
     /**
-     * Display the Admin Dashboard with Reports, Statistics, and Monthly Details
+     * Display the Admin Dashboard
      */
-// app/Http/Controllers/MedicineController.php
-
-public function adminDashboard(Request $request)
+    public function adminDashboard(Request $request)
     {
-        // Capture any newly expired medicines first
         $this->captureExpiredMedicines();
 
-        // --- NEW LOGIC FOR DAILY APPOINTMENTS ---
-        // Count only appointments scheduled for today
+        // 1. Daily Appointments Count
         $todayAppointmentsCount = Appointment::whereDate('appointment_date', Carbon::today())->count();
 
-        // Stats Row Queries
-        $totalMedicines = Medicine::count(); 
-        
-        // This is the total count used for other parts of the dashboard if needed
-        $totalAppointments = Appointment::count(); 
-        
-        $totalPatients = User::where('role', 'user')->count(); 
+        // 2. Counts
+        $totalMedicines = Medicine::count();
+        $totalAppointments = Appointment::count();
+        $totalPatients = User::where('role', 'user')->count();
 
-        // Charts & History Logic
-        $months = [];
-        $releasesData = [];
-        $expirationsData = [];
+        // 3. Alerts
+        $lowStock = Medicine::where('stock_quantity', '<', 10)->get();
+        $expiringSoon = Medicine::where('expiry_date', '<=', now()->addDays(30))->get();
 
-        for ($i = 5; $i >= 0; $i--) {
-            $monthDate = Carbon::now()->subMonths($i);
-            $months[] = $monthDate->format('M Y'); 
-
-            $releasesData[] = MedicineHistory::where('action_type', 'Released')
-                ->whereMonth('performed_at', $monthDate->month)
-                ->whereYear('performed_at', $monthDate->year)
-                ->sum(DB::raw('ABS(quantity_changed)')); 
-
-            $expirationsData[] = MedicineHistory::where('action_type', 'Expired')
-                ->whereMonth('performed_at', $monthDate->month)
-                ->whereYear('performed_at', $monthDate->year)
-                ->sum(DB::raw('ABS(quantity_changed)')); 
-        }
-
+        // 4. Initial Monthly Details
         $monthlyDetails = MedicineHistory::whereMonth('performed_at', now()->month)
             ->whereYear('performed_at', now()->year)
             ->whereIn('action_type', ['Released', 'Expired'])
             ->get();
 
-        $lowStock = Medicine::where('stock_quantity', '<', 10)->get();
-        $expiringSoon = Medicine::where('expiry_date', '<=', now()->addDays(30))->get();
-
-        // YOU MUST PASS EVERY VARIABLE HERE, INCLUDING todayAppointmentsCount
         return view('admin.dashboard', compact(
-            'todayAppointmentsCount', // Added this variable
-            'totalMedicines', 
-            'totalAppointments', 
-            'totalPatients', 
-            'lowStock', 
-            'expiringSoon', 
-            'monthlyDetails',
-            'months', 
-            'releasesData', 
-            'expirationsData'
+            'todayAppointmentsCount',
+            'totalMedicines',
+            'totalAppointments',
+            'totalPatients',
+            'lowStock',
+            'expiringSoon',
+            'monthlyDetails'
         ));
     }
 
-// app/Http/Controllers/MedicineController.php
-public function patientIndex(Request $request)
-{
-    $query = Medicine::query();
-    if ($request->filled('search')) {
-        $query->where('name', 'like', "%{$request->search}%");
+    /**
+     * API: Get Inventory Trends Data (Month vs Week)
+     */
+    public function getTrendsData(Request $request)
+    {
+        $filter = $request->get('filter', 'month');
+        $labels = [];
+        $releases = [];
+        $expirations = [];
+
+        if ($filter === 'week') {
+            for ($i = 11; $i >= 0; $i--) {
+                $date = Carbon::now()->subWeeks($i);
+                $start = $date->copy()->startOfWeek();
+                $end = $date->copy()->endOfWeek();
+                
+                $labels[] = 'W' . $date->week . ' (' . $start->format('M d') . ')';
+
+                $releases[] = MedicineHistory::where('action_type', 'Released')
+                    ->whereBetween('performed_at', [$start, $end])
+                    ->sum(DB::raw('ABS(quantity_changed)'));
+
+                $expirations[] = MedicineHistory::where('action_type', 'Expired')
+                    ->whereBetween('performed_at', [$start, $end])
+                    ->sum(DB::raw('ABS(quantity_changed)'));
+            }
+        } else {
+            for ($i = 5; $i >= 0; $i--) {
+                $date = Carbon::now()->subMonths($i);
+                $labels[] = $date->format('M Y');
+
+                $releases[] = MedicineHistory::where('action_type', 'Released')
+                    ->whereMonth('performed_at', $date->month)
+                    ->whereYear('performed_at', $date->year)
+                    ->sum(DB::raw('ABS(quantity_changed)'));
+
+                $expirations[] = MedicineHistory::where('action_type', 'Expired')
+                    ->whereMonth('performed_at', $date->month)
+                    ->whereYear('performed_at', $date->year)
+                    ->sum(DB::raw('ABS(quantity_changed)'));
+            }
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'releases' => $releases,
+            'expirations' => $expirations
+        ]);
     }
-    $medicines = $query->orderBy('name')->paginate(10);
-    return view('patient.medicines.index', compact('medicines'));
-}
-
-public function getHistoricalReport(Request $request)
-{
-    $month = $request->query('month');
-    $year = $request->query('year');
-
-    // Get total released quantity for the selected month
-    $releasedCount = DB::table('medicine_histories')
-        ->where('action_type', 'Released')
-        ->whereMonth('performed_at', $month)
-        ->whereYear('performed_at', $year)
-        ->sum(DB::raw('ABS(quantity_changed)'));
-
-    // Get total expired items for the selected month
-    $expiredCount = DB::table('medicine_histories')
-        ->where('action_type', 'Expired')
-        ->whereMonth('performed_at', $month)
-        ->whereYear('performed_at', $year)
-        ->count();
-
-    // Data for the charts (grouped by day of the month)
-    $historyData = DB::table('medicine_histories')
-        ->select(DB::raw('DAY(performed_at) as day'), 
-                 DB::raw('SUM(CASE WHEN action_type = "Released" THEN ABS(quantity_changed) ELSE 0 END) as released'),
-                 DB::raw('SUM(CASE WHEN action_type = "Expired" THEN 1 ELSE 0 END) as expired'))
-        ->whereMonth('performed_at', $month)
-        ->whereYear('performed_at', $year)
-        ->groupBy('day')
-        ->orderBy('day')
-        ->get();
-
-    return response()->json([
-        'released_count' => $releasedCount,
-        'expired_count' => $expiredCount,
-        'chart_labels' => $historyData->pluck('day'),
-        'chart_data_released' => $historyData->pluck('released'),
-        'chart_data_expired' => $historyData->pluck('expired'),
-        'formatted_date' => date('F Y', mktime(0, 0, 0, $month, 1, $year))
-    ]);
-}
 
     /**
-     * AJAX Endpoint: Get Report Data & Log details for specific Month/Year
+     * API: Get Historical Peek Data (Month vs Week)
      */
-/**
- * AJAX Endpoint: Get Report Data & Log details for specific Month/Year
- */
-public function getMonthlyReport(Request $request)
-{
-    $month = $request->get('month', Carbon::now()->month);
-    $year = $request->get('year', Carbon::now()->year);
+    public function getPeekData(Request $request)
+    {
+        $mode = $request->get('mode', 'month');
+        $query = MedicineHistory::query();
+        $formattedDate = '';
 
-    // Aggregate Totals for the dynamic counters/doughnut chart
-    $releasesCount = MedicineHistory::where('action_type', 'Released')
-        ->whereMonth('performed_at', $month)
-        ->whereYear('performed_at', $year)
-        ->sum(DB::raw('ABS(quantity_changed)'));
+        if ($mode === 'week') {
+            $weekStr = $request->get('week', Carbon::now()->format('Y-\WW'));
+            if (!$weekStr) $weekStr = Carbon::now()->format('Y-\WW');
 
-    // FIXED: Changed count() to sum() to get the actual quantity of units expired
-    $expirationsCount = MedicineHistory::where('action_type', 'Expired')
-        ->whereMonth('performed_at', $month)
-        ->whereYear('performed_at', $year)
-        ->sum(DB::raw('ABS(quantity_changed)')); 
+            $year = (int)substr($weekStr, 0, 4);
+            $week = (int)substr($weekStr, 6);
+            
+            $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
+            $end = Carbon::now()->setISODate($year, $week)->endOfWeek();
 
-    // Detailed History Rows
-    $details = MedicineHistory::whereMonth('performed_at', $month)
-        ->whereYear('performed_at', $year)
-        ->whereIn('action_type', ['Released', 'Expired'])
-        ->orderBy('performed_at', 'desc')
-        ->get()
-        ->map(function($item) {
-            return [
-                'name' => $item->medicine_name,
-                'action' => $item->action_type,
-                'qty' => abs($item->quantity_changed), // Ensures quantity is positive for display
-                'date' => Carbon::parse($item->performed_at)->format('M d, Y'),
-                'desc' => $item->description
-            ];
-        });
+            $query->whereBetween('performed_at', [$start->startOfDay(), $end->endOfDay()]);
+            $formattedDate = "Week $week (" . $start->format('M d') . ' - ' . $end->format('M d') . ')';
+        } else {
+            $month = $request->get('month', Carbon::now()->month);
+            $year = $request->get('year', Carbon::now()->year);
+            
+            $query->whereMonth('performed_at', $month)->whereYear('performed_at', $year);
+            $formattedDate = Carbon::createFromDate($year, $month, 1)->format('F Y');
+        }
 
-    return response()->json([
-        'releases' => (int)$releasesCount,
-        'expirations' => (int)$expirationsCount,
-        'details' => $details,
-        'formatted_date' => Carbon::createFromDate($year, $month, 1)->format('F Y')
-    ]);
-}
-    /**
-     * CRUD: Inventory List (Index)
-     */
+        $releasesCount = (clone $query)->where('action_type', 'Released')->sum(DB::raw('ABS(quantity_changed)'));
+        $expirationsCount = (clone $query)->where('action_type', 'Expired')->sum(DB::raw('ABS(quantity_changed)'));
+
+        $details = $query->whereIn('action_type', ['Released', 'Expired'])
+            ->orderBy('performed_at', 'desc')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'name' => $item->medicine_name,
+                    'action' => $item->action_type,
+                    'qty' => abs($item->quantity_changed),
+                    'date' => Carbon::parse($item->performed_at)->format('M d, Y'),
+                    'desc' => $item->description
+                ];
+            });
+
+        return response()->json([
+            'releases' => (int)$releasesCount,
+            'expirations' => (int)$expirationsCount,
+            'details' => $details,
+            'formatted_date' => $formattedDate
+        ]);
+    }
+
     public function index(Request $request)
     {
         $query = Medicine::query();
@@ -201,20 +174,20 @@ public function getMonthlyReport(Request $request)
 
     public function store(Request $request)
     {
-$request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'required|string',
-            'description' => 'nullable|string', // <--- Add Validation
+            'description' => 'nullable|string',
             'stock_quantity' => 'required|integer|min:0',
             'expiry_date' => 'required', 
         ]);
 
-$expiryDate = $request->expiry_date . '-01';
+        $expiryDate = $request->expiry_date . '-01';
 
         $medicine = Medicine::create([
             'name' => $request->name,
             'category' => $request->category,
-            'description' => $request->description, // <--- Save it here
+            'description' => $request->description,
             'stock_quantity' => $request->stock_quantity,
             'expiry_date' => $expiryDate,
         ]);
@@ -230,12 +203,12 @@ $expiryDate = $request->expiry_date . '-01';
         return view('admin.medicines.edit', compact('medicine'));
     }
 
-public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'required|string',
-            'description' => 'nullable|string', // <--- Add Validation
+            'description' => 'nullable|string',
             'stock_quantity' => 'required|integer|min:0',
             'expiry_date' => 'required',
         ]);
@@ -247,12 +220,14 @@ public function update(Request $request, $id)
         $medicine->update([
             'name' => $request->name,
             'category' => $request->category,
-            'description' => $request->description, // <--- Save it here
+            'description' => $request->description,
             'stock_quantity' => $request->stock_quantity,
             'expiry_date' => $expiryDate,
         ]);
 
-        $this->logHistory($medicine->name, 'Edited', $qtyDiff, 'Medicine details updated.');
+        if ($qtyDiff != 0) {
+            $this->logHistory($medicine->name, 'Edited', $qtyDiff, 'Medicine details updated.');
+        }
 
         return redirect()->route('admin.medicines.index')->with('success', 'Medicine updated successfully!');
     }
@@ -298,38 +273,40 @@ public function update(Request $request, $id)
         return view('admin.medicines.history', compact('history'));
     }
 
-    /**
-     * Logic: Identify and log expired medicines
-     */
-private function captureExpiredMedicines()
+    public function patientIndex(Request $request)
+    {
+        $query = Medicine::query();
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+        $medicines = $query->orderBy('name')->paginate(10);
+        return view('patient.medicines.index', compact('medicines'));
+    }
+
+    private function captureExpiredMedicines()
     {
         $today = Carbon::today()->format('Y-m-d');
-        $medicines = Medicine::where('expiry_date', '<=', $today)->get();
+        $medicines = Medicine::where('expiry_date', '<=', $today)->where('stock_quantity', '>', 0)->get();
 
         foreach ($medicines as $medicine) {
             $alreadyLogged = MedicineHistory::where('medicine_name', $medicine->name)
                 ->where('action_type', 'Expired')
-                ->whereMonth('performed_at', Carbon::now()->month)
-                ->whereYear('performed_at', Carbon::now()->year)
+                ->whereDate('performed_at', Carbon::today())
                 ->exists();
 
-            if (!$alreadyLogged && $medicine->stock_quantity > 0) {
+            if (!$alreadyLogged) {
                 $this->logHistory(
                     $medicine->name, 
                     'Expired', 
                     -$medicine->stock_quantity, 
                     "Medicine expired on " . $medicine->expiry_date
                 );
-                // Zero out stock for expired items
                 $medicine->update(['stock_quantity' => 0]);
             }
         }
     }
 
-    /**
-     * Helper: Log History to DB
-     */
-   private function logHistory($name, $action, $qty, $desc)
+    private function logHistory($name, $action, $qty, $desc)
     {
         MedicineHistory::create([
             'medicine_name' => $name,
