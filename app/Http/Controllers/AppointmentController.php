@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class AppointmentController extends Controller
 {
-private function getMaxSlots($date)
+    private function getMaxSlots($date)
     {
         $setting = AppointmentSetting::where('date', $date)->first();
         
@@ -35,7 +35,7 @@ private function getMaxSlots($date)
         return false;
     }
 
-private function isPregnancyRestricted($date, $user)
+    private function isPregnancyRestricted($date, $user)
     {
         $setting = AppointmentSetting::where('date', $date)->first();
         $dayOfWeek = Carbon::parse($date)->dayOfWeek;
@@ -49,7 +49,7 @@ private function isPregnancyRestricted($date, $user)
             $label = 'Pregnancy';
         }
 
-if (Str::contains(Str::lower($label), 'pregnancy')) {
+        if (Str::contains(Str::lower($label), 'pregnancy')) {
             $gender = Str::lower(trim($user->gender ?? ''));
             if ($gender !== 'female') {
                 return true; 
@@ -61,7 +61,7 @@ if (Str::contains(Str::lower($label), 'pregnancy')) {
 
     // ================= PATIENT METHODS =================
 
-public function create()
+    public function create()
     {
         if ($this->isProfileIncomplete()) {
             return redirect()->route('profile.edit')->with('error', 'Profile Incomplete.');
@@ -99,7 +99,6 @@ public function create()
             $currentDate = $startOfMonth->copy()->setDay($day)->format('Y-m-d');
             $count = $dbCounts[$currentDate] ?? 0;
             
-            // --- FIX: THIS LINE WAS MISSING OR BROKEN ---
             $daySetting = $settings->get($currentDate);
             
             // Logic: Wednesday = 50, Others = 30
@@ -213,6 +212,19 @@ public function create()
         ]);
 
         return redirect()->route('appointments.index')->with('success', "Booked successfully!");
+    }
+
+    // NEW: Destroy Method for Deleting Appointment
+    public function destroy(Appointment $appointment)
+    {
+        // Security check: Ensure the user deleting the appointment is the one who made it
+        if ($appointment->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $appointment->delete();
+
+        return redirect()->route('dashboard')->with('success', 'Appointment cancelled successfully.');
     }
 
     // ================= ADMIN METHODS =================

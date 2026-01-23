@@ -9,9 +9,9 @@ use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\AdminAnnouncementController; // Added Import
+use App\Http\Controllers\AdminAnnouncementController;
 use App\Models\Appointment;
-use App\Models\Announcement; // Added Import
+use App\Models\Announcement;
 
 // --- Public Routes ---
 Route::get('/', function () {
@@ -48,7 +48,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Patient Dashboard
-Route::get('/dashboard', function () {
+    Route::get('/dashboard', function () {
         // 1. Auto-complete past appointments (yesterday or older)
         Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
@@ -73,6 +73,9 @@ Route::get('/dashboard', function () {
     Route::get('/my-appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/book-appointment', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/book-appointment', [AppointmentController::class, 'store'])->name('appointments.store');
+    
+    // NEW: Delete Appointment Route
+    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
 
     // API Helpers
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
@@ -88,7 +91,7 @@ Route::get('/dashboard', function () {
         // Historical Report
         Route::get('/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
 
-        // --- Announcement Management (NEW) ---
+        // --- Announcement Management ---
         Route::resource('announcements', AdminAnnouncementController::class)
             ->names([
                 'index' => 'admin.announcements.index',

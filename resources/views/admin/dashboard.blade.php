@@ -31,20 +31,22 @@
             </div>
         </div>
 
-        <div class="col-md-3"> {{-- Changed from col-md-4 --}}
-            <div class="card h-100 border-0 border-start border-4 border-info shadow-sm">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                    <div>
-                        <p class="text-muted mb-1 fw-bold text-uppercase small">Total Appointments</p>
-                        <h3 class="fw-bold mb-0">{{ \App\Models\Appointment::count() }}</h3>
-                        <a href="{{ route('admin.appointments.index') }}" class="text-info text-decoration-none small fw-bold">View Schedule</a>
-                    </div>
-                    <div class="bg-info bg-opacity-10 p-3 rounded-circle">
-                        <i class="fas fa-calendar-check fa-2x text-info"></i>
-                    </div>
-                </div>
+<div class="col-md-3">
+    <div class="card h-100 border-0 border-start border-4 border-info shadow-sm">
+        <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+                <p class="text-muted mb-1 fw-bold text-uppercase small">Today's Appointments</p>
+                
+               <h3 class="fw-bold mb-0">{{ $todayAppointmentsCount }}</h3>
+                
+                <a href="{{ route('admin.appointments.index') }}" class="text-info text-decoration-none small fw-bold">View Schedule</a>
+            </div>
+            <div class="bg-info bg-opacity-10 p-3 rounded-circle">
+                <i class="fas fa-calendar-check fa-2x text-info"></i>
             </div>
         </div>
+    </div>
+</div>
 
         <div class="col-md-3"> {{-- Changed from col-md-4 --}}
             <div class="card h-100 border-0 border-start border-4 border-success shadow-sm">

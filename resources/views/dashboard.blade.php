@@ -110,9 +110,19 @@
                         <p class="mb-0 text-muted">
                             Scheduled for: <strong>{{ $activeAppointment->appointment_date->format('F d, Y') }}</strong>
                         </p>
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary mt-2">
-                            Status: {{ ucfirst($activeAppointment->status) }}
-                        </span>
+                        <div class="mt-2 d-flex align-items-center gap-3">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                                Status: {{ ucfirst($activeAppointment->status) }}
+                            </span>
+                            
+                            <form action="{{ route('appointments.destroy', $activeAppointment->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                                    <i class="fas fa-trash-alt me-1"></i> Cancel Appointment
+                                </button>
+                            </form>
+                            </div>
                     </div>
                     <div class="text-center">
                         <small class="text-uppercase text-muted fw-bold d-block">Your Queue</small>

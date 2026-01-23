@@ -19,63 +19,64 @@ class MedicineController extends Controller
 // app/Http/Controllers/MedicineController.php
 
 public function adminDashboard(Request $request)
-{
-    // Capture any newly expired medicines first
-    $this->captureExpiredMedicines();
+    {
+        // Capture any newly expired medicines first
+        $this->captureExpiredMedicines();
 
-    // Stats Row Queries
-    // Count every unique medicine in your table
-    $totalMedicines = Medicine::count(); 
-    
-    // Count ALL appointments (Pending + Completed)
-    $totalAppointments = Appointment::count(); 
-    
-    // IMPORTANT: Verify if your database uses 'user', 'patient', or 'Patient'
-    $totalPatients = User::where('role', 'user')->count(); 
+        // --- NEW LOGIC FOR DAILY APPOINTMENTS ---
+        // Count only appointments scheduled for today
+        $todayAppointmentsCount = Appointment::whereDate('appointment_date', Carbon::today())->count();
 
-    // Charts & History Logic
-    $months = [];
-    $releasesData = [];
-    $expirationsData = [];
+        // Stats Row Queries
+        $totalMedicines = Medicine::count(); 
+        
+        // This is the total count used for other parts of the dashboard if needed
+        $totalAppointments = Appointment::count(); 
+        
+        $totalPatients = User::where('role', 'user')->count(); 
 
-// Inside adminDashboard() loop
-for ($i = 5; $i >= 0; $i--) {
-    $monthDate = Carbon::now()->subMonths($i);
-    $months[] = $monthDate->format('M Y'); 
+        // Charts & History Logic
+        $months = [];
+        $releasesData = [];
+        $expirationsData = [];
 
-    $releasesData[] = MedicineHistory::where('action_type', 'Released')
-        ->whereMonth('performed_at', $monthDate->month)
-        ->whereYear('performed_at', $monthDate->year)
-        ->sum(DB::raw('ABS(quantity_changed)')); 
+        for ($i = 5; $i >= 0; $i--) {
+            $monthDate = Carbon::now()->subMonths($i);
+            $months[] = $monthDate->format('M Y'); 
 
-    // FIXED: Changed count() to sum() for the line chart data
-    $expirationsData[] = MedicineHistory::where('action_type', 'Expired')
-        ->whereMonth('performed_at', $monthDate->month)
-        ->whereYear('performed_at', $monthDate->year)
-        ->sum(DB::raw('ABS(quantity_changed)')); 
-}
+            $releasesData[] = MedicineHistory::where('action_type', 'Released')
+                ->whereMonth('performed_at', $monthDate->month)
+                ->whereYear('performed_at', $monthDate->year)
+                ->sum(DB::raw('ABS(quantity_changed)')); 
 
-    $monthlyDetails = MedicineHistory::whereMonth('performed_at', now()->month)
-        ->whereYear('performed_at', now()->year)
-        ->whereIn('action_type', ['Released', 'Expired'])
-        ->get();
+            $expirationsData[] = MedicineHistory::where('action_type', 'Expired')
+                ->whereMonth('performed_at', $monthDate->month)
+                ->whereYear('performed_at', $monthDate->year)
+                ->sum(DB::raw('ABS(quantity_changed)')); 
+        }
 
-    $lowStock = Medicine::where('stock_quantity', '<', 10)->get();
-    $expiringSoon = Medicine::where('expiry_date', '<=', now()->addDays(30))->get();
+        $monthlyDetails = MedicineHistory::whereMonth('performed_at', now()->month)
+            ->whereYear('performed_at', now()->year)
+            ->whereIn('action_type', ['Released', 'Expired'])
+            ->get();
 
-    // YOU MUST PASS EVERY VARIABLE HERE
-    return view('admin.dashboard', compact(
-        'totalMedicines', 
-        'totalAppointments', 
-        'totalPatients', 
-        'lowStock', 
-        'expiringSoon', 
-        'monthlyDetails',
-        'months', 
-        'releasesData', 
-        'expirationsData'
-    ));
-}
+        $lowStock = Medicine::where('stock_quantity', '<', 10)->get();
+        $expiringSoon = Medicine::where('expiry_date', '<=', now()->addDays(30))->get();
+
+        // YOU MUST PASS EVERY VARIABLE HERE, INCLUDING todayAppointmentsCount
+        return view('admin.dashboard', compact(
+            'todayAppointmentsCount', // Added this variable
+            'totalMedicines', 
+            'totalAppointments', 
+            'totalPatients', 
+            'lowStock', 
+            'expiringSoon', 
+            'monthlyDetails',
+            'months', 
+            'releasesData', 
+            'expirationsData'
+        ));
+    }
 
 // app/Http/Controllers/MedicineController.php
 public function patientIndex(Request $request)
@@ -300,7 +301,7 @@ public function update(Request $request, $id)
     /**
      * Logic: Identify and log expired medicines
      */
-    private function captureExpiredMedicines()
+private function captureExpiredMedicines()
     {
         $today = Carbon::today()->format('Y-m-d');
         $medicines = Medicine::where('expiry_date', '<=', $today)->get();
@@ -328,7 +329,7 @@ public function update(Request $request, $id)
     /**
      * Helper: Log History to DB
      */
-    private function logHistory($name, $action, $qty, $desc)
+   private function logHistory($name, $action, $qty, $desc)
     {
         MedicineHistory::create([
             'medicine_name' => $name,
