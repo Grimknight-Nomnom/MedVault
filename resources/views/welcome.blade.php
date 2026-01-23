@@ -50,25 +50,21 @@
                     <a href="#staff" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Staff</a>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    @if (Route::has('login'))
-                        @auth
-                         <a href="{{ route('login') }}" class="hidden md:block text-sm font-medium text-gray-600 hover:text-green-600 transition">Log in</a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-green-200">
-                                    Get Started
-                                </a>
-                            @endif
-                        @else
-                            <a href="{{ route('login') }}" class="hidden md:block text-sm font-medium text-gray-600 hover:text-green-600 transition">Log in</a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-green-200">
-                                    Get Started
-                                </a>
-                            @endif
-                        @endauth
-                    @endif
-                </div>
+<div class="flex items-center gap-4">
+    @if (Route::has('login'))
+        @auth
+            <a href="{{ url('/dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Dashboard</a>
+        @else
+            <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Log in</a>
+
+            @if (Route::has('register'))
+                <a href="{{ route('register') }}" class="hidden md:block bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-green-200">
+                    Get Started
+                </a>
+            @endif
+        @endauth
+    @endif
+</div>
             </div>
         </div>
     </nav>
@@ -166,9 +162,9 @@
                 <div class="relative">
                     <div class="absolute inset-0 bg-green-600 rounded-2xl rotate-3 opacity-20"></div>
                     <div class="relative bg-white p-2 rounded-2xl shadow-xl">
-                        <div class="aspect-[4/3] rounded-xl bg-gray-200 flex items-center justify-center overflow-hidden">
-                            <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                        </div>
+<div class="aspect-[4/3] rounded-xl bg-gray-200 flex items-center justify-center overflow-hidden">
+    <img src="{{ asset('Image/clinic.png') }}" alt="About Us Image" class="w-full h-full object-cover">
+</div>
                     </div>
                 </div>
             </div>
