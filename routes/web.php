@@ -48,7 +48,14 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Patient Dashboard
-    Route::get('/dashboard', function () {
+Route::get('/dashboard', function () {
+        // 1. Auto-complete past appointments (yesterday or older)
+        Appointment::where('user_id', Auth::id())
+            ->whereIn('status', ['pending', 'approved'])
+            ->where('appointment_date', '<', now()->startOfDay())
+            ->update(['status' => 'completed']);
+
+        // 2. Fetch the remaining active appointment (if any)
         $activeAppointment = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->latest('appointment_date')

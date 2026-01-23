@@ -76,7 +76,7 @@
                 <div class="card-body p-5">
                     <div class="row align-items-center">
                         <div class="col-md-8 text-center text-md-start">
-                            <h1 class="display-5 fw-bold mb-3">Hello, {{ Auth::user()->first_name }}!</h1>
+                            <h1 class="display-5 fw-bold mb-3">Hello, {{ Auth::user()->first_name ?? 'User' }}!</h1>
                             <p class="lead mb-4 opacity-90">Manage your health and check for available free medications in real-time.</p>
                             
                             @if($isProfileIncomplete)

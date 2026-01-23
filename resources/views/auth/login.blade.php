@@ -9,19 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Instrument Sans', 'sans-serif'] },
-                    colors: {
-                        teal: { 50: '#f0fdfa', 100: '#ccfbf1', 600: '#0d9488', 700: '#0f766e', 800: '#115e59', 900: '#134e4a' }
-                    }
-                }
-            }
-        }
-    </script>
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
 <body class="bg-white font-sans text-gray-900 antialiased selection:bg-teal-100 selection:text-teal-900">
 
