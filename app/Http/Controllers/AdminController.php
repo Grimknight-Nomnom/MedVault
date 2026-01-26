@@ -13,10 +13,10 @@ class AdminController extends Controller
      */
     public function indexPatients(Request $request)
     {
-        $query = User::where('role', 'user');
+        $query = User::whereIn('role', ['user', 'User', 'users']);
 
         // Simple Search Logic
-        if ($request->has('search') && $request->search != '') {
+if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('id', 'like', "%$search%")
@@ -25,12 +25,10 @@ class AdminController extends Controller
             });
         }
 
-        // Order by latest registration
         $patients = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return view('admin.patients.index', compact('patients'));
     }
-
     /**
      * Display the specified patient profile.
      */

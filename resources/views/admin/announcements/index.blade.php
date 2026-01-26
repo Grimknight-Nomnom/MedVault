@@ -66,13 +66,14 @@
                                     <a href="{{ route('admin.announcements.edit', $item->id) }}" class="btn btn-sm btn-outline-primary rounded-start px-3" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('admin.announcements.delete', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this announcement?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-end px-3" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
+                                    
+                                    {{-- TRIGGER DELETE MODAL --}}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger rounded-end px-3" 
+                                            title="Delete"
+                                            onclick="openDeleteModal('{{ route('admin.announcements.delete', $item->id) }}', 'Are you sure you want to delete this announcement? It will be removed from the homepage.')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -95,4 +96,8 @@
         @endif
     </div>
 </div>
+
+{{-- INCLUDE GLOBAL DELETE MODAL COMPONENT --}}
+@include('components.delete-modal')
+
 @endsection

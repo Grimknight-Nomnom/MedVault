@@ -229,32 +229,37 @@ class AppointmentController extends Controller
 
     // ================= ADMIN METHODS =================
 
-    public function adminIndex(Request $request)
-    {
-        $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
+public function adminIndex(Request $request)
+{
+    $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
+    
+    $appointments = Appointment::with('user')
+        ->whereYear('appointment_date', $date->year)
+        ->whereMonth('appointment_date', $date->month)
+        ->get();
+
+    // --- MODIFY THIS TRANSFORM BLOCK ---
+    $appointments->transform(function($app) {
+        $app->patient_name = $app->user ? ($app->user->first_name . ' ' . $app->user->last_name) : 'Unknown';
         
-        $appointments = Appointment::with('user')
-            ->whereYear('appointment_date', $date->year)
-            ->whereMonth('appointment_date', $date->month)
-            ->get();
+        // ADD THIS LINE: Create a specific string for the calendar filter
+        $app->calendar_date = Carbon::parse($app->appointment_date)->format('Y-m-d');
+        
+        return $app;
+    });
 
-        $appointments->transform(function($app) {
-            $app->patient_name = $app->user ? ($app->user->first_name . ' ' . $app->user->last_name) : 'Unknown';
-            return $app;
-        });
+       $appointmentsByDate = $appointments->groupBy(function($app) {
+        return Carbon::parse($app->appointment_date)->format('Y-m-d');
+    });
 
-        $appointmentsByDate = $appointments->groupBy(function($app) {
-            return Carbon::parse($app->appointment_date)->format('Y-m-d');
-        });
+    $startOfMonth = $date->copy()->startOfMonth();
+    $endOfMonth = $date->copy()->endOfMonth();
+    $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
+        ->get()
+        ->keyBy('date');
 
-        $startOfMonth = $date->copy()->startOfMonth();
-        $endOfMonth = $date->copy()->endOfMonth();
-        $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
-            ->get()
-            ->keyBy('date');
-
-        return view('admin.appointments.index', compact('appointmentsByDate', 'date', 'appointments', 'settings'));
-    }
+    return view('admin.appointments.index', compact('appointmentsByDate', 'date', 'appointments', 'settings'));
+}
 
     public function updateDailyLimit(Request $request)
     {

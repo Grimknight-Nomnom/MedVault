@@ -129,7 +129,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
             <div class="modal-header bg-light py-2">
@@ -163,7 +163,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="dayDetailsModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="dayDetailsModal" tabindex="-1" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white">
@@ -204,7 +204,7 @@
     }
 
     function openDayModal(dateString) {
-        const dayAppointments = allAppointments.filter(app => app.appointment_date.startsWith(dateString));
+        const dayAppointments = allAppointments.filter(app => app.calendar_date === dateString);
         dayAppointments.sort((a, b) => a.queue_number - b.queue_number);
 
         const dateObj = new Date(dateString);
