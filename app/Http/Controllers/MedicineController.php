@@ -267,9 +267,42 @@ class MedicineController extends Controller
         return redirect()->route('admin.medicines.index')->with('success', 'Medicine deleted successfully!');
     }
 
-    public function history()
+public function history(Request $request)
     {
-        $history = MedicineHistory::orderBy('performed_at', 'desc')->get();
+        $query = MedicineHistory::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function($q) use ($search) {
+                // 1. Basic Text Search (Medicine, Action, and Patient Name in Description)
+                $q->where('medicine_name', 'like', "%{$search}%")
+                  ->orWhere('action_type', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%"); // This searches Patient Name!
+
+                // 2. Smart Date Search
+                try {
+                    $date = \Carbon\Carbon::parse($search);
+                    
+                    // Check what kind of date the user typed
+                    if (preg_match('/^[a-zA-Z]+$/', $search)) {
+                        // User typed ONLY letters (e.g., "January", "Jan") -> Search by Month
+                        $q->orWhereMonth('performed_at', $date->month);
+                    } elseif (preg_match('/^\d{4}$/', $search)) {
+                        // User typed ONLY 4 digits (e.g., "2026") -> Search by Year
+                        $q->orWhereYear('performed_at', $search);
+                    } else {
+                        // User typed a specific date (e.g., "Jan 10", "2026-01-10") -> Search exact Date
+                        $q->orWhereDate('performed_at', $date->format('Y-m-d'));
+                    }
+                } catch (\Exception $e) {
+                    // If it's not a date (like a name), just ignore this part
+                }
+            });
+        }
+
+        $history = $query->orderBy('performed_at', 'desc')->get();
+        
         return view('admin.medicines.history', compact('history'));
     }
 

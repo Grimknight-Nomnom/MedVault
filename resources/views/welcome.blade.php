@@ -52,17 +52,21 @@
 
 <div class="flex items-center gap-4">
     @if (Route::has('login'))
-        @auth
-            <a href="{{ url('/dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Dashboard</a>
-        @else
-            <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Log in</a>
+@auth
+    @if(Auth::user()->role === 'admin')
+        <a href="{{ route('admin.dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Dashboard</a>
+    @else
+        <a href="{{ route('dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Dashboard</a>
+    @endif
+@else
+    <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Log in</a>
 
-            @if (Route::has('register'))
-                <a href="{{ route('register') }}" class="hidden md:block bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-green-200">
-                    Get Started
-                </a>
-            @endif
-        @endauth
+    @if (Route::has('register'))
+        <a href="{{ route('register') }}" class="hidden md:block bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-green-200">
+            Get Started
+        </a>
+    @endif
+@endauth   
     @endif
 </div>
             </div>
