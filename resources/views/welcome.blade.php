@@ -7,84 +7,144 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    
-
     <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Instrument Sans', sans-serif; }
+        
         html { scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* Line Clamp for Announcement Text */
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
+        
+        /* Fade In Animation */
+        .animate-fade-in { animation: fadeIn 1s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        
+        /* Delay classes */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
     </style>
 </head>
-<body class="antialiased bg-white text-gray-900 selection:bg-green-100 selection:text-green-700">
+<body class="antialiased bg-white text-slate-600 selection:bg-emerald-500 selection:text-white">
 
-    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-green-100 shadow-sm transition-all duration-300">
+    <nav class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-emerald-100 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
-                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
-                    <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md group">
-                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12h2l2-3 2 6 2-3h2"></path>
-                        </svg>
+                <div class="flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo(0,0)">
+                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200 transition-transform group-hover:scale-105">
+                        <i class="fa-solid fa-heart-pulse text-lg"></i>
                     </div>
-                    <span class="font-bold text-xl tracking-tight text-gray-900">MedVault</span>
+                    <div>
+                        <span class="block font-bold text-xl text-slate-900 leading-none">MedVault</span>
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Barangay Looc</span>
+                    </div>
                 </div>
 
-                <div class="hidden md:flex space-x-8">
-                    <a href="#home" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Home</a>
-                    <a href="#announcements" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Announcements</a>
-                    <a href="#about" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">About Us</a>
-                    <a href="#details" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Details</a>
-                    <a href="#staff" class="text-gray-600 hover:text-green-600 font-medium transition hover:underline decoration-2 underline-offset-4 decoration-green-500">Staff</a>
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#home" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Home</a>
+                    <a href="#announcements" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Updates</a>
+                    <a href="#about" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">About</a>
+                    <a href="#services" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Services</a>
+                    <a href="#staff" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Team</a>
                 </div>
 
-<div class="flex items-center gap-4">
-    @if (Route::has('login'))
-@auth
-    @if(Auth::user()->role === 'admin')
-        <a href="{{ route('admin.dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Dashboard</a>
-    @else
-        <a href="{{ route('dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Dashboard</a>
-    @endif
-@else
-    <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 hover:text-green-600 transition">Log in</a>
-
-    @if (Route::has('register'))
-        <a href="{{ route('register') }}" class="hidden md:block bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-full transition shadow-lg shadow-green-200">
-            Get Started
-        </a>
-    @endif
-@endauth   
-    @endif
-</div>
+                <div class="flex items-center gap-3">
+                    @if (Route::has('login'))
+                        @auth
+                            <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-800 transition">
+                                Dashboard
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" class="hidden sm:block text-sm font-semibold text-slate-600 hover:text-emerald-600">Sign In</a>
+                            @if (Route::has('register'))
+                                <a href="{{ route('register') }}" class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">
+                                    Book Now
+                                </a>
+                            @endif
+                        @endauth
+                    @endif
+                </div>
             </div>
         </div>
     </nav>
 
+<section id="home" class="relative min-h-screen flex items-center overflow-hidden">
+        
+        <div class="absolute inset-0 z-0">
+            <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Background" class="w-full h-full object-cover">
+        </div>
+
+        <div class="absolute inset-0 z-10" 
+             style="background: linear-gradient(to right, rgba(236, 253, 245, 0.98) 0%, rgba(209, 250, 229, 0.85) 50%, rgba(255, 255, 255, 0) 100%);">
+        </div>
+
+        <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20">
+            <div class="max-w-2xl text-left">
+                
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-emerald-200 shadow-sm text-emerald-700 text-xs font-bold uppercase tracking-wide mb-8 animate-fade-in">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Trusted Community Healthcare
+                </div>
+                
+                <h1 class="text-5xl md:text-7xl font-bold text-slate-900 tracking-tight mb-6 leading-[1.1] animate-fade-in delay-100">
+                    Your Health Journey, <br>
+                    <span class="text-emerald-700">Barangay Looc Clinic</span>
+                </h1>
+                
+                <p class="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed max-w-xl animate-fade-in delay-200 font-medium">
+                    At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community. Led by Dr. Adelinno Labro and supported by our dedicated team of skilled nurses and staff, we prioritize patient safety, confidentiality, and personalized care.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-5 animate-fade-in delay-300">
+                    @if (Route::has('register'))
+                    <a href="{{ route('register') }}" class="group relative px-8 py-4 bg-emerald-600 text-white font-bold text-lg rounded-full overflow-hidden shadow-lg shadow-emerald-200/50 transition-all hover:scale-105 hover:shadow-emerald-300/50 hover:-translate-y-1">
+                        <span class="relative z-10 flex items-center gap-2">
+                            Book Appointment <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </span>
+                    </a>
+                    @endif
+                    <a href="#about" class="px-8 py-4 bg-white border border-slate-300 text-slate-700 font-bold text-lg rounded-full hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-700 transition-all flex items-center justify-center gap-2 group shadow-sm">
+                        Learn More 
+                    </a>
+                </div>
+
+                <div class="mt-16 pt-8 border-t border-slate-300/50 flex gap-12 animate-fade-in delay-300">
+                    <div>
+                        <p class="text-3xl font-bold text-slate-900">40+</p>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Years Service</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-slate-900">10k+</p>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Patients Served</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-slate-900">100%</p>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Dedication</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     @if(isset($announcements) && $announcements->count() > 0)
-    <section id="announcements" class="py-12 bg-green-50 border-b border-green-100">
+    <section id="announcements" class="py-24 bg-green-50 border-b border-green-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-10">
+            <div class="text-center mb-16" id="updates-header">
                 <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl">Latest Updates</h2>
                 <div class="w-16 h-1.5 bg-green-500 mx-auto rounded-full mt-2"></div>
                 <p class="mt-4 text-lg text-gray-600">Important news and events from Barangay Looc Clinic.</p>
             </div>
 
             <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                @foreach($announcements as $announcement)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                @foreach($announcements as $key => $announcement)
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 {{ $key >= 3 ? 'hidden extra-announcement' : '' }}">
                     @if($announcement->image_path)
                         <div class="h-48 w-full bg-gray-100 relative group">
                             <img src="{{ asset('storage/' . $announcement->image_path) }}" alt="{{ $announcement->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
@@ -106,45 +166,59 @@
                         <p class="text-gray-600 text-sm line-clamp-3 leading-relaxed">
                             {{ $announcement->description }}
                         </p>
-                        </div>
+                    </div>
                 </div>
                 @endforeach
             </div>
+
+            @if($announcements->count() > 3)
+            <div class="text-center mt-16">
+                <button id="viewMoreBtn" class="inline-flex items-center px-8 py-3 bg-white border border-green-300 rounded-full font-semibold text-green-700 tracking-wide hover:bg-green-50 transition-all duration-300 shadow-sm hover:shadow-md">
+                    View More Updates
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <button id="showLessBtn" class="hidden inline-flex items-center px-8 py-3 bg-white border border-gray-300 rounded-full font-semibold text-gray-700 tracking-wide hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md">
+                    Show Less
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                </button>
+            </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const viewMoreBtn = document.getElementById('viewMoreBtn');
+                    const showLessBtn = document.getElementById('showLessBtn');
+                    const header = document.getElementById('updates-header');
+
+                    if (viewMoreBtn && showLessBtn) {
+                        viewMoreBtn.addEventListener('click', function() {
+                            const hiddenCards = document.querySelectorAll('.extra-announcement');
+                            hiddenCards.forEach(card => {
+                                card.classList.remove('hidden');
+                                card.classList.add('animate-fade-in');
+                            });
+                            this.style.display = 'none';
+                            showLessBtn.style.display = 'inline-flex';
+                            showLessBtn.classList.remove('hidden');
+                        });
+
+                        showLessBtn.addEventListener('click', function() {
+                            const hiddenCards = document.querySelectorAll('.extra-announcement');
+                            hiddenCards.forEach(card => {
+                                card.classList.add('hidden');
+                                card.classList.remove('animate-fade-in');
+                            });
+                            this.style.display = 'none';
+                            viewMoreBtn.style.display = 'inline-flex';
+                            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        });
+                    }
+                });
+            </script>
+            @endif
         </div>
     </section>
     @endif
-
-    <section id="home" class="relative pt-20 pb-24 lg:pt-32 lg:pb-40 overflow-hidden bg-white">
-        <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0">
-            <div class="absolute top-0 right-0 w-1/2 h-full bg-green-50/50 skew-x-12 opacity-70"></div>
-            <div class="absolute top-20 left-10 w-72 h-72 bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        </div>
-
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-            <span class="inline-block py-1 px-3 rounded-full bg-green-50 text-green-700 text-sm font-semibold mb-6 border border-green-100">
-                Welcome to Community Healthcare
-            </span>
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
-                Your Health Journey, <br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800">Barangay Looc Clinic</span>
-            </h1>
-            
-            <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-4xl mx-auto mb-10 leading-relaxed">
-                At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community. Led by Dr. Adelinno Labro and supported by our dedicated team of skilled nurses and staff, we prioritize patient safety, confidentiality, and personalized care.
-            </p>
-
-            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-                @if (Route::has('register'))
-                <a href="{{ route('register') }}" class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full shadow-lg hover:shadow-green-200/50 hover:-translate-y-1 transition-all duration-300">
-                    Get Started
-                </a>
-                @endif
-                <a href="#about" class="px-8 py-4 bg-white border-2 border-green-600 text-green-700 font-semibold rounded-full hover:bg-green-50 transition-all">
-                    Learn More
-                </a>
-            </div>
-        </div>
-    </section>
 
     <section id="about" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
@@ -163,12 +237,12 @@
                     </p>
                 </div>
 
-                <div class="relative">
-                    <div class="absolute inset-0 bg-green-600 rounded-2xl rotate-3 opacity-20"></div>
-                    <div class="relative bg-white p-2 rounded-2xl shadow-xl">
-<div class="aspect-[4/3] rounded-xl bg-gray-200 flex items-center justify-center overflow-hidden">
-    <img src="{{ asset('Image/clinic.png') }}" alt="About Us Image" class="w-full h-full object-cover">
-</div>
+                <div class="relative group cursor-pointer">
+                    <div class="absolute inset-0 bg-green-600 rounded-2xl rotate-3 opacity-20 transition-transform duration-500 group-hover:rotate-6"></div>
+                    <div class="relative bg-white p-2 rounded-2xl shadow-xl transition-shadow duration-500 group-hover:shadow-2xl">
+                        <div class="aspect-[4/3] rounded-xl bg-gray-200 flex items-center justify-center overflow-hidden">
+                            <img src="{{ asset('Image/clinic.png') }}" alt="About Us Image" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -225,7 +299,7 @@
 
                 <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">John Paul Dela Cruz</h3>
                     <p class="text-gray-500 font-medium">Nurse</p>
@@ -233,7 +307,7 @@
 
                 <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
                     <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h3 class="text-xl font-bold text-green-700">Krystal Mae Anarna</h3>
                     <p class="text-gray-500 font-medium">Nurse</p>
