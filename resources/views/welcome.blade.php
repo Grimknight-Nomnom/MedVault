@@ -27,6 +27,19 @@
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
+
+        /* FORCE GRID LAYOUT (Fixes the "Not in a row" issue) */
+        .staff-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Default to 1 column */
+            gap: 1.5rem; /* gap-6 */
+        }
+        @media (min-width: 640px) {
+            .staff-grid { grid-template-columns: repeat(2, 1fr); } /* 2 columns on tablet */
+        }
+        @media (min-width: 1024px) {
+            .staff-grid { grid-template-columns: repeat(4, 1fr); } /* 4 columns on desktop */
+        }
     </style>
 </head>
 <body class="antialiased bg-white text-slate-600 selection:bg-emerald-500 selection:text-white">
@@ -48,7 +61,6 @@
                     <a href="#home" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Home</a>
                     <a href="#announcements" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Updates</a>
                     <a href="#about" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">About</a>
-                    <a href="#services" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Services</a>
                     <a href="#staff" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Team</a>
                 </div>
 
@@ -81,19 +93,14 @@
         </div>
     </nav>
 
-    <section id="home" class="relative min-h-screen flex items-center overflow-hidden pt-16 sm:pt-0">
-        
+    <section id="home" class="relative min-h-screen flex flex-col justify-center overflow-hidden scroll-mt-20">
         <div class="absolute inset-0 z-0">
             <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Background" class="w-full h-full object-cover">
         </div>
+        <div class="absolute inset-0 z-10" style="background: linear-gradient(to right, rgba(236, 253, 245, 0.98) 0%, rgba(209, 250, 229, 0.85) 50%, rgba(255, 255, 255, 0) 100%);"></div>
 
-        <div class="absolute inset-0 z-10" 
-             style="background: linear-gradient(to right, rgba(236, 253, 245, 0.98) 0%, rgba(209, 250, 229, 0.85) 50%, rgba(255, 255, 255, 0) 100%);">
-        </div>
-
-        <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-10 sm:pt-20">
+        <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div class="max-w-2xl text-left">
-                
                 <div class="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-white border border-emerald-200 shadow-sm text-emerald-700 text-xs font-bold uppercase tracking-wide mb-6 sm:mb-8 animate-fade-in">
                     <span class="relative flex h-2 w-2">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -108,7 +115,7 @@
                 </h1>
                 
                 <p class="text-sm sm:text-lg md:text-xl text-slate-600 mb-8 sm:mb-10 leading-relaxed max-w-xl animate-fade-in delay-200 font-medium">
-                    At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community. Led by Dr. Adelinno Labro and supported by our dedicated team of skilled nurses and staff, we prioritize patient safety, confidentiality, and personalized care.
+                    At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community.
                 </p>
 
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-5 animate-fade-in delay-300">
@@ -123,32 +130,16 @@
                         Learn More 
                     </a>
                 </div>
-
-                <div class="mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-slate-300/50 flex gap-8 sm:gap-12 animate-fade-in delay-300">
-                    <div>
-                        <p class="text-2xl sm:text-3xl font-bold text-slate-900">40+</p>
-                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Years Service</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl sm:text-3xl font-bold text-slate-900">10k+</p>
-                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Patients Served</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl sm:text-3xl font-bold text-slate-900">100%</p>
-                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Dedication</p>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
 
     @if(isset($announcements) && $announcements->count() > 0)
-    <section id="announcements" class="py-12 sm:py-24 bg-green-50 border-b border-green-100">
+    <section id="announcements" class="min-h-screen flex flex-col justify-center py-12 sm:py-24 bg-green-50 border-b border-green-100 scroll-mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10 sm:mb-16" id="updates-header">
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Latest Updates</h2>
                 <div class="w-12 h-1 sm:w-16 sm:h-1.5 bg-green-500 mx-auto rounded-full mt-2"></div>
-                <p class="mt-3 sm:mt-4 text-sm sm:text-lg text-gray-600">Important news and events from Barangay Looc Clinic.</p>
             </div>
 
             <div class="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -229,7 +220,7 @@
     </section>
     @endif
 
-    <section id="about" class="py-12 sm:py-24 bg-white">
+    <section id="about" class="min-h-screen flex flex-col justify-center py-12 sm:py-24 bg-white scroll-mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="text-center mb-8 sm:mb-12">
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">About Us</h2>
@@ -258,7 +249,7 @@
         </div>
     </section>
 
-    <section id="details" class="py-12 sm:py-24 bg-gray-50">
+    <section id="details" class="min-h-screen flex flex-col justify-center py-12 sm:py-24 bg-gray-50 scroll-mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="text-center mb-10 sm:mb-16">
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">Our Core Values</h2>
@@ -293,40 +284,52 @@
         </div>
     </section>
 
-    <section id="staff" class="py-12 sm:py-24 bg-green-50/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+    <section id="staff" class="min-h-screen flex flex-col justify-center py-12 sm:py-24 bg-green-50/50 scroll-mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center w-full">
             <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-10 sm:mb-16">Our Dedicated Staff</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+            <div class="staff-grid w-full max-w-7xl mx-auto">
                 
                 @php
                     $staffMembers = [
-                        ['name' => 'Dr. Adelinno Labro', 'role' => 'Doctor'],
-                        ['name' => 'John Paul Dela Cruz', 'role' => 'Nurse'],
-                        ['name' => 'Krystal Mae Anarna', 'role' => 'Nurse'],
-                        ['name' => 'Elena Divina', 'role' => 'Nutrition Scholar'],
-                        ['name' => 'Nena Alcaraz', 'role' => 'Nutrition Scholar'],
-                        ['name' => 'Lolita Mane', 'role' => 'Nutrition Scholar'],
-                        ['name' => 'Christine Manalac', 'role' => 'Health Worker'],
-                        ['name' => 'Roberta Manlapaz', 'role' => 'Health Worker'],
-                        ['name' => 'Fia Delima', 'role' => 'Health Worker'],
-                        ['name' => 'Corazon Alcala', 'role' => 'Health Worker'],
-                        ['name' => 'Roberta Alintanahin', 'role' => 'Health Worker'],
-                        ['name' => 'Precila Magpantay', 'role' => 'Health Worker'],
-                        ['name' => 'Charmaine Dazo', 'role' => 'Health Worker'],
-                        ['name' => 'Evangeline Ignacio', 'role' => 'Health Worker'],
-                        ['name' => 'Marites Ilanes', 'role' => 'Health Worker'],
+                        ['name' => 'Dr. Adelinno Labro', 'role' => 'Doctor', 'image' => 'Image/staff1.png'],
+                        ['name' => 'John Paul Dela Cruz', 'role' => 'Nurse', 'image' => null],
+                        ['name' => 'Krystal Mae Anarna', 'role' => 'Nurse', 'image' => null],
+                        ['name' => 'Elena Divina', 'role' => 'Nutrition Scholar', 'image' => null],
+                        ['name' => 'Nena Alcaraz', 'role' => 'Nutrition Scholar', 'image' => null],
+                        ['name' => 'Lolita Mane', 'role' => 'Nutrition Scholar', 'image' => null],
+                        ['name' => 'Christine Manalac', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Roberta Manlapaz', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Fia Delima', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Corazon Alcala', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Roberta Alintanahin', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Precila Magpantay', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Charmaine Dazo', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Evangeline Ignacio', 'role' => 'Health Worker', 'image' => null],
+                        ['name' => 'Marites Ilanes', 'role' => 'Health Worker', 'image' => null],
                     ];
                 @endphp
 
                 @foreach($staffMembers as $staff)
-                <div class="bg-white p-5 sm:p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-all duration-300">
-                    <div class="w-16 h-16 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center mb-3 sm:mb-4 text-green-600">
-                         <svg class="w-8 h-8 sm:w-12 sm:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    @php
+                        $imageSrc = $staff['image'] 
+                            ? asset($staff['image']) 
+                            : 'https://ui-avatars.com/api/?name=' . urlencode($staff['name']) . '&background=10b981&color=fff&size=512&font-size=0.33';
+                    @endphp
+                    
+                    <div class="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200">
+                        
+                        <img src="{{ $imageSrc }}" 
+                             alt="{{ $staff['name'] }}" 
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                        <div class="absolute bottom-0 left-0 w-full p-6 text-left transform translate-y-0 transition-transform duration-300">
+                            <h3 class="text-white text-lg font-bold leading-tight drop-shadow-md">{{ $staff['name'] }}</h3>
+                            <p class="text-emerald-400 text-xs font-bold tracking-widest uppercase mt-2 drop-shadow-sm">{{ $staff['role'] }}</p>
+                        </div>
                     </div>
-                    <h3 class="text-lg sm:text-xl font-bold text-green-700">{{ $staff['name'] }}</h3>
-                    <p class="text-sm sm:text-base text-gray-500 font-medium">{{ $staff['role'] }}</p>
-                </div>
                 @endforeach
 
             </div>
