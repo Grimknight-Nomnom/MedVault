@@ -2,11 +2,13 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
+    <div class="mb-4">
+        <div class="mb-3">
             <h2 class="fw-bold text-primary">Manage Announcements</h2>
             <p class="text-muted mb-0">Control the news and updates visible on the homepage.</p>
         </div>
+        
+        {{-- Button moved below the title --}}
         <a href="{{ route('admin.announcements.create') }}" class="btn btn-primary rounded-pill shadow-sm fw-bold px-4">
             <i class="fas fa-plus-circle me-2"></i> Create New
         </a>

@@ -2,11 +2,13 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    {{-- Page Header --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h2 class="fw-bold text-dark mb-1">Registered Patients</h2>
-            <p class="text-muted small">Manage and view patient records.</p>
+            <p class="text-muted small mb-0">Manage and view patient records.</p>
         </div>
+        
         <form action="{{ route('admin.patients.index') }}" method="GET" class="d-flex gap-2">
             <input type="text" name="search" class="form-control border-success shadow-none" 
                    placeholder="Search Name or ID..." value="{{ request('search') }}" style="width: 250px;">
@@ -34,16 +36,19 @@
                             <td class="ps-4 fw-bold text-success">#{{ $patient->usernumber }}</td>
                             <td>{{ $patient->first_name }} {{ $patient->last_name }}</td>
                             <td class="text-end pe-4">
-                                <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold me-1">
-                                    View
-                                </a>
-                                
-                                {{-- Trigger the Bootstrap Delete Modal --}}
-                                <button type="button" 
-                                    onclick="openBootstrapDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
-                                    class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="d-flex justify-content-end gap-2">
+                                    {{-- View Button --}}
+                                    <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
+                                        View
+                                    </a>
+                                    
+                                    {{-- Delete Button --}}
+                                    <button type="button" 
+                                        onclick="openBootstrapDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
+                                        class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         @empty
