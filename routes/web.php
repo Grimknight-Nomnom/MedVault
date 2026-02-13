@@ -76,7 +76,8 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
         // Dashboard
-        Route::get('/dashboard', [MedicineController::class, 'adminDashboard'])->name('admin.dashboard');
+        // Use AdminController (which now contains the combined Dashboard + Calendar logic)
+Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
         // NEW: Corrected API Routes for Charts
         // We removed '/admin' from the string because prefix('admin') adds it automatically.

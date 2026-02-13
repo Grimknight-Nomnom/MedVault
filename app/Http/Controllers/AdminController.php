@@ -4,19 +4,121 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Appointment;
+use App\Models\Medicine;
+use App\Models\MedicineHistory;
+use App\Models\AppointmentSetting;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
-    /**
-     * Display a listing of registered patients.
-     */
+    public function dashboard(Request $request)
+    {
+        // --- 1. DASHBOARD STATS ---
+        $this->captureExpiredMedicines();
+
+        $todayAppointmentsCount = Appointment::whereDate('appointment_date', Carbon::today())->count();
+        $totalMedicines = Medicine::count();
+        $totalAppointments = Appointment::count();
+        $totalPatients = User::where('role', 'user')->count();
+        $lowStock = Medicine::where('stock_quantity', '<', 10)->get();
+        $expiringSoon = Medicine::where('expiry_date', '<=', now()->addDays(30))->get();
+        
+        // Monthly details for the chart
+        $monthlyDetails = MedicineHistory::whereMonth('performed_at', now()->month)
+            ->whereYear('performed_at', now()->year)
+            ->whereIn('action_type', ['Released', 'Expired'])
+            ->get();
+
+        // --- 2. CALENDAR LOGIC (Unified) ---
+        $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
+        $startOfMonth = $date->copy()->startOfMonth();
+        $endOfMonth = $date->copy()->endOfMonth();
+
+        // Fetch RAW appointments for the view (Grouped logic)
+        $appointments = Appointment::with('user')
+            ->whereBetween('appointment_date', [$startOfMonth, $endOfMonth])
+            ->get();
+
+        // Transform for View logic (Add names and formatted dates)
+        $appointments->transform(function($app) {
+            $app->patient_name = $app->user ? ($app->user->first_name . ' ' . $app->user->last_name) : 'Unknown';
+            $app->calendar_date = Carbon::parse($app->appointment_date)->format('Y-m-d');
+            return $app;
+        });
+
+        // Create the Missing Variable: $appointmentsByDate
+        $appointmentsByDate = $appointments->groupBy('calendar_date');
+
+        // Fetch Settings
+        $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->keyBy('date');
+
+        // Generate Grid Array (For dashboard-style grid if needed)
+        $calendar = [];
+        $today = Carbon::today()->format('Y-m-d');
+        $startDayOfWeek = $startOfMonth->dayOfWeek;
+        
+        // Fill empty slots
+        for ($i = 0; $i < $startDayOfWeek; $i++) { $calendar[] = null; }
+
+        for ($day = 1; $day <= $endOfMonth->day; $day++) {
+            $currentDate = $startOfMonth->copy()->setDay($day)->format('Y-m-d');
+            $dayCount = $appointmentsByDate->get($currentDate, collect())->count();
+            $daySetting = $settings->get($currentDate);
+            $maxLimit = $daySetting ? $daySetting->max_appointments : (Carbon::parse($currentDate)->dayOfWeek === Carbon::WEDNESDAY ? 50 : 30);
+
+            $calendar[] = [
+                'date' => $currentDate,
+                'day' => $day,
+                'count' => $dayCount,
+                'max' => $maxLimit,
+                'label' => $daySetting ? $daySetting->label : null,
+                'is_full' => $dayCount >= $maxLimit,
+                'is_past' => $currentDate < $today,
+            ];
+        }
+
+        // --- 3. RETURN EVERYTHING ---
+        return view('admin.dashboard', compact(
+            // Stats
+            'todayAppointmentsCount', 'totalMedicines', 'totalAppointments', 'totalPatients',
+            'lowStock', 'expiringSoon', 'monthlyDetails',
+            // Calendar
+            'calendar', 'date', 'appointments', 'appointmentsByDate', 'settings'
+        ));
+    }
+
+    private function captureExpiredMedicines()
+    {
+        $today = Carbon::today()->format('Y-m-d');
+        $medicines = Medicine::where('expiry_date', '<=', $today)->where('stock_quantity', '>', 0)->get();
+
+        foreach ($medicines as $medicine) {
+            $alreadyLogged = MedicineHistory::where('medicine_name', $medicine->name)
+                ->where('action_type', 'Expired')
+                ->whereDate('performed_at', Carbon::today())
+                ->exists();
+
+            if (!$alreadyLogged) {
+                MedicineHistory::create([
+                    'medicine_name' => $medicine->name,
+                    'action_type' => 'Expired',
+                    'quantity_changed' => -$medicine->stock_quantity,
+                    'description' => "Medicine expired on " . $medicine->expiry_date,
+                    'performed_at' => now(),
+                ]);
+                $medicine->update(['stock_quantity' => 0]);
+            }
+        }
+    }
+
+    // ... Keep your existing patient methods (indexPatients, showPatient, destroy) ...
     public function indexPatients(Request $request)
     {
         $query = User::whereIn('role', ['user', 'User', 'users']);
-
-        // Simple Search Logic
-if ($request->has('search') && $request->search != '') {
+        if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('id', 'like', "%$search%")
@@ -24,47 +126,25 @@ if ($request->has('search') && $request->search != '') {
                   ->orWhere('last_name', 'like', "%$search%");
             });
         }
-
         $patients = $query->orderBy('created_at', 'desc')->paginate(10);
-
         return view('admin.patients.index', compact('patients'));
     }
-    /**
-     * Display the specified patient profile.
-     */
+
     public function showPatient($id)
     {
-        // 1. Fetch User
         $patient = User::where('role', 'user')->findOrFail($id);
-
-        // 2. Fetch Consultation History
-        // We get appointments that are 'completed' and have an associated medical record
-        // Assuming there is a relationship set up, or we can fetch appointments and eager load the record
         $consultations = Appointment::where('user_id', $id)
             ->where('status', 'completed')
-            ->with('medicalRecord') // Ensure this relationship exists in Appointment model
+            ->with('medicalRecord')
             ->orderBy('appointment_date', 'desc')
             ->get();
-
         return view('admin.patients.show', compact('patient', 'consultations'));
     }
 
-    /**
-     * Remove the specified patient from storage.
-     */
     public function destroy($id)
     {
-        // 1. Find the patient (ensure we only delete users with role 'user')
         $patient = User::where('role', 'user')->findOrFail($id);
-
-        // 2. Delete the record
-        // Note: If you have foreign key constraints (like appointments), 
-        // ensure your database is set to ON DELETE CASCADE, 
-        // or manually delete related records here first.
         $patient->delete();
-
-        // 3. Redirect back with a success message
-        return redirect()->route('admin.patients.index')
-            ->with('success', 'Patient account deleted successfully.');
+        return redirect()->route('admin.patients.index')->with('success', 'Patient deleted.');
     }
 }
