@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Varela+Round&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -19,26 +19,101 @@
         html { scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Fade In Animation */
         .animate-fade-in { animation: fadeIn 1s ease-out forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         
-        /* Delay classes */
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
 
-        /* FORCE GRID LAYOUT (Fixes the "Not in a row" issue) */
-        .staff-grid {
+        .staff-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 640px) { .staff-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .staff-grid { grid-template-columns: repeat(4, 1fr); } }
+
+        /* --- GALLERY CSS --- */
+        .gallery {
+            --g: 8px; /* the gap */
             display: grid;
-            grid-template-columns: 1fr; /* Default to 1 column */
-            gap: 1.5rem; /* gap-6 */
+            clip-path: inset(1px); 
+            border-radius: 1.5rem; 
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            background-color: white; 
         }
-        @media (min-width: 640px) {
-            .staff-grid { grid-template-columns: repeat(2, 1fr); } /* 2 columns on tablet */
+        .gallery > img {
+            --_p: calc(-1*var(--g));
+            grid-area: 1/1;
+            width: 100%; 
+            aspect-ratio: 1;
+            cursor: pointer;
+            transition: .4s .1s;
+            object-fit: cover;
         }
-        @media (min-width: 1024px) {
-            .staff-grid { grid-template-columns: repeat(4, 1fr); } /* 4 columns on desktop */
+        .gallery > img:first-child {
+            clip-path: polygon(0 0, calc(100% + var(--_p)) 0 , 0 calc(100% + var(--_p)));
+        }
+        .gallery > img:last-child {
+            clip-path: polygon(100% 100%, 100% calc(0% - var(--_p)), calc(0% - var(--_p)) 100%);
+        }
+        .gallery:hover > img:last-child,
+        .gallery:hover > img:first-child:hover{
+            --_p: calc(50% - var(--g));
+        }
+        .gallery:hover > img:first-child,
+        .gallery:hover > img:first-child:hover + img{
+            --_p: calc(-50% - var(--g));
+        }
+
+        /* --- WAVY MENU CSS --- */
+        .wavy-menu {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .wavy-menu li {
+            width: 100px; /* Adjusted width for compact header */
+            height: 50px;
+            transition: background-position-x 0.9s linear;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wavy-menu li a {
+            font-family: "Varela Round", sans-serif;
+            font-size: 15px; /* Matches your previous font size */
+            color: #475569; /* slate-600 */
+            text-decoration: none;
+            transition: all 0.45s;
+            font-weight: 600;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hover Effect */
+        .wavy-menu li:hover {
+            /* Converted the Red SVG to Emerald Green (#059669) */
+            background: url('data:image/svg+xml;charset=utf-8,%3Csvg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="390px" height="50px" viewBox="0 0 390 50" enable-background="new 0 0 390 50" xml:space="preserve"%3E%3Cpath fill="none" stroke="%23059669" stroke-width="1.5" stroke-miterlimit="10" d="M0,47.585c0,0,97.5,0,130,0 c13.75,0,28.74-38.778,46.168-19.416C192.669,46.5,243.603,47.585,260,47.585c31.821,0,130,0,130,0"/%3E%3C/svg%3E');
+            animation: line 0.50s;
+            background-repeat: no-repeat;
+            background-position: center bottom; 
+        }
+
+        .wavy-menu li:hover a {
+            color: #059669; /* Emerald 600 */
+        }
+
+        @keyframes line {
+            0% {
+                background-position-x: 390px;
+            }
         }
     </style>
 </head>
@@ -57,33 +132,25 @@
                     </div>
                 </div>
 
-                <div class="hidden md:flex items-center gap-8">
-                    <a href="#home" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Home</a>
-                    <a href="#announcements" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Updates</a>
-                    <a href="#about" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">About</a>
-                    <a href="#staff" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Team</a>
+                <div class="hidden md:flex items-center">
+                    <ul class="wavy-menu">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#announcements">Updates</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#staff">Team</a></li>
+                    </ul>
                 </div>
 
                 <div class="flex items-center gap-2 sm:gap-3">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-800 transition">
-                                Dashboard
-                            </a>
+                            <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-800 transition">Dashboard</a>
                         @else
-                            <a href="{{ route('login') }}" class="sm:hidden px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">
-                                Login
-                            </a>
-
+                            <a href="{{ route('login') }}" class="sm:hidden px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">Login</a>
                             <div class="hidden sm:flex items-center gap-4">
-                                <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">
-                                    Login
-                                </a>
-                                
+                                <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Login</a>
                                 @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">
-                                        Register
-                                    </a>
+                                    <a href="{{ route('register') }}" class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">Register</a>
                                 @endif
                             </div>
                         @endauth
@@ -93,43 +160,57 @@
         </div>
     </nav>
 
-    <section id="home" class="relative min-h-screen flex flex-col justify-center overflow-hidden scroll-mt-20">
+    <section id="home" class="relative min-h-screen flex items-center pt-24 pb-12 lg:pt-0 lg:pb-0 overflow-hidden scroll-mt-20">
+        
         <div class="absolute inset-0 z-0">
             <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Background" class="w-full h-full object-cover">
         </div>
         <div class="absolute inset-0 z-10" style="background: linear-gradient(to right, rgba(236, 253, 245, 0.98) 0%, rgba(209, 250, 229, 0.85) 50%, rgba(255, 255, 255, 0) 100%);"></div>
 
-        <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div class="max-w-2xl text-left">
-                <div class="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-white border border-emerald-200 shadow-sm text-emerald-700 text-xs font-bold uppercase tracking-wide mb-6 sm:mb-8 animate-fade-in">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    Trusted Community Healthcare
-                </div>
+        <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full">
+            
+            <div class="flex flex-col md:flex-row items-center justify-between gap-8 lg:gap-12">
                 
-                <h1 class="text-3xl sm:text-5xl md:text-7xl font-bold text-slate-900 tracking-tight mb-4 sm:mb-6 leading-tight sm:leading-[1.1] animate-fade-in delay-100">
-                    Your Health Journey, <br>
-                    <span class="text-emerald-700">Barangay Looc Clinic</span>
-                </h1>
-                
-                <p class="text-sm sm:text-lg md:text-xl text-slate-600 mb-8 sm:mb-10 leading-relaxed max-w-xl animate-fade-in delay-200 font-medium">
-                    At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community.
-                </p>
-
-                <div class="flex flex-col sm:flex-row gap-3 sm:gap-5 animate-fade-in delay-300">
-                    @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="group relative px-6 py-3 sm:px-8 sm:py-4 bg-emerald-600 text-white font-bold text-sm sm:text-lg rounded-full overflow-hidden shadow-lg shadow-emerald-200/50 transition-all hover:scale-105 hover:shadow-emerald-300/50 hover:-translate-y-1 text-center">
-                        <span class="relative z-10 flex items-center justify-center gap-2">
-                            Book Appointment <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                <div class="w-full md:w-1/2 lg:w-5/12 text-left flex flex-col justify-center order-1">
+                    
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-emerald-200 shadow-sm text-emerald-700 text-sm font-bold uppercase tracking-wide mb-5 animate-fade-in w-fit">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
-                    </a>
-                    @endif
-                    <a href="#about" class="px-6 py-3 sm:px-8 sm:py-4 bg-white border border-slate-300 text-slate-700 font-bold text-sm sm:text-lg rounded-full hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-700 transition-all flex items-center justify-center gap-2 group shadow-sm">
-                        Learn More 
-                    </a>
+                        Trusted Community Healthcare
+                    </div>
+                    
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 tracking-tight mb-5 leading-tight animate-fade-in delay-100">
+                        Your Health Journey, <br>
+                        <span class="text-emerald-700">Barangay Looc Clinic</span>
+                    </h1>
+                    
+                    <p class="text-base sm:text-lg lg:text-xl text-slate-700 mb-8 font-medium leading-relaxed animate-fade-in delay-200 max-w-lg">
+                        At Barangay Looc Clinic, we are committed to providing compassionate, reliable, and high-quality healthcare to our community.
+                    </p>
+
+                    <div class="flex flex-row gap-3 animate-fade-in delay-300">
+                        @if (Route::has('register'))
+                        <a href="{{ route('register') }}" class="group relative px-6 py-3 bg-emerald-600 text-white font-bold text-sm sm:text-base rounded-full shadow-lg shadow-emerald-200/50 transition-all hover:scale-105 hover:shadow-emerald-300/50 hover:-translate-y-1 text-center">
+                            <span class="relative z-10 flex items-center justify-center gap-2">
+                                Book Appointment <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                            </span>
+                        </a>
+                        @endif
+                        <a href="#about" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-bold text-sm sm:text-base rounded-full hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-700 transition-all flex items-center justify-center gap-2 group shadow-sm">
+                            Learn More 
+                        </a>
+                    </div>
                 </div>
+
+                <div class="hidden md:flex w-full md:w-1/2 lg:w-5/12 items-center justify-center animate-fade-in delay-200 order-2">
+                    <div class="gallery w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[400px]">
+                        <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Exterior">
+                        <img src="{{ asset('Image/background.jpg') }}" alt="Medical Equipment">
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -318,13 +399,8 @@
                     @endphp
                     
                     <div class="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200">
-                        
-                        <img src="{{ $imageSrc }}" 
-                             alt="{{ $staff['name'] }}" 
-                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-
+                        <img src="{{ $imageSrc }}" alt="{{ $staff['name'] }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
-
                         <div class="absolute bottom-0 left-0 w-full p-6 text-left transform translate-y-0 transition-transform duration-300">
                             <h3 class="text-white text-lg font-bold leading-tight drop-shadow-md">{{ $staff['name'] }}</h3>
                             <p class="text-emerald-400 text-xs font-bold tracking-widest uppercase mt-2 drop-shadow-sm">{{ $staff['role'] }}</p>
