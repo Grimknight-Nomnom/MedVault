@@ -168,7 +168,8 @@
                             @forelse($expiringSoon ?? [] as $med)
                             <tr>
                                 <td class="ps-3 small fw-bold">{{ $med->name }}</td>
-                                <td class="small">{{ \Carbon\Carbon::parse($med->expiry_date)->format('M d, Y') }}</td>
+                                {{-- UPDATED: Format shows Month and Year only (e.g. January 2026) --}}
+                                <td class="small">{{ \Carbon\Carbon::parse($med->expiry_date)->format('F Y') }}</td>
                                 <td class="text-center"><span class="badge {{ $med->expiry_date < now() ? 'bg-danger' : 'bg-warning text-dark' }}">{{ $med->expiry_date < now() ? 'EXPIRED' : 'EXPIRING' }}</span></td>
                             </tr>
                             @empty

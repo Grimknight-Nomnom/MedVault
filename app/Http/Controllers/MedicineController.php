@@ -17,6 +17,7 @@ class MedicineController extends Controller
      */
     public function adminDashboard(Request $request)
     {
+        // Check for expired medicines on dashboard load
         $this->captureExpiredMedicines();
 
         // 1. Daily Appointments Count
@@ -194,6 +195,9 @@ class MedicineController extends Controller
 
         $this->logHistory($medicine->name, 'Added', $medicine->stock_quantity, 'Initial stock added.');
 
+        // IMMEDIATE CHECK: Check if the newly added medicine is already expired
+        $this->checkSingleExpiration($medicine);
+
         return redirect()->route('admin.medicines.index')->with('success', 'Medicine added successfully!');
     }
 
@@ -228,6 +232,9 @@ class MedicineController extends Controller
         if ($qtyDiff != 0) {
             $this->logHistory($medicine->name, 'Edited', $qtyDiff, 'Medicine details updated.');
         }
+
+        // IMMEDIATE CHECK: Check if the updated medicine is now expired
+        $this->checkSingleExpiration($medicine);
 
         return redirect()->route('admin.medicines.index')->with('success', 'Medicine updated successfully!');
     }
@@ -267,7 +274,7 @@ class MedicineController extends Controller
         return redirect()->route('admin.medicines.index')->with('success', 'Medicine deleted successfully!');
     }
 
-public function history(Request $request)
+    public function history(Request $request)
     {
         $query = MedicineHistory::query();
 
@@ -275,34 +282,24 @@ public function history(Request $request)
             $search = $request->search;
 
             $query->where(function($q) use ($search) {
-                // 1. Basic Text Search (Medicine, Action, and Patient Name in Description)
                 $q->where('medicine_name', 'like', "%{$search}%")
                   ->orWhere('action_type', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%"); // This searches Patient Name!
+                  ->orWhere('description', 'like', "%{$search}%");
 
-                // 2. Smart Date Search
                 try {
                     $date = \Carbon\Carbon::parse($search);
-                    
-                    // Check what kind of date the user typed
                     if (preg_match('/^[a-zA-Z]+$/', $search)) {
-                        // User typed ONLY letters (e.g., "January", "Jan") -> Search by Month
                         $q->orWhereMonth('performed_at', $date->month);
                     } elseif (preg_match('/^\d{4}$/', $search)) {
-                        // User typed ONLY 4 digits (e.g., "2026") -> Search by Year
                         $q->orWhereYear('performed_at', $search);
                     } else {
-                        // User typed a specific date (e.g., "Jan 10", "2026-01-10") -> Search exact Date
                         $q->orWhereDate('performed_at', $date->format('Y-m-d'));
                     }
-                } catch (\Exception $e) {
-                    // If it's not a date (like a name), just ignore this part
-                }
+                } catch (\Exception $e) {}
             });
         }
 
         $history = $query->orderBy('performed_at', 'desc')->get();
-        
         return view('admin.medicines.history', compact('history'));
     }
 
@@ -316,25 +313,55 @@ public function history(Request $request)
         return view('patient.medicines.index', compact('medicines'));
     }
 
+    // --- HELPER FUNCTIONS ---
+
+    /**
+     * Checks if a single medicine is expired and has stock.
+     * If so, logs it and sets stock to 0.
+     */
+    private function checkSingleExpiration($medicine)
+    {
+        $today = Carbon::today()->format('Y-m-d');
+
+        // Check conditions: Expired date AND Stock exists
+        if ($medicine->expiry_date <= $today && $medicine->stock_quantity > 0) {
+            
+            // Format to Month Year (e.g. "January 2026")
+            $formattedExpiry = Carbon::parse($medicine->expiry_date)->format('F Y');
+
+            $this->logHistory(
+                $medicine->name, 
+                'Expired', 
+                -$medicine->stock_quantity, 
+                "Medicine expired on " . $formattedExpiry
+            );
+
+            // Set stock to 0 immediately
+            $medicine->update(['stock_quantity' => 0]);
+        }
+    }
+
+    /**
+     * Bulk check for dashboard. Safely checks all medicines.
+     */
     private function captureExpiredMedicines()
     {
         $today = Carbon::today()->format('Y-m-d');
-        $medicines = Medicine::where('expiry_date', '<=', $today)->where('stock_quantity', '>', 0)->get();
+        
+        // Only fetch medicines that look expired and have stock
+        $medicines = Medicine::where('expiry_date', '<=', $today)
+                             ->where('stock_quantity', '>', 0)
+                             ->get();
 
         foreach ($medicines as $medicine) {
+            // Safety check to avoid double logging on dashboard refresh
             $alreadyLogged = MedicineHistory::where('medicine_name', $medicine->name)
                 ->where('action_type', 'Expired')
                 ->whereDate('performed_at', Carbon::today())
                 ->exists();
 
             if (!$alreadyLogged) {
-                $this->logHistory(
-                    $medicine->name, 
-                    'Expired', 
-                    -$medicine->stock_quantity, 
-                    "Medicine expired on " . $medicine->expiry_date
-                );
-                $medicine->update(['stock_quantity' => 0]);
+                $this->checkSingleExpiration($medicine);
             }
         }
     }
