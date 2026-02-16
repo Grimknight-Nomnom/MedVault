@@ -26,9 +26,11 @@ class AdminAnnouncementController extends Controller
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
+            'expires_at' => 'nullable|date|after:today', // Validate future date
         ]);
 
-        $data = $request->only(['title', 'description']);
+        // Include 'expires_at' in the data array
+        $data = $request->only(['title', 'description', 'expires_at']);
         $data['is_active'] = $request->has('is_active');
 
         if ($request->hasFile('image')) {
@@ -54,9 +56,11 @@ class AdminAnnouncementController extends Controller
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
+            'expires_at' => 'nullable|date', // Validate date
         ]);
 
-        $data = $request->only(['title', 'description']);
+        // Include 'expires_at' in the data array
+        $data = $request->only(['title', 'description', 'expires_at']);
         $data['is_active'] = $request->has('is_active'); // Checkbox handling
 
         if ($request->hasFile('image')) {

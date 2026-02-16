@@ -74,7 +74,7 @@
         }
 
         .wavy-menu li {
-            width: 100px; /* Adjusted width for compact header */
+            width: 100px; 
             height: 50px;
             transition: background-position-x 0.9s linear;
             text-align: center;
@@ -85,8 +85,8 @@
 
         .wavy-menu li a {
             font-family: "Varela Round", sans-serif;
-            font-size: 15px; /* Matches your previous font size */
-            color: #475569; /* slate-600 */
+            font-size: 15px; 
+            color: #475569; 
             text-decoration: none;
             transition: all 0.45s;
             font-weight: 600;
@@ -99,7 +99,6 @@
 
         /* Hover Effect */
         .wavy-menu li:hover {
-            /* Converted the Red SVG to Emerald Green (#059669) */
             background: url('data:image/svg+xml;charset=utf-8,%3Csvg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="390px" height="50px" viewBox="0 0 390 50" enable-background="new 0 0 390 50" xml:space="preserve"%3E%3Cpath fill="none" stroke="%23059669" stroke-width="1.5" stroke-miterlimit="10" d="M0,47.585c0,0,97.5,0,130,0 c13.75,0,28.74-38.778,46.168-19.416C192.669,46.5,243.603,47.585,260,47.585c31.821,0,130,0,130,0"/%3E%3C/svg%3E');
             animation: line 0.50s;
             background-repeat: no-repeat;
@@ -107,7 +106,7 @@
         }
 
         .wavy-menu li:hover a {
-            color: #059669; /* Emerald 600 */
+            color: #059669; 
         }
 
         @keyframes line {
@@ -143,17 +142,14 @@
 
                 <div class="flex items-center gap-2 sm:gap-3">
                     @if (Route::has('login'))
-                        @auth
-                            <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-800 transition">Dashboard</a>
-                        @else
-                            <a href="{{ route('login') }}" class="sm:hidden px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">Login</a>
-                            <div class="hidden sm:flex items-center gap-4">
-                                <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Login</a>
-                                @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">Register</a>
-                                @endif
-                            </div>
-                        @endauth
+                        {{-- UPDATED: Removed Dashboard link check. Login/Register always visible. --}}
+                        <a href="{{ route('login') }}" class="sm:hidden px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">Login</a>
+                        <div class="hidden sm:flex items-center gap-4">
+                            <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Login</a>
+                            @if (Route::has('register'))
+                                <a href="{{ route('register') }}" class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-full hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">Register</a>
+                            @endif
+                        </div>
                     @endif
                 </div>
             </div>

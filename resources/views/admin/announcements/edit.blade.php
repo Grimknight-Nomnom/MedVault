@@ -31,6 +31,17 @@
                             <textarea name="description" id="description" rows="5" class="form-control" required>{{ old('description', $announcement->description) }}</textarea>
                         </div>
 
+                        {{-- Auto-Hide Date (NEW FIELD) --}}
+                        <div class="mb-3">
+                            <label for="expires_at" class="form-label fw-bold small text-uppercase text-danger">Auto-Hide Date</label>
+                            <input type="date" 
+                                   name="expires_at" 
+                                   id="expires_at" 
+                                   class="form-control" 
+                                   value="{{ old('expires_at', $announcement->expires_at ? $announcement->expires_at->format('Y-m-d') : '') }}">
+                            <div class="form-text">Optional: The announcement will automatically stop showing after this date.</div>
+                        </div>
+
                         {{-- Current Image Preview & Upload --}}
                         <div class="mb-4">
                             <label class="form-label fw-bold small text-uppercase">Image</label>
