@@ -21,17 +21,16 @@ RUN composer install --no-dev --optimize-autoloader
 # Install Node dependencies and build assets for Vite
 RUN npm install && npm run build
 
-# Set permissions for Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions for Laravel (added database folder for SQLite)
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 # Update Apache DocumentRoot to point to Laravel's public folder
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Configure Apache to listen on the Render-assigned PORT
-RUN echo "Listen \${PORT:-80}" > /etc/apache2/ports.conf
-RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:\${PORT:-80}>/g' /etc/apache2/sites-available/000-default.conf
+# Tell Render to use port 80
+EXPOSE 80
 
 # Run your database migrations and start Apache
 CMD ["sh", "-c", "php artisan migrate --force && apache2-foreground"]
