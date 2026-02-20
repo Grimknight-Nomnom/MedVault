@@ -1,9 +1,9 @@
 FROM php:8.2-apache
 
-# Install required system packages and PHP extensions
+# Install required system packages and PHP extensions (Added PostgreSQL drivers here!)
 RUN apt-get update && apt-get install -y \
-    libpng-dev libonig-dev libxml2-dev zip unzip nodejs npm \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
+    libpng-dev libonig-dev libxml2-dev zip unzip nodejs npm libpq-dev \
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd \
     && a2enmod rewrite
 
 # Set the working directory
@@ -21,7 +21,7 @@ RUN composer install --no-dev --optimize-autoloader
 # Install Node dependencies and build assets for Vite
 RUN npm install && npm run build
 
-# Set permissions for Laravel (added database folder for SQLite)
+# Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 # Update Apache DocumentRoot to point to Laravel's public folder
