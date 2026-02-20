@@ -12,11 +12,15 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\AdminAnnouncementController;
 use App\Models\Appointment;
 use App\Models\Announcement;
+use App\Models\Staff;
 
 // --- Public Routes ---
 Route::get('/', function () {
     $announcements = Announcement::where('is_active', true)->latest()->get();
-    return view('welcome', compact('announcements'));
+    $staff = Staff::all();
+    
+    // FIX: Added 'staff' to the compact function so the view can receive it
+    return view('welcome', compact('announcements', 'staff'));
 })->name('welcome');
 
 // --- Authentication ---
@@ -70,22 +74,20 @@ Route::middleware(['auth'])->group(function () {
 
     // API Helpers (Patient side)
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
-    // REMOVED: The old 'admin.report.api' route was here. It is now correctly placed in the admin group below.
 
     // --- Admin Routes Group ---
     Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
-        // Manage Staff Routes
-Route::post('/admin/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
-Route::put('/admin/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
-Route::delete('/admin/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'destroyStaff'])->name('admin.staff.destroy');
+        // Manage Staff Routes 
+        // FIX: Removed '/admin' from the URL string because prefix('admin') already adds it
+        Route::post('/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
+        Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
+        Route::delete('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'destroyStaff'])->name('admin.staff.destroy');
 
         // Dashboard
-        // Use AdminController (which now contains the combined Dashboard + Calendar logic)
-Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
-        // NEW: Corrected API Routes for Charts
-        // We removed '/admin' from the string because prefix('admin') adds it automatically.
+        // API Routes for Charts
         Route::get('/api/trends', [MedicineController::class, 'getTrendsData'])->name('admin.trends.api');
         Route::get('/api/report', [MedicineController::class, 'getPeekData'])->name('admin.report.api');
 

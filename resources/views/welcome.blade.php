@@ -15,186 +15,21 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         h1, h2, h3, h4, h5, h6 { font-family: 'Instrument Sans', sans-serif; }
-        
         html { scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .animate-fade-in { animation: fadeIn 1s ease-out forwards; opacity: 0; transform: translateY(20px); }
+
+        /* Tailwind requires Keyframes to be defined in CSS or Config */
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-        
+        .animate-fade-in { animation: fadeIn 1s ease-out forwards; opacity: 0; transform: translateY(20px); }
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
 
-        .staff-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 640px) { .staff-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1024px) { .staff-grid { grid-template-columns: repeat(4, 1fr); } }
+        @keyframes line { 0% { background-position-x: 390px; } }
+        .animate-wavy-line { animation: line 0.50s; }
 
-        /* --- GALLERY CSS --- */
-        .gallery {
-            --g: 8px; /* the gap */
-            display: grid;
-            clip-path: inset(1px); 
-            border-radius: 1.5rem; 
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            background-color: white; 
-        }
-        .gallery > img {
-            --_p: calc(-1*var(--g));
-            grid-area: 1/1;
-            width: 100%; 
-            aspect-ratio: 1;
-            cursor: pointer;
-            transition: .4s .1s;
-            object-fit: cover;
-        }
-        .gallery > img:first-child {
-            clip-path: polygon(0 0, calc(100% + var(--_p)) 0 , 0 calc(100% + var(--_p)));
-        }
-        .gallery > img:last-child {
-            clip-path: polygon(100% 100%, 100% calc(0% - var(--_p)), calc(0% - var(--_p)) 100%);
-        }
-        .gallery:hover > img:last-child,
-        .gallery:hover > img:first-child:hover{
-            --_p: calc(50% - var(--g));
-        }
-        .gallery:hover > img:first-child,
-        .gallery:hover > img:first-child:hover + img{
-            --_p: calc(-50% - var(--g));
-        }
-
-        /* --- WAVY MENU CSS --- */
-        .wavy-menu {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .wavy-menu li {
-            width: 100px; /* Adjusted width for compact header */
-            height: 50px;
-            transition: background-position-x 0.9s linear;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wavy-menu li a {
-            font-family: "Varela Round", sans-serif;
-            font-size: 15px; /* Matches your previous font size */
-            color: #475569; /* slate-600 */
-            text-decoration: none;
-            transition: all 0.45s;
-            font-weight: 600;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Hover Effect */
-        .wavy-menu li:hover {
-            /* Converted the Red SVG to Emerald Green (#059669) */
-            background: url('data:image/svg+xml;charset=utf-8,%3Csvg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="390px" height="50px" viewBox="0 0 390 50" enable-background="new 0 0 390 50" xml:space="preserve"%3E%3Cpath fill="none" stroke="%23059669" stroke-width="1.5" stroke-miterlimit="10" d="M0,47.585c0,0,97.5,0,130,0 c13.75,0,28.74-38.778,46.168-19.416C192.669,46.5,243.603,47.585,260,47.585c31.821,0,130,0,130,0"/%3E%3C/svg%3E');
-            animation: line 0.50s;
-            background-repeat: no-repeat;
-            background-position: center bottom; 
-        }
-
-        .wavy-menu li:hover a {
-            color: #059669; /* Emerald 600 */
-        }
-
-        @keyframes line {
-            0% {
-                background-position-x: 390px;
-            }
-        }
-
-        /* --- FACEBOOK BUTTON CSS (Custom Blend) --- */
-        .fb-wrapper {
-            display: flex;
-            justify-content: flex-start; /* Align to start to match text */
-        }
-
-        .fb-cta {
-            display: flex;
-            padding: 12px 35px;
-            text-decoration: none;
-            font-family: 'Instrument Sans', sans-serif;
-            font-size: 18px;
-            color: white;
-            background: #059669; /* Emerald 600 (Blends with site) */
-            transition: 1s;
-            box-shadow: 5px 5px 0 #0f172a; /* Slate 900 (Dark shadow) */
-            transform: skewX(-15deg);
-            align-items: center;
-            border-radius: 4px;
-        }
-
-        .fb-cta:focus {
-            outline: none;
-        }
-
-        .fb-cta:hover {
-            transition: 0.5s;
-            background: #047857; /* Emerald 700 */
-            box-shadow: 5px 5px 0 #34d399; /* Emerald 400 (Highlight shadow) */
-        }
-
-        .fb-cta span:nth-child(2) {
-            transition: 0.5s;
-            margin-right: 0px;
-            width: 25px; /* Fixed width for icon */
-            margin-left: 20px;
-            display: flex;
-            align-items: center;
-        }
-
-        .fb-cta:hover span:nth-child(2) {
-            transition: 0.5s;
-            margin-right: 25px;
-        }
-
-        .fb-cta span {
-            transform: skewX(15deg);
-        }
-
-        /* SVG Animation */
-        path.one {
-            transition: 0.4s;
-            transform: translateX(-60%);
-        }
-
-        path.two {
-            transition: 0.5s;
-            transform: translateX(-30%);
-        }
-
-        .fb-cta:hover path.three {
-            animation: color_anim 1s infinite 0.2s;
-        }
-
-        .fb-cta:hover path.one {
-            transform: translateX(0%);
-            animation: color_anim 1s infinite 0.6s;
-        }
-
-        .fb-cta:hover path.two {
-            transform: translateX(0%);
-            animation: color_anim 1s infinite 0.4s;
-        }
-
-        @keyframes color_anim {
-            0% { fill: white; }
-            50% { fill: #34d399; } /* Emerald 400 */
-            100% { fill: white; }
-        }
+        @keyframes color_anim { 0% { fill: white; } 50% { fill: #34d399; } 100% { fill: white; } }
+        .animate-svg-color { animation: color_anim 1s infinite; }
     </style>
 </head>
 <body class="antialiased bg-white text-slate-600 selection:bg-emerald-500 selection:text-white">
@@ -212,12 +47,16 @@
                     </div>
                 </div>
 
+                {{-- WAVY MENU: Fully Tailwind Converted --}}
                 <div class="hidden md:flex items-center">
-                    <ul class="wavy-menu">
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#announcements">Updates</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#staff">Team</a></li>
+                    <ul class="flex justify-center items-center m-0 p-0 list-none">
+                        @foreach(['Home' => '#home', 'Updates' => '#announcements', 'About' => '#about', 'Team' => '#staff'] as $name => $link)
+                        <li class="group w-[100px] h-[50px] text-center flex items-center justify-center transition-all duration-[0.3s] ease-linear hover:bg-[url('data:image/svg+xml;utf8,%3Csvg%20version=%221.1%22%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22390px%22%20height=%2250px%22%20viewBox=%220%200%20390%2050%22%3E%3Cpath%20fill=%22none%22%20stroke=%22%23059669%22%20stroke-width=%221.5%22%20d=%22M0,47.585c0,0,97.5,0,130,0%20c13.75,0,28.74-38.778,46.168-19.416C192.669,46.5,243.603,47.585,260,47.585c31.821,0,130,0,130,0%22/%3E%3C/svg%3E')] hover:bg-no-repeat hover:bg-bottom hover:animate-wavy-line">
+                            <a href="{{ $link }}" class="font-['Varela_Round'] text-[15px] text-slate-600 no-underline transition-all duration-[0.2s] font-semibold w-full h-full flex items-center justify-center group-hover:text-emerald-600">
+                                {{ $name }}
+                            </a>
+                        </li>
+                        @endforeach
                     </ul>
                 </div>
 
@@ -237,18 +76,14 @@
     </nav>
 
     <section id="home" class="relative min-h-screen flex items-center pt-24 pb-12 lg:pt-0 lg:pb-0 overflow-hidden scroll-mt-20">
-        
         <div class="absolute inset-0 z-0">
             <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Background" class="w-full h-full object-cover">
         </div>
         <div class="absolute inset-0 z-10" style="background: linear-gradient(to right, rgba(236, 253, 245, 0.98) 0%, rgba(209, 250, 229, 0.85) 50%, rgba(255, 255, 255, 0) 100%);"></div>
 
         <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full">
-            
             <div class="flex flex-col md:flex-row items-center justify-between gap-8 lg:gap-12">
-                
                 <div class="w-full md:w-1/2 lg:w-5/12 text-left flex flex-col justify-center order-1">
-                    
                     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-emerald-200 shadow-sm text-emerald-700 text-sm font-bold uppercase tracking-wide mb-5 animate-fade-in w-fit">
                         <span class="relative flex h-2 w-2">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -274,35 +109,50 @@
                             </span>
                         </a>
                         @endif
-                        <a href="#about" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-bold text-sm sm:text-base rounded-full hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-700 transition-all flex items-center justify-center gap-2 group shadow-sm">
+                        <a href="#about" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-bold text-sm sm:text-base rounded-full hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-700 transition-all flex items-center justify-center gap-2 shadow-sm">
                             Learn More 
                         </a>
                     </div>
 
-                    <div class="fb-wrapper animate-fade-in delay-300">
-                        <a class="fb-cta" href="https://www.facebook.com/bhs.looc" target="_blank">
-                            <span class="font-bold tracking-wider">VISIT FACEBOOK</span>
-                            <span>
+                    {{-- FACEBOOK BUTTON: Fully Tailwind Converted --}}
+                    <div class="flex justify-start animate-fade-in delay-300">
+                        <a href="https://www.facebook.com/bhs.looc" target="_blank" class="group flex items-center px-[35px] py-[12px] no-underline font-['Instrument_Sans'] text-[18px] text-white bg-[#059669] shadow-[5px_5px_0_#0f172a] rounded-[4px] -skew-x-[15deg] transition-all duration-[1s] hover:duration-[0.5s] hover:bg-[#047857] hover:shadow-[5px_5px_0_#34d399] outline-none">
+                            <span class="font-bold tracking-wider skew-x-[15deg]">VISIT FACEBOOK</span>
+                            <span class="flex items-center w-[25px] ml-[20px] mr-0 transition-all duration-[0.5s] skew-x-[15deg] group-hover:mr-[25px]">
                                 <svg width="40px" height="26px" viewBox="0 0 66 43" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                                    <g id="arrow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                        <path class="one" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 C65.7000188,22.2031791 65.6958657,22.2073326 65.6916762,22.2114492 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 C40.1502893,38.3977268 40.1524132,38.395603 40.1545562,38.3934985 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 C56.9980647,21.1475418 56.9959223,21.1453995 56.9937605,21.1432767 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 C40.1501626,3.89904911 40.1522686,3.89694235 40.1543933,3.89485454 Z" fill="#FFFFFF"></path>
-                                        <path class="two" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 C45.7000188,22.2031791 45.6958657,22.2073326 45.6916762,22.2114492 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 C20.1502893,38.3977268 20.1524132,38.395603 20.1545562,38.3934985 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 C36.9980647,21.1475418 36.9959223,21.1453995 36.9937605,21.1432767 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 C20.1501626,3.89904911 20.1522686,3.89694235 20.1543933,3.89485454 Z" fill="#FFFFFF"></path>
-                                        <path class="three" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 C25.7000188,22.2031791 25.6958657,22.2073326 25.6916762,22.2114492 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 C0.150289256,38.3977268 0.152413239,38.395603 0.154556228,38.3934985 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 C16.9980647,21.1475418 16.9959223,21.1453995 16.9937605,21.1432767 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 C0.150162624,3.89904911 0.152268631,3.89694235 0.154393339,3.89485454 Z" fill="#FFFFFF"></path>
+                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                        <path class="transition-transform duration-[0.4s] -translate-x-[60%] group-hover:translate-x-[0%] group-hover:animate-svg-color group-hover:[animation-delay:0.6s]" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 C65.7000188,22.2031791 65.6958657,22.2073326 65.6916762,22.2114492 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 C40.1502893,38.3977268 40.1524132,38.395603 40.1545562,38.3934985 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 C56.9980647,21.1475418 56.9959223,21.1453995 56.9937605,21.1432767 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 C40.1501626,3.89904911 40.1522686,3.89694235 40.1543933,3.89485454 Z" fill="#FFFFFF"></path>
+                                        <path class="transition-transform duration-[0.5s] -translate-x-[30%] group-hover:translate-x-[0%] group-hover:animate-svg-color group-hover:[animation-delay:0.4s]" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 C45.7000188,22.2031791 45.6958657,22.2073326 45.6916762,22.2114492 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 C20.1502893,38.3977268 20.1524132,38.395603 20.1545562,38.3934985 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 C36.9980647,21.1475418 36.9959223,21.1453995 36.9937605,21.1432767 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 C20.1501626,3.89904911 20.1522686,3.89694235 20.1543933,3.89485454 Z" fill="#FFFFFF"></path>
+                                        <path class="group-hover:animate-svg-color group-hover:[animation-delay:0.2s]" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 C25.7000188,22.2031791 25.6958657,22.2073326 25.6916762,22.2114492 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 C0.150289256,38.3977268 0.152413239,38.395603 0.154556228,38.3934985 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 C16.9980647,21.1475418 16.9959223,21.1453995 16.9937605,21.1432767 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 C0.150162624,3.89904911 0.152268631,3.89694235 0.154393339,3.89485454 Z" fill="#FFFFFF"></path>
                                     </g>
                                 </svg>
                             </span>
                         </a>
                     </div>
-
                 </div>
 
+                {{-- GALLERY SPLIT IMAGE: 100% Tailwind --}}
                 <div class="hidden md:flex w-full md:w-1/2 lg:w-5/12 items-center justify-center animate-fade-in delay-200 order-2">
-                    <div class="gallery w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[400px]">
-                        <img src="{{ asset('Image/Team 2.jpg') }}" alt="Clinic Exterior">
-                        <img src="{{ asset('Image/team.jpg') }}" alt="Medical Equipment">
+                    
+                    <div class="group grid bg-white rounded-[1.5rem] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] [clip-path:inset(1px)] w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[400px]">
+                        
+                        {{-- Top Left Image (Peer) --}}
+                        <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Exterior" 
+                             class="peer col-start-1 row-start-1 w-full aspect-square object-cover cursor-pointer transition-all duration-[400ms] delay-[100ms] 
+                                    [clip-path:polygon(0_0,calc(100%_-_8px)_0,0_calc(100%_-_8px))] 
+                                    group-hover:[clip-path:polygon(0_0,calc(50%_-_8px)_0,0_calc(50%_-_8px))] 
+                                    hover:![clip-path:polygon(0_0,calc(150%_-_8px)_0,0_calc(150%_-_8px))]">
+                        
+                        {{-- Bottom Right Image --}}
+                        <img src="{{ asset('Image/background.jpg') }}" alt="Medical Equipment" 
+                             class="col-start-1 row-start-1 w-full aspect-square object-cover cursor-pointer transition-all duration-[400ms] delay-[100ms] 
+                                    [clip-path:polygon(100%_100%,100%_8px,8px_100%)] 
+                                    group-hover:[clip-path:polygon(100%_100%,100%_calc(-50%_+_8px),calc(-50%_+_8px)_100%)] 
+                                    peer-hover:![clip-path:polygon(100%_100%,100%_calc(50%_+_8px),calc(50%_+_8px)_100%)]">
+                                    
                     </div>
+                    
                 </div>
-
             </div>
         </div>
     </section>
@@ -457,50 +307,36 @@
         </div>
     </section>
 
-    <section id="staff" class="min-h-screen flex flex-col justify-center py-12 sm:py-24 bg-green-50/50 scroll-mt-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center w-full">
-            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-10 sm:mb-16">Our Dedicated Staff</h2>
+    <section id="staff" class="min-h-screen py-24 bg-green-50/50 flex flex-col justify-center scroll-mt-20">
+        <div class="text-center w-full mb-12">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Our Dedicated Staff</h2>
+            <div class="w-16 h-1.5 bg-green-500 mx-auto rounded-full mt-4"></div>
+        </div>
 
-            <div class="staff-grid w-full max-w-7xl mx-auto">
-                
-                @php
-                    $staffMembers = [
-                        ['name' => 'Dr. Adelinno Labro', 'role' => 'Doctor', 'image' => 'Image/staff1.png'],
-                        ['name' => 'John Paul Dela Cruz', 'role' => 'Nurse', 'image' => null],
-                        ['name' => 'Krystal Mae Anarna', 'role' => 'Nurse', 'image' => null],
-                        ['name' => 'Elena Divina', 'role' => 'Nutrition Scholar', 'image' => null],
-                        ['name' => 'Nena Alcaraz', 'role' => 'Nutrition Scholar', 'image' => null],
-                        ['name' => 'Lolita Mane', 'role' => 'Nutrition Scholar', 'image' => null],
-                        ['name' => 'Christine Manalac', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Roberta Manlapaz', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Fia Delima', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Corazon Alcala', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Roberta Alintanahin', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Precila Magpantay', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Charmaine Dazo', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Evangeline Ignacio', 'role' => 'Health Worker', 'image' => null],
-                        ['name' => 'Marites Ilanes', 'role' => 'Health Worker', 'image' => null],
-                    ];
-                @endphp
-
-                @foreach($staffMembers as $staff)
-                    @php
-                        $imageSrc = $staff['image'] 
-                            ? asset($staff['image']) 
-                            : 'https://ui-avatars.com/api/?name=' . urlencode($staff['name']) . '&background=10b981&color=fff&size=512&font-size=0.33';
-                    @endphp
+        <div class="relative w-full max-w-[1100px] flex items-center justify-center flex-wrap p-[30px] mx-auto gap-4 pt-[60px]">
+            @forelse(isset($staff) ? $staff : [] as $member)
+                <div class="group relative w-[300px] h-[215px] bg-white mt-[40px] mb-[30px] px-[15px] py-[20px] flex flex-col shadow-[0_5px_20px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out rounded-[15px] hover:h-[320px] hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
                     
-                    <div class="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200">
-                        <img src="{{ $imageSrc }}" alt="{{ $staff['name'] }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="absolute bottom-0 left-0 w-full p-6 text-left transform translate-y-0 transition-transform duration-300">
-                            <h3 class="text-white text-lg font-bold leading-tight drop-shadow-md">{{ $staff['name'] }}</h3>
-                            <p class="text-emerald-400 text-xs font-bold tracking-widest uppercase mt-2 drop-shadow-sm">{{ $staff['role'] }}</p>
-                        </div>
+                    <div class="relative w-[260px] h-[260px] -top-[40%] left-[5px] shadow-[0_5px_20px_rgba(0,0,0,0.2)] z-10 rounded-[15px] bg-gray-200 shrink-0">
+                        @if($member->picture_path)
+                            <img src="{{ asset('storage/' . $member->picture_path) }}" alt="{{ $member->name }}" class="w-full h-full object-cover rounded-[15px]">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($member->name) }}&background=10b981&color=fff&size=512" alt="{{ $member->name }}" class="w-full h-full object-cover rounded-[15px]">
+                        @endif
                     </div>
-                @endforeach
-
-            </div>
+                    
+                    <div class="relative -top-[140px] px-[15px] py-[10px] text-center invisible opacity-0 transition-all duration-300 ease-in-out group-hover:mt-[30px] group-hover:visible group-hover:opacity-100 group-hover:delay-200">
+                        <h3 class="text-xl font-bold text-gray-900">{{ $member->name }}</h3>
+                        <p class="text-sm mt-2 text-emerald-600 font-bold tracking-wider uppercase">{{ $member->role }}</p>
+                    </div>
+                    
+                </div>
+            @empty
+                <div class="text-center text-gray-500 py-10 w-full">
+                    <i class="fas fa-users-slash fa-3x mb-3 opacity-50"></i>
+                    <p>No staff members have been added yet.</p>
+                </div>
+            @endforelse
         </div>
     </section>
 
