@@ -27,27 +27,29 @@
                             </select>
                         </div>
                         <div class="mb-3">
-    <label for="description" class="form-label fw-bold">Description / Usage Instructions</label>
-    <textarea name="description" id="description" class="form-control" rows="3" placeholder="e.g. Take after meals. Used for headaches.">{{ old('description') }}</textarea>
-</div>
+                            <label for="description" class="form-label fw-bold">Description / Usage Instructions</label>
+                            <textarea name="description" id="description" class="form-control" rows="3" placeholder="e.g. Take after meals. Used for headaches.">{{ old('description') }}</textarea>
+                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Stock Quantity</label>
                             <input type="number" name="stock_quantity" class="form-control" required>
                         </div>
                     </div>
 
-<div class="mb-3">
-    <label for="expiry_date" class="form-label fw-bold">Expiry Date (Month & Year)</label>
-    <input type="month" 
-           name="expiry_date" 
-           id="expiry_date" 
-           class="form-control @error('expiry_date') is-invalid @enderror" 
-           required>
-    <div class="form-text">Pick the month and year of expiration.</div>
-    @error('expiry_date')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
+                    <div class="mb-3">
+                        <label for="expiry_date" class="form-label fw-bold">Expiry Date (Month & Year)</label>
+                        {{-- CHANGED MIN TO NEXT MONTH --}}
+                        <input type="month" 
+                               name="expiry_date" 
+                               id="expiry_date" 
+                               class="form-control @error('expiry_date') is-invalid @enderror" 
+                               min="{{ now()->addMonth()->format('Y-m') }}"
+                               required>
+                        <div class="form-text">Pick the month and year of expiration.</div>
+                        @error('expiry_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('admin.medicines.index') }}" class="btn btn-secondary">Cancel</a>

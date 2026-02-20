@@ -2,20 +2,17 @@
 
 @section('content')
 <div class="container py-4">
-{{-- Page Header --}}
+    {{-- Page Header --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <h2 class="fw-bold text-primary mb-1">Medicine Inventory</h2>
             <p class="text-muted small mb-0">Manage stock, track expiry dates, and dispense medicines.</p>
         </div>
         <div class="d-flex gap-3">
-            {{-- View History Button --}}
-            {{-- Removed 'me-2' because the parent div now handles spacing with 'gap-3' --}}
             <a href="{{ route('admin.medicines.history') }}" class="btn btn-secondary shadow-sm rounded-pill px-4">
                 <i class="fas fa-history me-2"></i>View History
             </a>
             
-            {{-- Add Medicine Button --}}
             <a href="{{ route('admin.medicines.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
                 <i class="fas fa-plus me-2"></i>Add Medicine
             </a>
@@ -84,29 +81,25 @@
                                     <i class="fas fa-exclamation-circle text-danger ms-1" title="Expired"></i>
                                 @endif
                             </td>
-<td class="text-end pe-4">
-    {{-- Changed d-inline-flex to d-flex for better control --}}
-    {{-- Added gap-2 for more space between buttons --}}
-    {{-- Added flex-wrap to prevent overlap on very small screens --}}
-    {{-- Added justify-content-end to keep them aligned to the right --}}
-    <div class="d-flex gap-2 flex-wrap justify-content-end">
-        {{-- Release Button --}}
-        <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#releaseModal{{ $medicine->id }}" title="Dispense">
-            <i class="fas fa-box-open"></i> Release
-        </button>
-        
-        {{-- Edit Button --}}
-        <a href="{{ route('admin.medicines.edit', $medicine->id) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3" title="Edit">
-            <i class="fas fa-edit"></i>
-        </a>
-        
-        {{-- Delete Button --}}
-        <button type="button" 
-            class="btn btn-sm btn-outline-danger rounded-pill px-3"
-            onclick="openBootstrapDeleteModal('{{ route('admin.medicines.delete', $medicine->id) }}', 'Are you sure to delete this medicine? It will permanently delete this medicine.')">
-            <i class="fas fa-trash-alt"></i>
-        </button>
-    </div>
+                            <td class="text-end pe-4">
+                                <div class="d-flex gap-2 flex-wrap justify-content-end">
+                                    {{-- Release Button --}}
+                                    <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#releaseModal{{ $medicine->id }}" title="Dispense">
+                                        <i class="fas fa-box-open"></i> Release
+                                    </button>
+                                    
+                                    {{-- Edit Button --}}
+                                    <a href="{{ route('admin.medicines.edit', $medicine->id) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    {{-- Delete Button --}}
+                                    <button type="button" 
+                                        class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                        onclick="openBootstrapDeleteModal('{{ route('admin.medicines.delete', $medicine->id) }}', 'Are you sure to delete this medicine? It will permanently delete this medicine.')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
 
                                 {{-- Release Modal (Inside Loop for ID context) --}}
                                 <div class="modal fade" id="releaseModal{{ $medicine->id }}" tabindex="-1" aria-hidden="true">
@@ -122,6 +115,17 @@
                                                     <div class="mb-4 p-3 bg-light rounded border border-info border-opacity-25">
                                                         <h6 class="fw-bold text-dark mb-1">{{ $medicine->name }}</h6>
                                                         <small class="text-muted">Current Stock: <span class="badge bg-success">{{ $medicine->stock_quantity }}</span></small>
+                                                    </div>
+
+                                                    {{-- Select Staff Dropdown --}}
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold small text-uppercase text-secondary">Released By (Staff)</label>
+                                                        <select name="released_by" class="form-select" required>
+                                                            <option value="" disabled selected>Select staff member...</option>
+                                                            @foreach(isset($staffList) ? $staffList : [] as $staff)
+                                                                <option value="{{ $staff->name }}">{{ $staff->name }} ({{ $staff->role }})</option>
+                                                            @endforeach
+                                                        </select>
                                                     </div>
 
                                                     <div class="mb-3">

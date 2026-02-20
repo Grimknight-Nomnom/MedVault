@@ -7,6 +7,8 @@ use App\Models\Medicine;
 use App\Models\MedicineHistory;
 use App\Models\User;
 use App\Models\Appointment;
+use App\Models\Staff;
+use App\Models\MedicalRecord;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -164,8 +166,9 @@ class MedicineController extends Controller
 
         $medicines = $query->get();
         $patients = User::where('role', 'user')->orderBy('first_name')->get();
+        $staffList = Staff::orderBy('name')->get(); // Fetch Staff list to pass to the view
 
-        return view('admin.medicines.index', compact('medicines', 'patients'));
+        return view('admin.medicines.index', compact('medicines', 'patients', 'staffList'));
     }
 
     public function create()
@@ -244,6 +247,7 @@ class MedicineController extends Controller
         $request->validate([
             'patient_id' => 'required|exists:users,id',
             'quantity' => 'required|integer|min:1',
+            'released_by' => 'required|string', // Ensuring the admin selects a staff member
         ]);
 
         $medicine = Medicine::findOrFail($id);
@@ -255,12 +259,22 @@ class MedicineController extends Controller
         $patient = User::find($request->patient_id);
         $medicine->decrement('stock_quantity', $request->quantity);
 
+        // 1. Log in Admin History
         $this->logHistory(
             $medicine->name, 
             'Released', 
             -$request->quantity, 
-            "Released {$request->quantity} items to Patient: {$patient->first_name} {$patient->last_name}"
+            "Released {$request->quantity} items to Patient: {$patient->first_name} {$patient->last_name} (By: {$request->released_by})"
         );
+
+        // 2. Create Medical Record for the Patient (Using special formatting)
+        MedicalRecord::create([
+            'user_id' => $patient->id,
+            'appointment_id' => null, 
+            'diagnosis' => 'MEDICINE_DISPENSED', // Using this exact string as a flag for the view
+            'prescription' => $medicine->name, // Store Med Name here temporarily
+            'notes' => "{$request->quantity}|{$medicine->description}|{$request->released_by}", // Use a pipe "|" separator for parsing
+        ]);
 
         return redirect()->route('admin.medicines.index')->with('success', 'Medicine released successfully!');
     }

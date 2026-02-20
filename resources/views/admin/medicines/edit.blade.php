@@ -25,9 +25,9 @@
                             </select>
                         </div>
                         <div class="mb-3">
-    <label for="description" class="form-label fw-bold">Description / Usage Instructions</label>
-    <textarea name="description" id="description" class="form-control" rows="3">{{ old('description', $medicine->description) }}</textarea>
-</div>
+                            <label for="description" class="form-label fw-bold">Description / Usage Instructions</label>
+                            <textarea name="description" id="description" class="form-control" rows="3">{{ old('description', $medicine->description) }}</textarea>
+                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Stock Quantity</label>
                             <input type="number" name="stock_quantity" class="form-control" value="{{ $medicine->stock_quantity }}" required>
@@ -36,8 +36,11 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Expiry Date (Month/Year)</label>
+                        {{-- CHANGED MIN TO NEXT MONTH --}}
                         <input type="month" name="expiry_date" class="form-control" 
-                               value="{{ $medicine->expiry_date->format('Y-m') }}" required>
+                               value="{{ $medicine->expiry_date->format('Y-m') }}" 
+                               min="{{ now()->addMonth()->format('Y-m') }}" 
+                               required>
                     </div>
 
                     <div class="d-flex justify-content-between">
