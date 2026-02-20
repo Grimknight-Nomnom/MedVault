@@ -75,6 +75,11 @@ Route::middleware(['auth'])->group(function () {
     // --- Admin Routes Group ---
     Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
+        // Manage Staff Routes
+Route::post('/admin/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
+Route::put('/admin/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
+Route::delete('/admin/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'destroyStaff'])->name('admin.staff.destroy');
+
         // Dashboard
         // Use AdminController (which now contains the combined Dashboard + Calendar logic)
 Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');

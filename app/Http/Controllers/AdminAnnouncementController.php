@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\Staff; // <-- ADD THIS IMPORT
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,7 +12,10 @@ class AdminAnnouncementController extends Controller
     public function index()
     {
         $announcements = Announcement::latest()->paginate(10);
-        return view('admin.announcements.index', compact('announcements'));
+        $staffMembers = Staff::latest()->get(); // <-- FETCH STAFF
+        
+        // Pass both variables to the view
+        return view('admin.announcements.index', compact('announcements', 'staffMembers'));
     }
 
     public function create()
@@ -54,7 +58,7 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'is_active' => 'boolean',
             'expires_at' => 'nullable|date', // Validate date
         ]);
@@ -87,5 +91,59 @@ class AdminAnnouncementController extends Controller
 
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement deleted successfully.');
+    }
+
+    public function storeStaff(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'role' => 'required|string|max:255',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $data = $request->only(['name', 'role']);
+
+        if ($request->hasFile('picture')) {
+            $path = $request->file('picture')->store('staff_pictures', 'public');
+            $data['picture_path'] = $path;
+        }
+
+        Staff::create($data);
+
+        return redirect()->route('admin.announcements.index')->with('success', 'Staff member added successfully.');
+    }
+
+    public function updateStaff(Request $request, Staff $staff)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'role' => 'required|string|max:255',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = $request->only(['name', 'role']);
+
+        if ($request->hasFile('picture')) {
+            // Delete old picture if exists
+            if ($staff->picture_path) {
+                Storage::disk('public')->delete($staff->picture_path);
+            }
+            $path = $request->file('picture')->store('staff_pictures', 'public');
+            $data['picture_path'] = $path;
+        }
+
+        $staff->update($data);
+
+        return redirect()->route('admin.announcements.index')->with('success', 'Staff member updated successfully.');
+    }
+
+    public function destroyStaff(Staff $staff)
+    {
+        if ($staff->picture_path) {
+            Storage::disk('public')->delete($staff->picture_path);
+        }
+        $staff->delete();
+
+        return redirect()->route('admin.announcements.index')->with('success', 'Staff member removed successfully.');
     }
 }
