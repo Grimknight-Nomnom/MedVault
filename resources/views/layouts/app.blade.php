@@ -43,7 +43,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="{{ url('/') }}">
-                <i class="fas fa-heartbeat me-2"></i>MedVault
+                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="me-2" style="height: 24px; width: auto;">MedVault
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>

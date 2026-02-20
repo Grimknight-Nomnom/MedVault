@@ -90,7 +90,7 @@
                             @endif
                         </div>
                         <div class="col-md-4 text-center d-none d-md-block">
-                            <i class="fas fa-heartbeat fa-6x opacity-50"></i>
+                            <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="opacity-50" style="width: 120px; height: 120px; object-fit: contain;">
                         </div>
                     </div>
                 </div>

@@ -39,9 +39,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 sm:h-20">
                 <div class="flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo(0,0)">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200 transition-transform group-hover:scale-105">
-                        <i class="fa-solid fa-heart-pulse text-base sm:text-lg"></i>
-                    </div>
+                    <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:scale-105 object-contain">
                     <div>
                         <span class="block font-bold text-lg sm:text-xl text-slate-900 leading-none">MedVault</span>
                         <span class="text-[9px] sm:text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Barangay Looc</span>
@@ -344,12 +342,7 @@
     <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12h2l2-3 2 6 2-3h2"></path>
-                    </svg>
-                </div>
+                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-8 h-8 object-contain">
                 <span class="font-bold text-xl">MedVault</span>
             </div>
             

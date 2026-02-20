@@ -21,12 +21,7 @@
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
             
             <div class="relative z-10 max-w-md mx-auto">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-teal-500 mb-8 shadow-lg shadow-teal-500/30">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12h2l2-3 2 6 2-3h2"></path>
-                    </svg>
-                </div>
+                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-16 h-16 mb-8 object-contain">
 
                 <h1 class="text-3xl font-bold mb-2 tracking-tight">Barangay Looc Clinic</h1>
                 <h2 class="text-xl font-medium text-teal-200 mb-8">One ID for your entire health journey.</h2>
@@ -67,12 +62,7 @@
                 <div class="w-full max-w-lg mx-auto">
                     
                     <div class="lg:hidden mb-8 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center text-white shadow-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12h2l2-3 2 6 2-3h2"></path>
-                            </svg>
-                        </div>
+                        <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-10 h-10 object-contain shadow-lg rounded-lg">
                         <span class="font-bold text-xl text-gray-900">Barangay Looc Clinic</span>
                     </div>
 
