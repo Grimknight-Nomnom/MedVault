@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Flatpickr + MonthSelect Plugin CSS --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+<style>
+    .flatpickr-day.selected, .flatpickr-monthSelect-month.selected { background: #0d6efd !important; border-color: #0d6efd !important; }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card shadow border-0">
@@ -38,12 +45,11 @@
 
                     <div class="mb-3">
                         <label for="expiry_date" class="form-label fw-bold">Expiry Date (Month & Year)</label>
-                        {{-- CHANGED MIN TO NEXT MONTH --}}
-                        <input type="month" 
+                        <input type="text" 
                                name="expiry_date" 
                                id="expiry_date" 
-                               class="form-control @error('expiry_date') is-invalid @enderror" 
-                               min="{{ now()->addMonth()->format('Y-m') }}"
+                               class="form-control bg-white cursor-pointer @error('expiry_date') is-invalid @enderror" 
+                               placeholder="Select Month & Year..."
                                required>
                         <div class="form-text">Pick the month and year of expiration.</div>
                         @error('expiry_date')
@@ -60,4 +66,22 @@
         </div>
     </div>
 </div>
+
+{{-- Flatpickr + MonthSelect Plugin JS --}}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+<script>
+    flatpickr("#expiry_date", {
+        plugins: [
+            new monthSelectPlugin({
+                shorthand: true, // Use short month names
+                dateFormat: "Y-m", // Must match backend expected format YYYY-MM
+                altFormat: "F Y"  // Display format like "February 2026"
+            })
+        ],
+        // Set minimum date to next month
+        minDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
+        allowInput: true
+    });
+</script>
 @endsection

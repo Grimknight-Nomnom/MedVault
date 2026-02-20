@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Flatpickr CSS --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-day.selected { background: #198754 !important; border-color: #198754 !important; }
+    .custom-year-select { margin-left: 5px; padding: 2px; border-radius: 4px; border: 1px solid transparent; background: transparent; font-weight: 500; color: inherit; cursor: pointer; }
+    .custom-year-select:hover { background: rgba(0,0,0,0.05); }
+</style>
+
 <div class="container py-4">
     <div class="mb-4">
         <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted small">
@@ -47,11 +55,11 @@
 
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Date of Birth <span class="text-danger">*</span></label>
-                                    <input type="date" name="date_of_birth" class="form-control" value="{{ old('date_of_birth', optional($user->date_of_birth)->format('Y-m-d')) }}" required>
+                                    <input type="text" name="date_of_birth" id="date_of_birth" class="form-control bg-white cursor-pointer" placeholder="Select Date..." value="{{ old('date_of_birth', optional($user->date_of_birth)->format('Y-m-d')) }}" required>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold">Age <span class="text-danger">*</span></label>
-                                    <input type="number" name="age" class="form-control" value="{{ old('age', $user->age) }}" required min="0">
+                                    <input type="number" name="age" id="age" class="form-control bg-light" value="{{ old('age', $user->age) }}" required min="0" readonly tabindex="-1">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold">Gender <span class="text-danger">*</span></label>
@@ -73,12 +81,12 @@
                                 </div>
 
                                 <div class="col-md-6">
-    <label class="form-label fw-bold">Email Address <span class="text-danger">*</span></label>
-    <div class="input-group">
-        <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
-        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
-    </div>
-</div>
+                                    <label class="form-label fw-bold">Email Address <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
+                                        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+                                    </div>
+                                </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Contact Number <span class="text-danger">*</span></label>
@@ -154,4 +162,60 @@
         </div>
     </div>
 </div>
+
+{{-- Flatpickr JS --}}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#date_of_birth", {
+        dateFormat: "Y-m-d",
+        maxDate: "today",
+        allowInput: true,
+        onReady: function(selectedDates, dateStr, instance) {
+            const yearInputWrapper = instance.currentYearElement.parentNode;
+            const yearDropdown = document.createElement("select");
+            yearDropdown.className = "custom-year-select flatpickr-monthDropdown-months";
+            
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i >= 1920; i--) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = i;
+                yearDropdown.appendChild(option);
+            }
+            
+            yearDropdown.value = instance.currentYear;
+            yearDropdown.addEventListener("change", function(e) {
+                instance.changeYear(Number(e.target.value));
+            });
+            instance.config.onYearChange.push(function() {
+                yearDropdown.value = instance.currentYear;
+            });
+            yearInputWrapper.parentNode.replaceChild(yearDropdown, yearInputWrapper);
+        },
+        onChange: function(selectedDates, dateStr, instance) {
+            calculateAge(dateStr);
+        }
+    });
+
+    function calculateAge(dobInput) {
+        if (!dobInput) return;
+        const dob = new Date(dobInput);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+        document.getElementById('age').value = age > 0 ? age : 0;
+    }
+
+    // Recalculate on load just in case
+    window.onload = function() {
+        const existingDate = document.getElementById('date_of_birth').value;
+        if(existingDate) {
+            calculateAge(existingDate);
+        }
+    };
+</script>
 @endsection

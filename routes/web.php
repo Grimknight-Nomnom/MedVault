@@ -14,6 +14,11 @@ use App\Models\Appointment;
 use App\Models\Announcement;
 use App\Models\Staff;
 
+Route::get('/clear-cache', function() {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return "Cache cleared successfully!";
+});
+
 // --- Public Routes ---
 Route::get('/', function () {
     $announcements = Announcement::where('is_active', true)->latest()->get();

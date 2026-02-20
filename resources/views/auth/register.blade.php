@@ -9,19 +9,41 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Flatpickr CSS for the advanced datepicker --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .flatpickr-day.selected {
+            background: #0d9488 !important; /* Teal 600 to match your theme */
+            border-color: #0d9488 !important;
+        }
+        /* Make our new custom year dropdown look like the month dropdown */
+        .custom-year-select {
+            margin-left: 5px;
+            padding: 2px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            background: transparent;
+            font-weight: 500;
+            color: inherit;
+            cursor: pointer;
+        }
+        .custom-year-select:hover {
+            background: rgba(0,0,0,0.05);
+        }
+    </style>
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-white font-sans text-gray-900 antialiased selection:bg-teal-100 selection:text-teal-900">
 
     <div class="min-h-screen w-full flex">
         
+        {{-- LEFT SIDE: Hero Section --}}
         <div class="hidden lg:flex lg:w-5/12 relative bg-teal-900 flex-col justify-center overflow-hidden p-12 text-white">
             <div class="absolute inset-0 bg-gradient-to-bl from-slate-900 to-teal-900"></div>
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
             
             <div class="relative z-10 max-w-md mx-auto">
-                {{-- Adjusted desktop logo --}}
                 <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-20 h-20 mb-8 object-contain">
 
                 <h1 class="text-3xl font-bold mb-2 tracking-tight">Barangay Looc Clinic</h1>
@@ -50,6 +72,7 @@
             </div>
         </div>
 
+        {{-- RIGHT SIDE: Registration Form --}}
         <div class="w-full lg:w-7/12 flex flex-col relative bg-white h-screen overflow-y-auto">
             
             <div class="absolute top-6 right-6 z-20">
@@ -63,7 +86,6 @@
                 <div class="w-full max-w-lg mx-auto">
                     
                     <div class="lg:hidden mb-8 flex items-center gap-3">
-                        {{-- Adjusted mobile logo --}}
                         <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-12 h-12 object-contain shadow-md rounded-lg">
                         <span class="font-bold text-xl text-gray-900">Barangay Looc Clinic</span>
                     </div>
@@ -73,11 +95,11 @@
                         <p class="mt-2 text-gray-500">Fill in your details to generate your secure Medical ID.</p>
                     </div>
 
-                    {{-- Global Error Message (Duplicate Warning will appear here via 'email' key) --}}
-                    @if($errors->has('email'))
+                    {{-- Global Error Message --}}
+                    @if($errors->has('email') || $errors->has('first_name'))
                         <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
                             <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <p class="text-sm text-red-800 font-medium">{{ $errors->first('email') }}</p>
+                            <p class="text-sm text-red-800 font-medium">{{ $errors->first('email') ?: $errors->first('first_name') }}</p>
                         </div>
                     @endif
 
@@ -91,7 +113,6 @@
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">First Name</label>
                                     <input type="text" name="first_name" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('first_name') }}">
-                                    @error('first_name') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Middle Name <span class="font-normal text-gray-400">(Optional)</span></label>
@@ -102,19 +123,20 @@
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Last Name</label>
                                 <input type="text" name="last_name" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('last_name') }}">
-                                @error('last_name') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Date of Birth</label>
-                                    <input type="date" name="date_of_birth" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('date_of_birth') }}">
-                                    @error('date_of_birth') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                    {{-- Changed input type to text for Flatpickr, set bg-white so it doesn't look disabled --}}
+                                    <input type="text" name="date_of_birth" id="date_of_birth" required 
+                                        class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-white text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm cursor-pointer" 
+                                        placeholder="Select Date..."
+                                        value="{{ old('date_of_birth') }}">
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Age</label>
-                                    <input type="number" name="age" required min="0" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('age') }}">
-                                    @error('age') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                    <input type="number" name="age" id="age" required min="0" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-100 text-gray-500 focus:outline-none sm:text-sm" value="{{ old('age') }}" readonly tabindex="-1">
                                 </div>
                             </div>
 
@@ -149,19 +171,23 @@
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Email Address</label>
                                 <input type="email" name="email" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('email') }}">
-                                @if(!$errors->has('email')) 
-                                    @endif
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div class="space-y-1.5">
+                                <div class="space-y-1.5 relative">
                                     <label class="block text-sm font-semibold text-gray-700">Password</label>
-                                    <input type="password" name="password" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm">
+                                    <input type="password" name="password" id="password" required minlength="8" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm pr-10">
+                                    <button type="button" onclick="togglePassword('password', 'eye-icon-1')" class="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                        <svg id="eye-icon-1" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
                                     @error('password') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="space-y-1.5">
+                                <div class="space-y-1.5 relative">
                                     <label class="block text-sm font-semibold text-gray-700">Confirm Password</label>
-                                    <input type="password" name="password_confirmation" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm">
+                                    <input type="password" name="password_confirmation" id="password_confirmation" required minlength="8" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm pr-10">
+                                    <button type="button" onclick="togglePassword('password_confirmation', 'eye-icon-2')" class="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                        <svg id="eye-icon-2" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -185,5 +211,89 @@
             </div>
         </div>
     </div>
+
+    {{-- Flatpickr JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Initialize Flatpickr on the Date of Birth field with a custom Year Dropdown
+        flatpickr("#date_of_birth", {
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            allowInput: true,
+            
+            // This hook triggers right when the calendar is built
+            onReady: function(selectedDates, dateStr, instance) {
+                // Find the wrapper that holds Flatpickr's default number input for the year
+                const yearInputWrapper = instance.currentYearElement.parentNode;
+                
+                // Create our own <select> element
+                const yearDropdown = document.createElement("select");
+                yearDropdown.className = "custom-year-select flatpickr-monthDropdown-months";
+                
+                // Get current year
+                const currentYear = new Date().getFullYear();
+                
+                // Populate the dropdown with years (from this year down to 1920)
+                for (let i = currentYear; i >= 1920; i--) {
+                    const option = document.createElement("option");
+                    option.value = i;
+                    option.text = i;
+                    yearDropdown.appendChild(option);
+                }
+                
+                // Set the default selected year in our new dropdown
+                yearDropdown.value = instance.currentYear;
+                
+                // Listen for user selecting a year, and apply it to the calendar
+                yearDropdown.addEventListener("change", function(e) {
+                    instance.changeYear(Number(e.target.value));
+                });
+                
+                // Keep dropdown synced if user changes year using other methods
+                instance.config.onYearChange.push(function() {
+                    yearDropdown.value = instance.currentYear;
+                });
+                
+                // Replace Flatpickr's number input with our newly built dropdown!
+                yearInputWrapper.parentNode.replaceChild(yearDropdown, yearInputWrapper);
+            },
+            
+            // This still automatically calculates age when a full date is selected
+            onChange: function(selectedDates, dateStr, instance) {
+                calculateAge(dateStr);
+            }
+        });
+
+        function calculateAge(dobInput) {
+            if (!dobInput) return;
+
+            const dob = new Date(dobInput);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            document.getElementById('age').value = age > 0 ? age : 0;
+        }
+
+        window.onload = function() {
+            const existingDate = document.getElementById('date_of_birth').value;
+            if(existingDate) {
+                calculateAge(existingDate);
+            }
+        };
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+    </script>
 </body>
 </html>

@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-day.selected { background: #0d6efd !important; border-color: #0d6efd !important; }
+</style>
+
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -19,30 +24,27 @@
                         @csrf
                         @method('PUT')
                         
-                        {{-- Title --}}
                         <div class="mb-3">
                             <label for="title" class="form-label fw-bold small text-uppercase">Headline Title</label>
                             <input type="text" name="title" id="title" value="{{ old('title', $announcement->title) }}" class="form-control form-control-lg" required>
                         </div>
 
-                        {{-- Description --}}
                         <div class="mb-3">
                             <label for="description" class="form-label fw-bold small text-uppercase">Content</label>
                             <textarea name="description" id="description" rows="5" class="form-control" required>{{ old('description', $announcement->description) }}</textarea>
                         </div>
 
-                        {{-- Auto-Hide Date (NEW FIELD) --}}
                         <div class="mb-3">
                             <label for="expires_at" class="form-label fw-bold small text-uppercase text-danger">Auto-Hide Date</label>
-                            <input type="date" 
+                            <input type="text" 
                                    name="expires_at" 
                                    id="expires_at" 
-                                   class="form-control" 
+                                   class="form-control bg-white cursor-pointer" 
+                                   placeholder="Select Expiration Date..."
                                    value="{{ old('expires_at', $announcement->expires_at ? $announcement->expires_at->format('Y-m-d') : '') }}">
                             <div class="form-text">Optional: The announcement will automatically stop showing after this date.</div>
                         </div>
 
-                        {{-- Current Image Preview & Upload --}}
                         <div class="mb-4">
                             <label class="form-label fw-bold small text-uppercase">Image</label>
                             <div class="d-flex gap-3 align-items-start">
@@ -59,7 +61,6 @@
                             </div>
                         </div>
 
-                        {{-- Visibility Toggle --}}
                         <div class="mb-4 p-3 bg-light rounded border d-flex align-items-center">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="is_active" id="is_active" value="1" {{ $announcement->is_active ? 'checked' : '' }} style="width: 3em; height: 1.5em;">
@@ -78,4 +79,13 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#expires_at", {
+        dateFormat: "Y-m-d",
+        minDate: new Date().fp_incr(1), // Tomorrow
+        allowInput: true
+    });
+</script>
 @endsection

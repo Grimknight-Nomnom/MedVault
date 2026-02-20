@@ -12,8 +12,6 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
-    // ... (Keep existing dashboard and captureExpiredMedicines methods) ...
-
     public function dashboard(Request $request)
     {
         // --- 1. DASHBOARD STATS ---
@@ -119,14 +117,19 @@ class AdminController extends Controller
     public function indexPatients(Request $request)
     {
         $query = User::whereIn('role', ['user', 'User', 'users']);
+        
         if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
+            // Remove the '#' if the admin types it (e.g., "#124" becomes "124")
+            $search = ltrim($request->search, '#');
+            
             $query->where(function($q) use ($search) {
-                $q->where('id', 'like', "%$search%")
+                // FIXED: Changed 'id' to 'usernumber'
+                $q->where('usernumber', 'like', "%$search%")
                   ->orWhere('first_name', 'like', "%$search%")
                   ->orWhere('last_name', 'like', "%$search%");
             });
         }
+        
         $patients = $query->orderBy('created_at', 'desc')->paginate(10);
         return view('admin.patients.index', compact('patients'));
     }
@@ -149,7 +152,7 @@ class AdminController extends Controller
         return redirect()->route('admin.patients.index')->with('success', 'Patient deleted.');
     }
 
-    // --- NEW: Manual Patient Verification ---
+    // --- Manual Patient Verification ---
     public function verifyPatient($id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);

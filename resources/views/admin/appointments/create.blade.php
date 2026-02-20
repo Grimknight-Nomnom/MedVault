@@ -1,11 +1,15 @@
 @extends('layouts.app')
 
 @section('content')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-day.selected { background: #0d6efd !important; border-color: #0d6efd !important; }
+</style>
+
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             
-            {{-- Back Button --}}
             <a href="{{ route('admin.appointments.index') }}" class="text-decoration-none text-muted mb-3 d-inline-block">
                 <i class="fas fa-arrow-left me-1"></i> Back to List
             </a>
@@ -20,7 +24,6 @@
                 </div>
 
                 <div class="card-body p-4">
-                    {{-- Error Alerts --}}
                     @if ($errors->any())
                         <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
                             <ul class="mb-0 small">
@@ -35,7 +38,6 @@
                     <form action="{{ route('admin.appointments.store') }}" method="POST">
                         @csrf
 
-                        {{-- 1. Select Patient --}}
                         <div class="mb-4">
                             <label for="user_id" class="form-label fw-semibold text-secondary small text-uppercase">Select Patient</label>
                             <div class="input-group">
@@ -52,22 +54,20 @@
                             <div class="form-text small">Only registered patients appear in this list.</div>
                         </div>
 
-                        {{-- 2. Select Date --}}
                         <div class="mb-4">
                             <label for="appointment_date" class="form-label fw-semibold text-secondary small text-uppercase">Appointment Date</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i class="fas fa-calendar-alt"></i></span>
-                                <input type="date" 
+                                <input type="text" 
                                        name="appointment_date" 
                                        id="appointment_date" 
-                                       class="form-control border-start-0" 
+                                       class="form-control border-start-0 bg-white cursor-pointer" 
+                                       placeholder="Select Date..."
                                        value="{{ old('appointment_date', date('Y-m-d')) }}"
-                                       min="{{ date('Y-m-d') }}" 
                                        required>
                             </div>
                         </div>
 
-                        {{-- 3. Reason --}}
                         <div class="mb-4">
                             <label for="reason" class="form-label fw-semibold text-secondary small text-uppercase">Reason for Visit</label>
                             <textarea name="reason" 
@@ -78,7 +78,6 @@
                                       required>{{ old('reason') }}</textarea>
                         </div>
 
-                        {{-- Submit Button --}}
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary py-2 rounded-3 fw-bold">
                                 <i class="fas fa-check-circle me-2"></i> Confirm Booking
@@ -90,4 +89,13 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#appointment_date", {
+        dateFormat: "Y-m-d",
+        minDate: "today", // Disables past dates
+        allowInput: true
+    });
+</script>
 @endsection
