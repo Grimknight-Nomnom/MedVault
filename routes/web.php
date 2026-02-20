@@ -37,6 +37,7 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
 // --- Email Verification ---
+// (We leave this for the email link)
 Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->middleware(['signed'])
     ->name('verification.verify');
@@ -89,7 +90,6 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
         // Manage Staff Routes 
-        // FIX: Removed '/admin' from the URL string because prefix('admin') already adds it
         Route::post('/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
         Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
         Route::delete('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'destroyStaff'])->name('admin.staff.destroy');
@@ -142,8 +142,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
             
-            // --- NEW: Manual Patient Verification ---
-            Route::patch('/patients/{id}/verify', 'verifyPatient')->name('admin.patients.verify');
+            // --- NEW: Bypass Manual Patient Verification ---
+            Route::post('/patients/{id}/force-verify', 'verifyPatient');
         });
 
         // Records
