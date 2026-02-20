@@ -66,66 +66,73 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-public function register(Request $request)
-{
-    // 1. Validate Fields
-    $validated = $request->validate([
-        'first_name'    => 'required|string|max:255',
-        'middle_name'   => 'nullable|string|max:255',
-        'last_name'     => 'required|string|max:255',
-        'date_of_birth' => 'required|date',
-        'age'           => 'required|integer|min:1|max:120',
-        'phone'         => 'nullable|string|max:20',
-        'address'       => 'nullable|string|max:500',
-        'email'         => 'required|string|email|max:255|unique:users',
-        'password'      => 'required|string|min:8|confirmed',
-    ]);
+    public function register(Request $request)
+    {
+        // 1. Validate Fields (Includes Array setup for custom messages)
+        $validated = $request->validate([
+            'first_name'    => 'required|string|max:255',
+            'middle_name'   => 'nullable|string|max:255',
+            'last_name'     => 'required|string|max:255',
+            'date_of_birth' => 'required|date',
+            'age'           => 'required|integer|min:1|max:120',
+            
+            // UPDATED: Strict Philippine phone number validation and uniqueness
+            'phone'         => ['required', 'string', 'unique:users,phone', 'regex:/^\+639\d{9}$/'],
+            
+            'address'       => 'nullable|string|max:500',
+            'email'         => 'required|string|email|max:255|unique:users',
+            'password'      => 'required|string|min:8|confirmed',
+        ], [
+            // CUSTOM ERROR MESSAGES
+            'phone.regex'  => 'The phone number must be a valid Philippine mobile number (e.g., +639123456789).',
+            'phone.unique' => 'This phone number is already registered to another account.',
+        ]);
 
-    // 2. STRICT DUPLICATE ACCOUNT PREVENTION
-    // We check first_name, last_name, and date_of_birth to identify duplicates.
-    $duplicateUser = User::where('first_name', $validated['first_name'])
-        ->where('last_name', $validated['last_name'])
-        ->whereDate('date_of_birth', $validated['date_of_birth'])
-        ->where(function($query) use ($validated) {
-            // If the new registration has no middle name, match against existing records 
-            // that are also NULL or empty strings.
-            if (empty($validated['middle_name'])) {
-                $query->whereNull('middle_name')->orWhere('middle_name', '');
-            } else {
-                $query->where('middle_name', $validated['middle_name']);
-            }
-        })
-        ->first();
+        // 2. STRICT DUPLICATE ACCOUNT PREVENTION
+        // We check first_name, last_name, and date_of_birth to identify duplicates.
+        $duplicateUser = User::where('first_name', $validated['first_name'])
+            ->where('last_name', $validated['last_name'])
+            ->whereDate('date_of_birth', $validated['date_of_birth'])
+            ->where(function($query) use ($validated) {
+                // If the new registration has no middle name, match against existing records 
+                // that are also NULL or empty strings.
+                if (empty($validated['middle_name'])) {
+                    $query->whereNull('middle_name')->orWhere('middle_name', '');
+                } else {
+                    $query->where('middle_name', $validated['middle_name']);
+                }
+            })
+            ->first();
 
-    if ($duplicateUser) {
-        // Associate the error with 'first_name' so it appears prominently on the form.
-        return back()->withErrors([
-            'first_name' => "An account with this name and date of birth already exists. Please log in or reset your password."
-        ])->withInput();
+        if ($duplicateUser) {
+            // Associate the error with 'first_name' so it appears prominently on the form.
+            return back()->withErrors([
+                'first_name' => "An account with this name and date of birth already exists. Please log in or reset your password."
+            ])->withInput();
+        }
+
+        // 3. Generate Unique 3-Digit User Number
+        do {
+            $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
+        } while (User::where('usernumber', $randomNumber)->exists());
+
+        // 4. Create User
+        User::create([
+            'first_name'    => $validated['first_name'],
+            'middle_name'   => $validated['middle_name'],
+            'last_name'     => $validated['last_name'],
+            'date_of_birth' => $validated['date_of_birth'],
+            'age'           => $validated['age'],
+            'phone'         => $validated['phone'],
+            'address'       => $validated['address'],
+            'email'         => $validated['email'],
+            'password'      => Hash::make($validated['password']),
+            'usernumber'    => $randomNumber,
+            'role'          => 'user',
+        ]);
+
+        // 5. Redirect
+        return redirect()->route('login')->with('success', 
+            "Registration successful! Your User Number is: {$randomNumber}. Please log in using this number or your email.");
     }
-
-    // 3. Generate Unique 3-Digit User Number
-    do {
-        $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
-    } while (User::where('usernumber', $randomNumber)->exists());
-
-    // 4. Create User
-    User::create([
-        'first_name'    => $validated['first_name'],
-        'middle_name'   => $validated['middle_name'],
-        'last_name'     => $validated['last_name'],
-        'date_of_birth' => $validated['date_of_birth'],
-        'age'           => $validated['age'],
-        'phone'         => $validated['phone'],
-        'address'       => $validated['address'],
-        'email'         => $validated['email'],
-        'password'      => Hash::make($validated['password']),
-        'usernumber'    => $randomNumber,
-        'role'          => 'user',
-    ]);
-
-    // 5. Redirect
-    return redirect()->route('login')->with('success', 
-        "Registration successful! Your User Number is: {$randomNumber}. Please log in using this number or your email.");
-}
 }

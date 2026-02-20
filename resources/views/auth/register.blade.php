@@ -126,9 +126,27 @@
                                 </div>
                             </div>
 
+                            {{-- UPDATED PHONE NUMBER FIELD --}}
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Phone Number</label>
-                                <input type="text" name="phone" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('phone') }}">
+                                <input type="text" name="phone" required maxlength="13" pattern="^\+639\d{9}$" placeholder="+639123456789"
+                                    class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" 
+                                    value="{{ old('phone', '+63') }}"
+                                    oninput="
+                                        // Strip any non-numeric or non-plus characters
+                                        this.value = this.value.replace(/[^\d+]/g, '');
+                                        // Ensure the +63 prefix stays intact
+                                        if (!this.value.startsWith('+63')) {
+                                            this.value = '+63' + this.value.replace(/^\+?6?3?/, '');
+                                        }
+                                    "
+                                    onkeydown="
+                                        // Prevent deleting the +63 prefix via backspace or delete
+                                        if ((event.key === 'Backspace' || event.key === 'Delete') && this.selectionStart <= 3) {
+                                            event.preventDefault();
+                                        }
+                                    ">
+                                @error('phone') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="space-y-1.5">
