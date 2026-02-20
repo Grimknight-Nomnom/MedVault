@@ -90,7 +90,7 @@
                             @endif
                         </div>
                         <div class="col-md-4 text-center d-none d-md-block">
-                            <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="opacity-50" style="width: 120px; height: 120px; object-fit: contain;">
+                            <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="opacity-50" style="width: 180px; height: 180px; object-fit: contain;">
                         </div>
                     </div>
                 </div>

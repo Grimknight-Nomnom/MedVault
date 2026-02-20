@@ -21,7 +21,8 @@
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
             
             <div class="relative z-10 max-w-md mx-auto">
-                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-16 h-16 mb-8 object-contain">
+                {{-- Adjusted desktop logo --}}
+                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-20 h-20 mb-8 object-contain">
 
                 <h1 class="text-3xl font-bold mb-2 tracking-tight">Barangay Looc Clinic</h1>
                 <h2 class="text-xl font-medium text-teal-200 mb-8">One ID for your entire health journey.</h2>
@@ -62,7 +63,8 @@
                 <div class="w-full max-w-lg mx-auto">
                     
                     <div class="lg:hidden mb-8 flex items-center gap-3">
-                        <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-10 h-10 object-contain shadow-lg rounded-lg">
+                        {{-- Adjusted mobile logo --}}
+                        <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-12 h-12 object-contain shadow-md rounded-lg">
                         <span class="font-bold text-xl text-gray-900">Barangay Looc Clinic</span>
                     </div>
 
@@ -116,22 +118,18 @@
                                 </div>
                             </div>
 
-                            {{-- UPDATED PHONE NUMBER FIELD --}}
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Phone Number</label>
                                 <input type="text" name="phone" required maxlength="13" pattern="^\+639\d{9}$" placeholder="+639123456789"
                                     class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" 
                                     value="{{ old('phone', '+63') }}"
                                     oninput="
-                                        // Strip any non-numeric or non-plus characters
                                         this.value = this.value.replace(/[^\d+]/g, '');
-                                        // Ensure the +63 prefix stays intact
                                         if (!this.value.startsWith('+63')) {
                                             this.value = '+63' + this.value.replace(/^\+?6?3?/, '');
                                         }
                                     "
                                     onkeydown="
-                                        // Prevent deleting the +63 prefix via backspace or delete
                                         if ((event.key === 'Backspace' || event.key === 'Delete') && this.selectionStart <= 3) {
                                             event.preventDefault();
                                         }
@@ -151,7 +149,6 @@
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Email Address</label>
                                 <input type="email" name="email" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('email') }}">
-                                {{-- We handled the global email error above, but keep this for standard validation --}}
                                 @if(!$errors->has('email')) 
                                     @endif
                             </div>

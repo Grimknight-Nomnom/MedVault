@@ -19,7 +19,6 @@
         html { scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        /* Tailwind requires Keyframes to be defined in CSS or Config */
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 1s ease-out forwards; opacity: 0; transform: translateY(20px); }
         .delay-100 { animation-delay: 100ms; }
@@ -37,16 +36,15 @@
 
     <nav class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-emerald-100 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16 sm:h-20">
+            <div class="flex justify-between items-center h-20 sm:h-24">
                 <div class="flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo(0,0)">
-                    <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:scale-105 object-contain">
+                    <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-14 h-14 sm:w-16 sm:h-16 transition-transform group-hover:scale-105 object-contain">
                     <div>
-                        <span class="block font-bold text-lg sm:text-xl text-slate-900 leading-none">MedVault</span>
-                        <span class="text-[9px] sm:text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Barangay Looc</span>
+                        <span class="block font-bold text-xl sm:text-2xl text-slate-900 leading-none">MedVault</span>
+                        <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-widest">Barangay Looc</span>
                     </div>
                 </div>
 
-                {{-- WAVY MENU: Fully Tailwind Converted --}}
                 <div class="hidden md:flex items-center">
                     <ul class="flex justify-center items-center m-0 p-0 list-none">
                         @foreach(['Home' => '#home', 'Updates' => '#announcements', 'About' => '#about', 'Team' => '#staff'] as $name => $link)
@@ -74,7 +72,7 @@
         </div>
     </nav>
 
-    <section id="home" class="relative min-h-screen flex items-center pt-24 pb-12 lg:pt-0 lg:pb-0 overflow-hidden scroll-mt-20">
+    <section id="home" class="relative min-h-screen flex items-center pt-24 pb-12 lg:pt-0 lg:pb-0 overflow-hidden scroll-mt-24">
         <div class="absolute inset-0 z-0">
             <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Background" class="w-full h-full object-cover">
         </div>
@@ -113,7 +111,6 @@
                         </a>
                     </div>
 
-                    {{-- FACEBOOK BUTTON: Fully Tailwind Converted --}}
                     <div class="flex justify-start animate-fade-in delay-300">
                         <a href="https://www.facebook.com/bhs.looc" target="_blank" class="group flex items-center px-[35px] py-[12px] no-underline font-['Instrument_Sans'] text-[18px] text-white bg-[#059669] shadow-[5px_5px_0_#0f172a] rounded-[4px] -skew-x-[15deg] transition-all duration-[1s] hover:duration-[0.5s] hover:bg-[#047857] hover:shadow-[5px_5px_0_#34d399] outline-none">
                             <span class="font-bold tracking-wider skew-x-[15deg]">VISIT FACEBOOK</span>
@@ -130,19 +127,16 @@
                     </div>
                 </div>
 
-                {{-- GALLERY SPLIT IMAGE: 100% Tailwind --}}
                 <div class="hidden md:flex w-full md:w-1/2 lg:w-5/12 items-center justify-center animate-fade-in delay-200 order-2">
                     
                     <div class="group grid bg-white rounded-[1.5rem] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] [clip-path:inset(1px)] w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[400px]">
                         
-                        {{-- Top Left Image (Peer) --}}
                         <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Exterior" 
                              class="peer col-start-1 row-start-1 w-full aspect-square object-cover cursor-pointer transition-all duration-[400ms] delay-[100ms] 
                                     [clip-path:polygon(0_0,calc(100%_-_8px)_0,0_calc(100%_-_8px))] 
                                     group-hover:[clip-path:polygon(0_0,calc(50%_-_8px)_0,0_calc(50%_-_8px))] 
                                     hover:![clip-path:polygon(0_0,calc(150%_-_8px)_0,0_calc(150%_-_8px))]">
                         
-                        {{-- Bottom Right Image --}}
                         <img src="{{ asset('Image/background.jpg') }}" alt="Medical Equipment" 
                              class="col-start-1 row-start-1 w-full aspect-square object-cover cursor-pointer transition-all duration-[400ms] delay-[100ms] 
                                     [clip-path:polygon(100%_100%,100%_8px,8px_100%)] 
@@ -341,8 +335,8 @@
 
     <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-2">
-                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-8 h-8 object-contain">
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-14 h-14 object-contain">
                 <span class="font-bold text-xl">MedVault</span>
             </div>
             

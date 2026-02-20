@@ -25,7 +25,8 @@
 
             <div class="relative z-10 h-full flex flex-col justify-center">
                 <div class="mb-10">
-                    <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-16 h-16 mb-8 object-contain">
+                    {{-- Adjusted desktop logo to be nicely proportioned --}}
+                    <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-20 h-20 mb-8 object-contain">
                     
                     <h1 class="text-4xl font-bold tracking-tight mb-2">Barangay Looc Clinic</h1>
                     <h2 class="text-2xl font-medium text-teal-200 mb-6">MedVault System</h2>
@@ -66,7 +67,8 @@
                 <div class="w-full max-w-md mx-auto">
                     
                     <div class="lg:hidden mb-8 flex items-center gap-3">
-                        <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-10 h-10 object-contain shadow-lg rounded-lg">
+                        {{-- Adjusted mobile logo size --}}
+                        <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-12 h-12 object-contain shadow-md rounded-lg">
                         <span class="font-bold text-xl text-gray-900">Barangay Looc Clinic</span>
                     </div>
 

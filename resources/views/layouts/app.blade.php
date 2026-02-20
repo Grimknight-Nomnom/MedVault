@@ -12,7 +12,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f4f6f9; /* Professional light grey background */
+            background-color: #f4f6f9;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -42,8 +42,8 @@
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="{{ url('/') }}">
-                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="me-2" style="height: 24px; width: auto;">MedVault
+            <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{{ url('/') }}">
+                <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="me-2" style="height: 48px; width: auto; object-fit: contain;">MedVault
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
