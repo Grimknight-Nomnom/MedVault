@@ -11,13 +11,14 @@ class Announcement extends Model
 
     protected $fillable = [
         'title',
-        'content',
+        'description', // CHANGED THIS from 'content' to 'description'
+        'image_path',
         'is_active',
-        'expires_at', // Add this
+        'expires_at', 
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'expires_at' => 'datetime', // Automatically convert to Carbon instance
+        'expires_at' => 'datetime', 
     ];
 }

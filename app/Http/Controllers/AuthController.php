@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 use App\Models\User;
 
 class AuthController extends Controller
@@ -27,7 +30,6 @@ class AuthController extends Controller
         $input = $request->input('login_identifier');
         
         // 2. Determine Login Type
-        // If it looks like an email, treat as email. Otherwise, treat as usernumber.
         $fieldType = filter_var($input, FILTER_VALIDATE_EMAIL) ? 'email' : 'usernumber';
 
         // 3. Attempt Auth
@@ -37,6 +39,21 @@ class AuthController extends Controller
         ];
 
         if (Auth::attempt($credentials)) {
+            
+            // --- NEW: STRICT EMAIL VERIFICATION RESTRICTION ---
+            // If the user is a patient (not an admin) and hasn't verified their email yet
+            if (Auth::user()->role !== 'admin' && is_null(Auth::user()->email_verified_at)) {
+                // Log them back out immediately
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                // Send them back with an error
+                return back()->withErrors([
+                    'login_identifier' => 'You must verify your email address before logging in. Please check your inbox for the verification link.',
+                ])->onlyInput('login_identifier');
+            }
+
             $request->session()->regenerate();
 
             if (Auth::user()->role === 'admin') {
@@ -45,7 +62,7 @@ class AuthController extends Controller
             return redirect()->intended('/dashboard');
         }
 
-        // 4. Failed Login
+        // 4. Failed Login (Wrong password or ID)
         return back()->withErrors([
             'login_identifier' => 'Invalid credentials or user number.',
         ])->onlyInput('login_identifier');
@@ -68,34 +85,27 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // 1. Validate Fields (Includes Array setup for custom messages)
+        // 1. Validate Fields
         $validated = $request->validate([
             'first_name'    => 'required|string|max:255',
             'middle_name'   => 'nullable|string|max:255',
             'last_name'     => 'required|string|max:255',
             'date_of_birth' => 'required|date',
             'age'           => 'required|integer|min:1|max:120',
-            
-            // UPDATED: Strict Philippine phone number validation and uniqueness
             'phone'         => ['required', 'string', 'unique:users,phone', 'regex:/^\+639\d{9}$/'],
-            
             'address'       => 'nullable|string|max:500',
             'email'         => 'required|string|email|max:255|unique:users',
             'password'      => 'required|string|min:8|confirmed',
         ], [
-            // CUSTOM ERROR MESSAGES
             'phone.regex'  => 'The phone number must be a valid Philippine mobile number (e.g., +639123456789).',
             'phone.unique' => 'This phone number is already registered to another account.',
         ]);
 
         // 2. STRICT DUPLICATE ACCOUNT PREVENTION
-        // We check first_name, last_name, and date_of_birth to identify duplicates.
         $duplicateUser = User::where('first_name', $validated['first_name'])
             ->where('last_name', $validated['last_name'])
             ->whereDate('date_of_birth', $validated['date_of_birth'])
             ->where(function($query) use ($validated) {
-                // If the new registration has no middle name, match against existing records 
-                // that are also NULL or empty strings.
                 if (empty($validated['middle_name'])) {
                     $query->whereNull('middle_name')->orWhere('middle_name', '');
                 } else {
@@ -105,7 +115,6 @@ class AuthController extends Controller
             ->first();
 
         if ($duplicateUser) {
-            // Associate the error with 'first_name' so it appears prominently on the form.
             return back()->withErrors([
                 'first_name' => "An account with this name and date of birth already exists. Please log in or reset your password."
             ])->withInput();
@@ -117,7 +126,7 @@ class AuthController extends Controller
         } while (User::where('usernumber', $randomNumber)->exists());
 
         // 4. Create User
-        User::create([
+        $user = User::create([
             'first_name'    => $validated['first_name'],
             'middle_name'   => $validated['middle_name'],
             'last_name'     => $validated['last_name'],
@@ -131,8 +140,44 @@ class AuthController extends Controller
             'role'          => 'user',
         ]);
 
-        // 5. Redirect
+        // --- 5. Generate Secure Verification URL ---
+        $verifyUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->addHours(24), // Link expires in 24 hours
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
+        // --- 6. Send Verification Email ---
+        Mail::send('emails.verify_account', [
+            'url' => $verifyUrl,
+            'usernumber' => $user->usernumber,
+            'email' => $user->email,
+        ], function($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('Welcome to MedVault - Verify Your Account');
+        });
+
+        // 7. Redirect with Instructions
         return redirect()->route('login')->with('success', 
-            "Registration successful! Your User Number is: {$randomNumber}. Please log in using this number or your email.");
+            "Registration successful! We have sent a verification link to your email. Your User Number is: {$randomNumber}. Please verify your email before logging in.");
+    }
+
+    // --- EMAIL VERIFICATION CONFIRMATION METHOD ---
+
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $user = User::findOrFail($id);
+
+        // Check if the hash matches the user's email
+        if (! hash_equals((string) $hash, (string) sha1($user->email))) {
+            abort(403, 'Invalid or expired verification link.');
+        }
+
+        // Update the database to mark email as verified
+        if (! $user->email_verified_at) {
+            $user->update(['email_verified_at' => now()]);
+        }
+
+        return redirect()->route('login')->with('success', 'Your email has been successfully verified! You can now log in.');
     }
 }

@@ -17,6 +17,7 @@ class User extends Authenticatable
         'age',
         'usernumber',
         'email',
+        'email_verified_at', // <--- ADD THIS LINE HERE
         'password',
         'role',
         'phone',

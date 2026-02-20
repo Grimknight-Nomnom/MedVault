@@ -12,6 +12,8 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
+    // ... (Keep existing dashboard and captureExpiredMedicines methods) ...
+
     public function dashboard(Request $request)
     {
         // --- 1. DASHBOARD STATS ---
@@ -114,7 +116,6 @@ class AdminController extends Controller
         }
     }
 
-    // ... Keep your existing patient methods (indexPatients, showPatient, destroy) ...
     public function indexPatients(Request $request)
     {
         $query = User::whereIn('role', ['user', 'User', 'users']);
@@ -146,5 +147,18 @@ class AdminController extends Controller
         $patient = User::where('role', 'user')->findOrFail($id);
         $patient->delete();
         return redirect()->route('admin.patients.index')->with('success', 'Patient deleted.');
+    }
+
+    // --- NEW: Manual Patient Verification ---
+    public function verifyPatient($id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+        
+        if (is_null($patient->email_verified_at)) {
+            $patient->update(['email_verified_at' => now()]);
+            return redirect()->back()->with('success', "Patient {$patient->first_name} manually verified successfully.");
+        }
+
+        return redirect()->back()->with('info', 'Patient is already verified.');
     }
 }

@@ -131,7 +131,7 @@
                     
                     <div class="group grid bg-white rounded-[1.5rem] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] [clip-path:inset(1px)] w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[400px]">
                         
-                        <img src="{{ asset('Image/clinic.png') }}" alt="Clinic Exterior" 
+                        <img src="{{ asset('Image/team.jpg') }}" alt="Clinic Exterior" 
                              class="peer col-start-1 row-start-1 w-full aspect-square object-cover cursor-pointer transition-all duration-[400ms] delay-[100ms] 
                                     [clip-path:polygon(0_0,calc(100%_-_8px)_0,0_calc(100%_-_8px))] 
                                     group-hover:[clip-path:polygon(0_0,calc(50%_-_8px)_0,0_calc(50%_-_8px))] 
@@ -257,7 +257,7 @@
                     <div class="absolute inset-0 bg-green-600 rounded-2xl rotate-3 opacity-20 transition-transform duration-500 group-hover:rotate-6"></div>
                     <div class="relative bg-white p-2 rounded-2xl shadow-xl transition-shadow duration-500 group-hover:shadow-2xl">
                         <div class="aspect-[4/3] rounded-xl bg-gray-200 flex items-center justify-center overflow-hidden">
-                            <img src="{{ asset('Image/clinic.png') }}" alt="About Us Image" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                            <img src="{{ asset('Image/Team 2.jpg') }}" alt="About Us Image" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                         </div>
                     </div>
                 </div>

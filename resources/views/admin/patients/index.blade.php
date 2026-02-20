@@ -27,16 +27,36 @@
                         <tr class="text-uppercase small text-muted">
                             <th class="py-3 ps-4">User ID</th>
                             <th class="py-3">Patient Name</th>
+                            <th class="py-3">Status</th> {{-- Added Status Column --}}
                             <th class="py-3 text-end pe-4">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($patients as $patient)
-                        <tr>
+                        {{-- Add red highlight if unverified --}}
+                        <tr class="{{ is_null($patient->email_verified_at) ? 'bg-danger-subtle' : '' }}">
                             <td class="ps-4 fw-bold text-success">#{{ $patient->usernumber }}</td>
                             <td>{{ $patient->first_name }} {{ $patient->last_name }}</td>
+                            <td>
+                                @if(is_null($patient->email_verified_at))
+                                    <span class="badge bg-danger">Unverified</span>
+                                @else
+                                    <span class="badge bg-success">Verified</span>
+                                @endif
+                            </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
+                                    {{-- Manual Verify Button (Only shows if unverified) --}}
+                                    @if(is_null($patient->email_verified_at))
+                                        <form action="{{ route('admin.patients.verify', $patient->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold" title="Manually Verify">
+                                                <i class="fas fa-check-circle"></i> Verify
+                                            </button>
+                                        </form>
+                                    @endif
+
                                     {{-- View Button --}}
                                     <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
                                         View
@@ -53,12 +73,19 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="3" class="text-center py-5 text-muted">No patients found.</td>
+                            <td colspan="4" class="text-center py-5 text-muted">No patients found.</td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+            
+            {{-- Optional: Pagination Links if you are using paginate() --}}
+            @if(method_exists($patients, 'hasPages') && $patients->hasPages())
+                <div class="px-4 py-3 border-top">
+                    {{ $patients->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </div>

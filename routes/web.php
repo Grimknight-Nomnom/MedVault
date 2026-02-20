@@ -31,6 +31,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
+// --- Email Verification ---
+Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware(['signed'])
+    ->name('verification.verify');
+
 // --- Password Reset Routes ---
 Route::controller(PasswordResetController::class)->group(function () {
     Route::get('/forgot-password', 'showLinkRequestForm')->name('password.request');
@@ -131,6 +136,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
+            
+            // --- NEW: Manual Patient Verification ---
+            Route::patch('/patients/{id}/verify', 'verifyPatient')->name('admin.patients.verify');
         });
 
         // Records

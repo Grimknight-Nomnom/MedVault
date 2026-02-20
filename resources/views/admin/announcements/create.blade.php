@@ -37,6 +37,18 @@
                             <div class="form-text">Recommended size: 800x400px. Max size: 2MB.</div>
                         </div>
 
+                        {{-- Auto-Hide Date (NEW FIELD) --}}
+                        <div class="mb-4">
+                            <label for="expires_at" class="form-label fw-bold small text-uppercase text-danger">Auto-Hide Date (Optional)</label>
+                            <input type="date" 
+                                   name="expires_at" 
+                                   id="expires_at" 
+                                   class="form-control" 
+                                   min="{{ now()->addDay()->format('Y-m-d') }}"
+                                   value="{{ old('expires_at') }}">
+                            <div class="form-text">The announcement will automatically be hidden after this date. Past dates and today are disabled.</div>
+                        </div>
+
                         {{-- Visibility Toggle --}}
                         <div class="mb-4 p-3 bg-light rounded border d-flex align-items-center">
                             <div class="form-check form-switch">
