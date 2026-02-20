@@ -18,35 +18,24 @@
 
     /* --- MOBILE RESPONSIVENESS START --- */
     @media (max-width: 767.98px) {
-        /* Hide the Grid Header (Sun, Mon...) */
         .calendar-header { display: none; }
-        
-        /* Change Grid to Block (List View) */
         .calendar-grid { display: block; }
-
-        /* Hide ALL days by default on mobile */
         .day-cell { display: none; }
-
-        /* Style for visible days (Today OR Expanded List) */
         .day-cell.is-today, 
         .calendar-grid.show-all .day-cell:not(.disabled) { 
             display: flex !important; 
-            height: auto; /* Allow height to grow with content */
+            height: auto; 
             min-height: 80px;
             margin-bottom: 1rem;
             width: 100%;
             border-width: 1px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            flex-direction: column; /* Stack content vertically */
+            flex-direction: column; 
         }
-
-        /* Highlight 'Today' slightly more */
         .day-cell.is-today { 
             border-width: 2px;
-            border-color: #198754; /* Green border for today */
+            border-color: #198754; 
         }
-        
-        /* Center text in cards */
         .day-cell .fs-5 { font-size: 1.25rem !important; margin-bottom: 0.25rem; }
     }
     /* --- MOBILE RESPONSIVENESS END --- */
@@ -59,16 +48,45 @@
         </a>
     </div>
 
+    {{-- Error Validation Alert (Catches the 7-day limit backend error) --}}
+    @if ($errors->any())
+        <div class="alert alert-danger shadow-sm border-0 mb-4">
+            <ul class="mb-0 mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card shadow border-0 rounded-4">
         <div class="card-body p-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
                 
-                {{-- Dynamic Title --}}
-                <h2 class="fw-bold text-success mb-2 mb-md-0 text-center text-md-start">
-                    <span class="d-none d-md-inline">{{ $date->format('F Y') }}</span>
-                    {{-- Mobile Title: January 2026 (Friday) --}}
-                    <span class="d-md-none">{{ now()->format('F Y (l)') }}</span>
-                </h2>
+                {{-- Navigation Controls --}}
+                <div class="d-flex align-items-center mb-2 mb-md-0 gap-3">
+                    {{-- Previous Month Button (Disabled if it's the current month) --}}
+                    @if($date->copy()->startOfMonth()->isSameMonth(now()->startOfMonth()))
+                        <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    @else
+                        <a href="{{ route('appointments.create', ['month' => $date->copy()->subMonth()->month, 'year' => $date->copy()->subMonth()->year]) }}" class="btn btn-sm btn-outline-success rounded-circle shadow-sm">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    @endif
+
+                    {{-- Dynamic Title --}}
+                    <h2 class="fw-bold text-success mb-0 text-center" style="min-width: 180px;">
+                        <span class="d-none d-md-inline">{{ $date->format('F Y') }}</span>
+                        <span class="d-md-none">{{ $date->format('F Y') }}</span>
+                    </h2>
+
+                    {{-- Next Month Button (ALWAYS ENABLED so patients can check future schedules) --}}
+                    <a href="{{ route('appointments.create', ['month' => $date->copy()->addMonth()->month, 'year' => $date->copy()->addMonth()->year]) }}" class="btn btn-sm btn-outline-success rounded-circle shadow-sm">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
                 
                 <div class="d-none d-md-flex gap-3 small">
                     <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle bg-area border me-1" style="width:10px;height:10px;"></span> Area</span>
@@ -126,8 +144,9 @@
                             }
                         @endphp
 
-                        <div onclick="openModal('{{ $day['date'] }}', {{ $day['is_past'] ? 'true' : 'false' }}, {{ $day['is_full'] ? 'true' : 'false' }})"
-                             class="day-cell {{ $day['is_past'] ? 'disabled' : $bgClass }} {{ $isToday ? 'is-today' : '' }}"
+                        {{-- Changed is_past to is_disabled --}}
+                        <div onclick="openModal('{{ $day['date'] }}', {{ $day['is_disabled'] ? 'true' : 'false' }}, {{ $day['is_full'] ? 'true' : 'false' }})"
+                             class="day-cell {{ $day['is_disabled'] ? 'disabled' : $bgClass }} {{ $isToday ? 'is-today' : '' }}"
                              data-date="{{ $day['date'] }}">
                             
                             {{-- Content Container --}}
@@ -152,7 +171,8 @@
                             
                             {{-- Slots (Visible on Mobile for ALL days) --}}
                             <div class="mt-auto text-end w-100">
-                                @if(!$day['is_past'])
+                                {{-- Changed is_past to is_disabled --}}
+                                @if(!$day['is_disabled'])
                                     @if($day['is_full'])
                                         <span class="badge bg-danger">FULL</span>
                                     @else
@@ -165,6 +185,10 @@
                         </div>
                     @endif
                 @endforeach
+            </div>
+            
+            <div class="mt-4 text-center">
+                <small class="text-muted"><i class="fas fa-info-circle me-1"></i> You can only book appointments up to 7 days in advance.</small>
             </div>
         </div>
     </div>
@@ -211,8 +235,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         bootstrapModal = new bootstrap.Modal(document.getElementById('bookingModal'));
     });
-    function openModal(date, isPast, isFull) {
-        if (isPast) return;
+    function openModal(date, isDisabled, isFull) {
+        if (isDisabled) return; // Prevent opening modal if disabled
+        
         const title = document.getElementById('modalTitle');
         const list = document.getElementById('queueList');
         const form = document.getElementById('bookingForm');
