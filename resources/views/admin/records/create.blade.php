@@ -35,6 +35,21 @@
                     <form action="{{ route('admin.records.store', $appointment->id) }}" method="POST">
                         @csrf
 
+                        {{-- NEW DROPDOWN: Diagnosed By --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Diagnosed By (Doctor / Nurse)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-user-md text-primary"></i></span>
+                                <select name="diagnosed_by" class="form-select" required>
+                                    <option value="" disabled selected>Select medical staff...</option>
+                                    @foreach($staffList as $staff)
+                                        <option value="{{ $staff->name }}">{{ $staff->name }} ({{ $staff->role }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-text small">Select the Doctor or Nurse who assessed the patient.</div>
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label fw-bold">Diagnosis</label>
                             <div class="input-group">
@@ -57,7 +72,6 @@
                                       placeholder="Internal observation notes, follow-up requirements, etc."></textarea>
                         </div>
 
-                        
                         <div class="mt-5 pt-3 border-top">
                             <div class="alert alert-info small border-0 shadow-sm mb-4">
                                 <div class="d-flex">

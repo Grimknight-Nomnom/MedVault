@@ -87,6 +87,29 @@
 
             {{-- BLACK CARD: Standard Doctor Diagnosis --}}
             @else
+                @php
+                    // Logic to extract "Diagnosed by" and "Notes" from the saved string
+                    $diagnosedBy = 'Unknown Staff';
+                    $actualNotes = null;
+                    
+                    if ($record->notes) {
+                        // Check if both Diagnosed By and Notes exist
+                        if (str_contains($record->notes, ' | Notes: ')) {
+                            $parts = explode(' | Notes: ', $record->notes);
+                            $diagnosedBy = str_replace('Diagnosed by: ', '', $parts[0]);
+                            $actualNotes = $parts[1];
+                        } 
+                        // Check if only Diagnosed By exists (no extra notes)
+                        elseif (str_starts_with($record->notes, 'Diagnosed by: ')) {
+                            $diagnosedBy = str_replace('Diagnosed by: ', '', $record->notes);
+                        } 
+                        // Legacy records before this update was implemented
+                        else {
+                            $actualNotes = $record->notes;
+                        }
+                    }
+                @endphp
+
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm h-100 border-dark">
                         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
@@ -102,12 +125,17 @@
                                 {!! nl2br(e($record->prescription)) !!}</p>
                             </div>
 
-                            @if($record->notes)
+                            @if($actualNotes)
                             <div class="text-muted small">
                                 <strong>Doctor's Notes:</strong> <br>
-                                {{ $record->notes }}
+                                {{ $actualNotes }}
                             </div>
                             @endif
+                        </div>
+                        
+                        {{-- NEW FOOTER: Shows who diagnosed the patient --}}
+                        <div class="card-footer bg-white border-top-0 text-muted small pb-3">
+                            <i class="fas fa-user-md me-1"></i> Diagnosed by: <span class="fw-bold text-dark">{{ $diagnosedBy }}</span>
                         </div>
                     </div>
                 </div>
