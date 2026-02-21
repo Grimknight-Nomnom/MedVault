@@ -37,10 +37,11 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
 // --- Email Verification ---
-// (We leave this for the email link)
+// THE 'SIGNED' MIDDLEWARE IS NOW REMOVED
 Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-    ->middleware(['signed'])
     ->name('verification.verify');
+// NEW: Resend Verification Route
+Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->name('verification.resend'); 
 
 // --- Password Reset Routes ---
 Route::controller(PasswordResetController::class)->group(function () {
@@ -48,6 +49,7 @@ Route::controller(PasswordResetController::class)->group(function () {
     Route::post('/forgot-password', 'sendResetCode')->name('password.email');
     Route::get('/verify-code', 'showVerifyCodeForm')->name('password.verify');
     Route::post('/verify-code', 'verifyCode')->name('password.verify.post');
+    Route::post('/resend-reset-code', 'resendCode')->name('password.resend_code'); // NEW: Resend Code Route
     Route::get('/reset-password', 'showResetForm')->name('password.reset');
     Route::post('/reset-password', 'resetPassword')->name('password.update');
 });
@@ -142,7 +144,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
             
-            // --- NEW: Bypass Manual Patient Verification ---
+            // --- Bypass Manual Patient Verification ---
             Route::post('/patients/{id}/force-verify', 'verifyPatient');
         });
 

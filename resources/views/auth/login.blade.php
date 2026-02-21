@@ -25,27 +25,12 @@
 
             <div class="relative z-10 h-full flex flex-col justify-center">
                 <div class="mb-10">
-                    {{-- Adjusted desktop logo to be nicely proportioned --}}
                     <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-20 h-20 mb-8 object-contain">
-                    
                     <h1 class="text-4xl font-bold tracking-tight mb-2">Barangay Looc Clinic</h1>
                     <h2 class="text-2xl font-medium text-teal-200 mb-6">MedVault System</h2>
-                    
                     <p class="text-teal-100 text-lg leading-relaxed opacity-90 max-w-md">
                         Securely access your medical history, manage prescriptions, and track your health journey with our trusted community platform.
                     </p>
-                </div>
-
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-300">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="font-semibold">Official Health Portal</p>
-                            <p class="text-sm text-teal-200">Serving the Looc Community.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -67,7 +52,6 @@
                 <div class="w-full max-w-md mx-auto">
                     
                     <div class="lg:hidden mb-8 flex items-center gap-3">
-                        {{-- Adjusted mobile logo size --}}
                         <img src="{{ asset('Image/logo.png') }}" alt="Logo" class="w-12 h-12 object-contain shadow-md rounded-lg">
                         <span class="font-bold text-xl text-gray-900">Barangay Looc Clinic</span>
                     </div>
@@ -84,6 +68,27 @@
                         </div>
                     @endif
 
+                    {{-- NEW: Verification Error and Resend Link --}}
+                    @if(session('errors') && session('errors')->has('unverified'))
+                        <div class="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-100 flex flex-col gap-3">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                <p class="text-sm text-orange-800 font-medium">{{ session('errors')->first('unverified') }}</p>
+                            </div>
+                            
+                            @if(session('unverified_identifier'))
+                            <form id="resendVerifyForm" action="{{ route('verification.resend') }}" method="POST" class="ml-8">
+                                @csrf
+                                <input type="hidden" name="login_identifier" value="{{ session('unverified_identifier') }}">
+                                <button type="submit" id="resendVerifyBtn" class="text-sm font-bold text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    <span id="resendVerifyText">Resend Verification Link</span>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('login.post') }}" class="space-y-6">
                         @csrf
 
@@ -96,17 +101,17 @@
                             @error('login_identifier') <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p> @enderror
                         </div>
 
-<div class="space-y-1.5">
-    <div class="flex items-center justify-between">
-        <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
-        <a href="{{ route('password.request') }}" class="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors">
-            Forgot Password?
-        </a>
-    </div>
-    <input id="password" name="password" type="password" required 
-        class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none placeholder:text-gray-400 sm:text-sm"
-        placeholder="••••••••">
-</div>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
+                                <a href="{{ route('password.request') }}" class="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors">
+                                    Forgot Password?
+                                </a>
+                            </div>
+                            <input id="password" name="password" type="password" required 
+                                class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none placeholder:text-gray-400 sm:text-sm"
+                                placeholder="••••••••">
+                        </div>
 
                         <div class="pt-2">
                             <button type="submit" class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-teal-600/20 text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 transform hover:-translate-y-0.5">
@@ -127,5 +132,40 @@
             </div>
         </div>
     </div>
+
+    {{-- Frontend Javascript Timer for Resend Button --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let cooldownKey = "verify_link_cooldown";
+            let btn = document.getElementById("resendVerifyBtn");
+            let txt = document.getElementById("resendVerifyText");
+
+            if(btn && txt) {
+                function updateTimer() {
+                    let expireTime = localStorage.getItem(cooldownKey);
+                    if(expireTime) {
+                        let now = new Date().getTime();
+                        let diff = Math.floor((expireTime - now) / 1000);
+                        if(diff > 0) {
+                            btn.disabled = true;
+                            btn.classList.add('opacity-50', 'cursor-not-allowed');
+                            txt.innerText = "Resend in " + diff + "s";
+                            setTimeout(updateTimer, 1000);
+                        } else {
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            txt.innerText = "Resend Verification Link";
+                            localStorage.removeItem(cooldownKey);
+                        }
+                    }
+                }
+                updateTimer();
+
+                document.getElementById("resendVerifyForm").addEventListener("submit", function() {
+                    localStorage.setItem(cooldownKey, new Date().getTime() + 30000); // Set 30s
+                });
+            }
+        });
+    </script>
 </body>
 </html>

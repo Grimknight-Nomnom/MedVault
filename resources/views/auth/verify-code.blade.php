@@ -50,10 +50,19 @@
 
             <div class="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-24">
                 <div class="w-full max-w-md mx-auto">
+                    
                     <div class="mb-10">
                         <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Check your Email</h2>
                         <p class="mt-2 text-gray-500">We sent a 6-digit code to <span class="font-semibold text-teal-600">{{ $email }}</span>.</p>
                     </div>
+
+                    {{-- NEW: Success Message for Resending Code --}}
+                    @if(session('success'))
+                        <div class="mb-6 p-4 rounded-xl bg-teal-50 border border-teal-100 flex items-start gap-3">
+                            <svg class="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <p class="text-sm text-teal-800 font-medium">{{ session('success') }}</p>
+                        </div>
+                    @endif
 
                     <form method="POST" action="{{ route('password.verify.post') }}" class="space-y-6">
                         @csrf
@@ -70,9 +79,56 @@
                             </button>
                         </div>
                     </form>
+
+                    {{-- NEW: Resend Code Form --}}
+                    <div class="mt-8 text-center">
+                        <form id="resendResetForm" method="POST" action="{{ route('password.resend_code') }}">
+                            @csrf
+                            <button type="submit" id="resendResetBtn" class="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors inline-flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                <span id="resendResetText">Resend Code</span>
+                            </button>
+                        </form>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Frontend Javascript Timer for Resend Button --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let cooldownKey = "reset_code_cooldown";
+            let btn = document.getElementById("resendResetBtn");
+            let txt = document.getElementById("resendResetText");
+
+            if(btn && txt) {
+                function updateTimer() {
+                    let expireTime = localStorage.getItem(cooldownKey);
+                    if(expireTime) {
+                        let now = new Date().getTime();
+                        let diff = Math.floor((expireTime - now) / 1000);
+                        if(diff > 0) {
+                            btn.disabled = true;
+                            btn.classList.add('opacity-50', 'cursor-not-allowed');
+                            txt.innerText = "Resend in " + diff + "s";
+                            setTimeout(updateTimer, 1000);
+                        } else {
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            txt.innerText = "Resend Code";
+                            localStorage.removeItem(cooldownKey);
+                        }
+                    }
+                }
+                updateTimer();
+
+                document.getElementById("resendResetForm").addEventListener("submit", function() {
+                    localStorage.setItem(cooldownKey, new Date().getTime() + 30000); // Set 30s
+                });
+            }
+        });
+    </script>
 </body>
 </html>

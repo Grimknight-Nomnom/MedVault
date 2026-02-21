@@ -38,7 +38,6 @@
     @forelse($medicines as $med)
     <tr>
         <td class="ps-4">
-            {{-- Use $med here instead of $medicine --}}
             <div class="fw-bold text-dark">{{ $med->name }}</div>
             
             {{-- Description Section --}}
@@ -79,8 +78,9 @@
         </div>
     </div>
     
-    <div class="mt-4">
-        {{ $medicines->links() }}
+    {{-- FIXED: Changed to Bootstrap 5 pagination and centered it --}}
+    <div class="mt-4 d-flex justify-content-center">
+        {{ $medicines->links('pagination::bootstrap-5') }}
     </div>
 </div>
 @endsection

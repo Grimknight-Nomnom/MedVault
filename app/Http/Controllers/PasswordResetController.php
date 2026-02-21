@@ -23,21 +23,46 @@ class PasswordResetController extends Controller
         $request->validate(['email' => 'required|email|exists:users,email']);
 
         $email = $request->email;
-        $code = mt_rand(100000, 999999); // Generate 6-digit code
+        $code = mt_rand(100000, 999999); 
 
-        // Store code in Cache for 10 minutes
         Cache::put('password_reset_' . $email, $code, now()->addMinutes(10));
 
-        // Send Email (Inline logic for simplicity, or use a Mailable)
         Mail::send('emails.reset_otp', ['code' => $code], function ($message) use ($email) {
             $message->to($email);
             $message->subject('Your Password Reset Code - MedVault');
         });
 
-        // Store email in session for the next step
         Session::put('reset_email', $email);
 
         return redirect()->route('password.verify');
+    }
+
+    // --- NEW: Resend the Code with 30s Cooldown ---
+    public function resendCode(Request $request)
+    {
+        if (!Session::has('reset_email')) {
+            return redirect()->route('password.request');
+        }
+
+        $email = Session::get('reset_email');
+
+        // 30 SECOND BACKEND COOLDOWN CHECK
+        if (Cache::has('resend_reset_cooldown_' . $email)) {
+            return back()->withErrors(['code' => 'Please wait 30 seconds before resending the code.']);
+        }
+
+        $code = mt_rand(100000, 999999);
+        Cache::put('password_reset_' . $email, $code, now()->addMinutes(10));
+        
+        Mail::send('emails.reset_otp', ['code' => $code], function ($message) use ($email) {
+            $message->to($email);
+            $message->subject('Your Password Reset Code - MedVault');
+        });
+
+        // Set cooldown in cache for 30 seconds
+        Cache::put('resend_reset_cooldown_' . $email, true, now()->addSeconds(30));
+
+        return back()->with('success', 'A new 6-digit code has been sent to your email.');
     }
 
     // 3. Show Code Verification Form
@@ -94,7 +119,6 @@ class PasswordResetController extends Controller
             'password' => Hash::make($request->password)
         ]);
 
-        // Cleanup
         Cache::forget('password_reset_' . $email);
         Session::forget(['reset_email', 'is_verified']);
 
