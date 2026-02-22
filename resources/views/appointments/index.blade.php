@@ -34,7 +34,6 @@
                                     #{{ str_pad($apt->queue_number, 3, '0', STR_PAD_LEFT) }}
                                 </td>
                                 <td>
-                                    {{-- Safely parse the date even if model casting fails --}}
                                     {{ \Carbon\Carbon::parse($apt->appointment_date)->format('M d, Y') }}
                                 </td>
                                 <td>
@@ -44,6 +43,8 @@
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Approved</span>
                                     @elseif($apt->status == 'cancelled')
                                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Cancelled</span>
+                                    @elseif($apt->status == 'incomplete')
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary" title="You did not receive a diagnosis on this date.">Incomplete Record</span>
                                     @else
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success">Completed</span>
                                     @endif

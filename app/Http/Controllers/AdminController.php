@@ -10,13 +10,19 @@ use App\Models\AppointmentSetting;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Hash; 
 
 class AdminController extends Controller
 {
     public function dashboard(Request $request)
     {
         $this->captureExpiredMedicines();
+
+        // --- NEW: Global Auto-Cleanup for Past Appointments ---
+        // Automatically marks missed appointments as incomplete across the entire database
+        Appointment::whereIn('status', ['pending', 'approved'])
+            ->where('appointment_date', '<', Carbon::today())
+            ->update(['status' => 'incomplete']);
 
         $todayAppointmentsCount = Appointment::whereDate('appointment_date', Carbon::today())->count();
         $totalMedicines = Medicine::count();
@@ -152,7 +158,6 @@ class AdminController extends Controller
         return redirect()->back()->with('info', 'Patient is already verified.');
     }
 
-    // --- NEW: Delete Patient ID Image ---
     public function deletePatientId($id, $type)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
@@ -174,7 +179,6 @@ class AdminController extends Controller
         return redirect()->back()->with('error', 'Image not found.');
     }
 
-    // --- NEW: Admin Edit Patient ---
     public function editPatient($id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
@@ -186,7 +190,6 @@ class AdminController extends Controller
         $patient = User::where('role', 'user')->findOrFail($id);
 
         $validated = $request->validate([
-            // Demographics
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -197,13 +200,9 @@ class AdminController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $patient->id,
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:500',
-
-            // Medical History
             'allergies' => 'nullable|string',
             'current_medication' => 'nullable|string',
             'existing_medical_conditions' => 'nullable|string',
-            
-            // Image Validation (Max 5MB each)
             'philhealth_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'senior_pwd_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
@@ -211,7 +210,6 @@ class AdminController extends Controller
         $patient->is_philhealth_member = $request->has('is_philhealth_member');
         $patient->is_senior_citizen_or_pwd = $request->has('is_senior_citizen_or_pwd');
 
-        // Handle PhilHealth ID Upload
         if ($request->hasFile('philhealth_id')) {
             if ($patient->philhealth_id_path) {
                 Storage::disk('public')->delete($patient->philhealth_id_path);
@@ -220,7 +218,6 @@ class AdminController extends Controller
             $patient->philhealth_id_path = $path;
         }
 
-        // Handle Senior/PWD ID Upload
         if ($request->hasFile('senior_pwd_id')) {
             if ($patient->senior_pwd_id_path) {
                 Storage::disk('public')->delete($patient->senior_pwd_id_path);
@@ -235,7 +232,6 @@ class AdminController extends Controller
         return redirect()->route('admin.patients.show', $patient->id)->with('success', 'Patient information updated successfully.');
     }
 
-    // --- NEW: Admin Reset Patient Password ---
     public function changePatientPassword(Request $request, $id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
@@ -245,12 +241,10 @@ class AdminController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // Check if the old password is correct
         if (!Hash::check($request->old_password, $patient->password)) {
             return back()->with('error', 'The old password does not match our records.');
         }
 
-        // Save the new encrypted password
         $patient->update([
             'password' => Hash::make($request->password)
         ]);

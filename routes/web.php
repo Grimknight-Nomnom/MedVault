@@ -14,9 +14,14 @@ use App\Models\Appointment;
 use App\Models\Announcement;
 use App\Models\Staff;
 
-Route::get('/clear-cache', function() {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    return "Cache cleared successfully!";
+Route::get('/run-migrations', function () {
+    try {
+        // The --force flag is required in production
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return "Database migration completed successfully!";
+    } catch (\Exception $e) {
+        return "Migration failed: " . $e->getMessage();
+    }
 });
 
 // --- Public Routes ---
@@ -63,10 +68,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Patient Dashboard
     Route::get('/dashboard', function () {
+        // FIXED: Now correctly marks past unseen appointments as 'incomplete' instead of 'completed'
         Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '<', now()->startOfDay())
-            ->update(['status' => 'completed']);
+            ->update(['status' => 'incomplete']);
 
         $activeAppointment = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
@@ -121,6 +127,10 @@ Route::middleware(['auth'])->group(function () {
         Route::controller(AppointmentController::class)->group(function () {
             Route::get('/appointments', 'adminIndex')->name('admin.appointments.index');
             Route::post('/appointments/limit', 'updateDailyLimit')->name('admin.appointments.limit');
+            
+            // --- NEW: Bulk Update Calendar Settings ---
+            Route::post('/appointments/bulk-limit', 'bulkUpdateLimit')->name('admin.appointments.bulk_limit');
+            
             Route::get('/appointments/create', 'adminCreate')->name('admin.appointments.create');
             Route::post('/appointments', 'adminStore')->name('admin.appointments.store');
             Route::patch('/appointments/{id}', 'updateStatus')->name('admin.appointments.update');

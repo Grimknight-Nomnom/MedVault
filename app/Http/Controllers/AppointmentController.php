@@ -15,11 +15,7 @@ class AppointmentController extends Controller
     private function getMaxSlots($date)
     {
         $setting = AppointmentSetting::where('date', $date)->first();
-        
-        if ($setting) {
-            return $setting->max_appointments;
-        }
-        
+        if ($setting) return $setting->max_appointments;
         return Carbon::parse($date)->dayOfWeek === Carbon::WEDNESDAY ? 50 : 30;
     }
 
@@ -37,9 +33,7 @@ class AppointmentController extends Controller
     {
         $setting = AppointmentSetting::where('date', $date)->first();
         $dayOfWeek = Carbon::parse($date)->dayOfWeek;
-        
         $label = '';
-        
         if ($setting && !empty($setting->label)) {
             $label = $setting->label;
         } elseif ($dayOfWeek === Carbon::TUESDAY || $dayOfWeek === Carbon::THURSDAY) { 
@@ -48,21 +42,13 @@ class AppointmentController extends Controller
 
         if (Str::contains(Str::lower($label), 'pregnancy')) {
             $gender = Str::lower(trim($user->gender ?? ''));
-            if ($gender !== 'female') {
-                return true; 
-            }
+            if ($gender !== 'female') return true; 
         }
-
         return false; 
     }
 
-    /**
-     * NEW: Re-sequences the queue numbers for a specific date
-     * so if someone cancels, the people behind them move up in line.
-     */
     private function resequenceQueue($date)
     {
-        // Get all active appointments for this date, ordered by when they were created
         $appointments = Appointment::where('appointment_date', $date)
             ->where('status', '!=', 'cancelled')
             ->orderBy('created_at', 'asc')
@@ -87,6 +73,7 @@ class AppointmentController extends Controller
 
         $hasActiveAppointment = Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
+            ->where('appointment_date', '>=', now()->startOfDay())
             ->exists();
 
         $year = $request->query('year', now()->year);
@@ -101,10 +88,9 @@ class AppointmentController extends Controller
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
         
-        // Count total active appointments (IGNORE CANCELLED)
         $dbCounts = Appointment::selectRaw('appointment_date, count(*) as total')
             ->whereBetween('appointment_date', [$startOfMonth, $endOfMonth])
-            ->where('status', '!=', 'cancelled') // Frees up slots immediately
+            ->where('status', '!=', 'cancelled')
             ->groupBy('appointment_date')
             ->pluck('total', 'appointment_date')
             ->toArray();
@@ -169,7 +155,6 @@ class AppointmentController extends Controller
 
         $user = Auth::user();
         
-        // Only fetch active appointments (IGNORE CANCELLED)
         $appointments = Appointment::with('user')
             ->where('appointment_date', $date)
             ->where('status', '!=', 'cancelled')
@@ -228,7 +213,10 @@ class AppointmentController extends Controller
             return back()->withErrors(['msg' => 'Access Denied: This date is reserved for Pregnancy checkups (Females Only).']);
         }
 
-        if (Appointment::where('user_id', $user->id)->whereIn('status', ['pending', 'approved'])->exists()) {
+        if (Appointment::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->where('appointment_date', '>=', now()->startOfDay())
+            ->exists()) {
             return redirect()->route('dashboard')->with('error', 'You already have an active appointment.');
         }
 
@@ -259,11 +247,7 @@ class AppointmentController extends Controller
         }
 
         $date = $appointment->appointment_date;
-        
-        // Delete the appointment (frees up the slot)
         $appointment->delete();
-
-        // Automatically shift everyone else's queue number up!
         $this->resequenceQueue($date);
 
         return redirect()->route('dashboard')->with('success', 'Appointment cancelled successfully. Queue has been updated.');
@@ -273,6 +257,10 @@ class AppointmentController extends Controller
 
     public function adminIndex(Request $request)
     {
+        Appointment::whereIn('status', ['pending', 'approved'])
+            ->where('appointment_date', '<', Carbon::today())
+            ->update(['status' => 'incomplete']);
+
         $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
         
         $appointments = Appointment::with('user')
@@ -283,7 +271,6 @@ class AppointmentController extends Controller
         $appointments->transform(function($app) {
             $app->patient_name = $app->user ? ($app->user->first_name . ' ' . $app->user->last_name) : 'Unknown';
             $app->calendar_date = Carbon::parse($app->appointment_date)->format('Y-m-d');
-            
             return $app;
         });
 
@@ -319,6 +306,55 @@ class AppointmentController extends Controller
         return back()->with('success', 'Settings updated for ' . $request->date);
     }
 
+    // --- Bulk Update Calendar Logic ---
+    public function bulkUpdateLimit(Request $request)
+    {
+        $request->validate([
+            'day_of_week' => 'required|integer|min:0|max:6',
+            'limit' => 'required|integer|min:0|max:200',
+            'label' => 'nullable|string|max:50',
+            'custom_label' => 'nullable|string|max:50'
+        ]);
+
+        $targetDay = $request->day_of_week;
+        $limit = $request->limit;
+        
+        $label = $request->label;
+        if ($label === 'Custom') {
+            $label = $request->custom_label;
+        }
+
+        // Apply only to future dates for the next 1 year (52 weeks)
+        $startDate = Carbon::tomorrow();
+        $endDate = Carbon::tomorrow()->addYear();
+
+        for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
+            if ($date->dayOfWeek === (int)$targetDay) {
+                $dateString = $date->format('Y-m-d');
+                
+                // Check if any active appointments exist on this specific date
+                $hasAppointments = Appointment::where('appointment_date', $dateString)
+                    ->where('status', '!=', 'cancelled')
+                    ->exists();
+
+                // SKIPS the date if it has patients. Otherwise, updates it!
+                if (!$hasAppointments) {
+                    AppointmentSetting::updateOrCreate(
+                        ['date' => $dateString],
+                        [
+                            'max_appointments' => $limit,
+                            'label' => $label
+                        ]
+                    );
+                }
+            }
+        }
+
+        // FIXED: Cleaned up the success message to be short and simple!
+        $currentMonth = now()->format('F');
+        return back()->with('success', "Bulk Settings Applied Successfully in {$currentMonth}.");
+    }
+
     public function index() {
         $appointments = Appointment::where('user_id', Auth::id())->orderBy('appointment_date', 'desc')->get();
         return view('appointments.index', compact('appointments'));
@@ -328,7 +364,6 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         $appointment->update(['status' => $request->status]);
         
-        // If an Admin cancels the appointment, free the slot and shift the queue!
         if ($request->status === 'cancelled') {
             $appointment->update(['queue_number' => 0]); 
             $this->resequenceQueue($appointment->appointment_date);
