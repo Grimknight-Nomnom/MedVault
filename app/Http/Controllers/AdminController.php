@@ -9,12 +9,12 @@ use App\Models\MedicineHistory;
 use App\Models\AppointmentSetting;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage; // <-- NEW: Required for deleting images
 
 class AdminController extends Controller
 {
     public function dashboard(Request $request)
     {
-        // --- 1. DASHBOARD STATS ---
         $this->captureExpiredMedicines();
 
         $todayAppointmentsCount = Appointment::whereDate('appointment_date', Carbon::today())->count();
@@ -24,43 +24,35 @@ class AdminController extends Controller
         $lowStock = Medicine::where('stock_quantity', '<', 10)->get();
         $expiringSoon = Medicine::where('expiry_date', '<=', now()->addDays(30))->get();
         
-        // Monthly details for the chart
         $monthlyDetails = MedicineHistory::whereMonth('performed_at', now()->month)
             ->whereYear('performed_at', now()->year)
             ->whereIn('action_type', ['Released', 'Expired'])
             ->get();
 
-        // --- 2. CALENDAR LOGIC (Unified) ---
         $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
 
-        // Fetch RAW appointments for the view (Grouped logic)
         $appointments = Appointment::with('user')
             ->whereBetween('appointment_date', [$startOfMonth, $endOfMonth])
             ->get();
 
-        // Transform for View logic (Add names and formatted dates)
         $appointments->transform(function($app) {
             $app->patient_name = $app->user ? ($app->user->first_name . ' ' . $app->user->last_name) : 'Unknown';
             $app->calendar_date = Carbon::parse($app->appointment_date)->format('Y-m-d');
             return $app;
         });
 
-        // Create the Missing Variable: $appointmentsByDate
         $appointmentsByDate = $appointments->groupBy('calendar_date');
 
-        // Fetch Settings
         $settings = AppointmentSetting::whereBetween('date', [$startOfMonth, $endOfMonth])
             ->get()
             ->keyBy('date');
 
-        // Generate Grid Array (For dashboard-style grid if needed)
         $calendar = [];
         $today = Carbon::today()->format('Y-m-d');
         $startDayOfWeek = $startOfMonth->dayOfWeek;
         
-        // Fill empty slots
         for ($i = 0; $i < $startDayOfWeek; $i++) { $calendar[] = null; }
 
         for ($day = 1; $day <= $endOfMonth->day; $day++) {
@@ -80,12 +72,9 @@ class AdminController extends Controller
             ];
         }
 
-        // --- 3. RETURN EVERYTHING ---
         return view('admin.dashboard', compact(
-            // Stats
             'todayAppointmentsCount', 'totalMedicines', 'totalAppointments', 'totalPatients',
             'lowStock', 'expiringSoon', 'monthlyDetails',
-            // Calendar
             'calendar', 'date', 'appointments', 'appointmentsByDate', 'settings'
         ));
     }
@@ -119,11 +108,9 @@ class AdminController extends Controller
         $query = User::whereIn('role', ['user', 'User', 'users']);
         
         if ($request->has('search') && $request->search != '') {
-            // Remove the '#' if the admin types it (e.g., "#124" becomes "124")
             $search = ltrim($request->search, '#');
             
             $query->where(function($q) use ($search) {
-                // FIXED: Changed 'id' to 'usernumber'
                 $q->where('usernumber', 'like', "%$search%")
                   ->orWhere('first_name', 'like', "%$search%")
                   ->orWhere('last_name', 'like', "%$search%");
@@ -152,7 +139,6 @@ class AdminController extends Controller
         return redirect()->route('admin.patients.index')->with('success', 'Patient deleted.');
     }
 
-    // --- Manual Patient Verification ---
     public function verifyPatient($id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
@@ -163,5 +149,27 @@ class AdminController extends Controller
         }
 
         return redirect()->back()->with('info', 'Patient is already verified.');
+    }
+
+    // --- NEW: Delete Patient ID Image ---
+    public function deletePatientId($id, $type)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+
+        if ($type === 'philhealth' && $patient->philhealth_id_path) {
+            Storage::disk('public')->delete($patient->philhealth_id_path);
+            $patient->philhealth_id_path = null;
+            $patient->save();
+            return redirect()->back()->with('success', "PhilHealth ID deleted for {$patient->first_name}.");
+        }
+
+        if ($type === 'senior_pwd' && $patient->senior_pwd_id_path) {
+            Storage::disk('public')->delete($patient->senior_pwd_id_path);
+            $patient->senior_pwd_id_path = null;
+            $patient->save();
+            return redirect()->back()->with('success', "Senior/PWD ID deleted for {$patient->first_name}.");
+        }
+
+        return redirect()->back()->with('error', 'Image not found.');
     }
 }

@@ -27,13 +27,12 @@
                         <tr class="text-uppercase small text-muted">
                             <th class="py-3 ps-4">User ID</th>
                             <th class="py-3">Patient Name</th>
-                            <th class="py-3">Status</th> {{-- Added Status Column --}}
+                            <th class="py-3">Status</th>
                             <th class="py-3 text-end pe-4">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($patients as $patient)
-                        {{-- Add red highlight if unverified --}}
                         <tr class="{{ is_null($patient->email_verified_at) ? 'bg-danger-subtle' : '' }}">
                             <td class="ps-4 fw-bold text-success">#{{ $patient->usernumber }}</td>
                             <td>{{ $patient->first_name }} {{ $patient->last_name }}</td>
@@ -46,11 +45,10 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
-                                    {{-- Manual Verify Button (Only shows if unverified) --}}
+                                    {{-- Manual Verify Button --}}
                                     @if(is_null($patient->email_verified_at))
                                         <form action="{{ route('admin.patients.verify', $patient->id) }}" method="POST" class="d-inline">
                                             @csrf
-                                            @method('PATCH')
                                             <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold" title="Manually Verify">
                                                 <i class="fas fa-check-circle"></i> Verify
                                             </button>
@@ -80,7 +78,6 @@
                 </table>
             </div>
             
-            {{-- Optional: Pagination Links if you are using paginate() --}}
             @if(method_exists($patients, 'hasPages') && $patients->hasPages())
                 <div class="px-4 py-3 border-top">
                     {{ $patients->links() }}

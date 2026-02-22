@@ -143,11 +143,20 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
-            Route::post('/patients/{id}/force-verify', 'verifyPatient');
+            
+            // --- Bypass Manual Patient Verification ---
+            Route::post('/patients/{id}/force-verify', 'verifyPatient')->name('admin.patients.verify');
+
+            // --- NEW: Admin Delete Patient ID Image ---
+            Route::delete('/patients/{id}/delete-id/{type}', 'deletePatientId')->name('admin.patients.delete_id');
         });
 
         // Records
         Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
         Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
+        
+        // --- NEW: Edit Medical Records ---
+        Route::get('/records/{record}/edit', [MedicalRecordController::class, 'edit'])->name('admin.records.edit');
+        Route::put('/records/{record}', [MedicalRecordController::class, 'update'])->name('admin.records.update');
     });
 });

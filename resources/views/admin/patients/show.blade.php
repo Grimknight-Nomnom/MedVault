@@ -2,6 +2,15 @@
 
 @section('content')
 <div class="container py-4">
+
+    {{-- Alert for Image Deletion & Updates --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4 mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <a href="{{ route('admin.patients.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
             <i class="fas fa-arrow-left me-1"></i> Back to List
@@ -26,10 +35,12 @@
                         <i class="fas fa-map-marker-alt me-1"></i> {{ $patient->address ?? 'No Address Provided' }}
                     </p>
                     <div class="d-flex justify-content-center gap-2 mb-4">
-                        <span class="badge bg-light text-dark border">{{ $patient->age }} Years Old</span>
+                        <span class="badge bg-light text-dark border">{{ $patient->age }}</span>
                         <span class="badge bg-light text-dark border">{{ $patient->civil_status ?? 'Single' }}</span>
                     </div>
                     <hr class="opacity-10">
+                    
+                    {{-- Patient Details --}}
                     <div class="row text-start small mt-3">
                         <div class="col-6 mb-2">
                             <label class="text-muted d-block">Gender</label>
@@ -39,7 +50,13 @@
                             <label class="text-muted d-block">Birthday</label>
                             <span class="fw-bold">{{ $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->format('M d, Y') : 'N/A' }}</span>
                         </div>
-                        <div class="col-12">
+                        
+                        {{-- Email & Contact Aligned --}}
+                        <div class="col-6 mb-2">
+                            <label class="text-muted d-block">Email</label>
+                            <span class="fw-bold text-success text-break">{{ $patient->email }}</span>
+                        </div>
+                        <div class="col-6 mb-2">
                             <label class="text-muted d-block">Contact</label>
                             <span class="fw-bold">{{ $patient->phone ?? 'N/A' }}</span>
                         </div>
@@ -53,15 +70,52 @@
                 </div>
                 <div class="card-body px-4 pb-4">
                     
+                    {{-- Programs Section --}}
                     <div class="mb-3">
-                        <label class="small text-muted fw-bold text-uppercase">Programs</label>
-                        <div class="mt-1">
+                        <label class="small text-muted fw-bold text-uppercase mb-2">Programs</label>
+                        <div>
                             @if($patient->is_philhealth_member)
-                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary mb-1">PhilHealth Member</span>
+                                <div class="d-flex align-items-center mb-2 gap-2">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">PhilHealth Member</span>
+                                    
+                                    @if($patient->philhealth_id_path)
+                                        <a href="{{ asset('storage/' . $patient->philhealth_id_path) }}" target="_blank" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2" title="View ID" style="line-height: 1.2;">
+                                            <i class="fas fa-eye" style="font-size: 0.75rem;"></i>
+                                        </a>
+                                        <form action="{{ route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'philhealth']) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this PhilHealth ID?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-light border text-danger rounded-pill py-0 px-2" title="Delete ID" style="line-height: 1.2;">
+                                                <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-secondary text-white" style="font-size: 0.65rem;">No Image</span>
+                                    @endif
+                                </div>
                             @endif
+
                             @if($patient->is_senior_citizen_or_pwd)
-                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning mb-1">Senior / PWD</span>
+                                <div class="d-flex align-items-center mb-2 gap-2">
+                                    <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">Senior / PWD</span>
+                                    
+                                    @if($patient->senior_pwd_id_path)
+                                        <a href="{{ asset('storage/' . $patient->senior_pwd_id_path) }}" target="_blank" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2" title="View ID" style="line-height: 1.2;">
+                                            <i class="fas fa-eye" style="font-size: 0.75rem;"></i>
+                                        </a>
+                                        <form action="{{ route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'senior_pwd']) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this Senior/PWD ID?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-light border text-danger rounded-pill py-0 px-2" title="Delete ID" style="line-height: 1.2;">
+                                                <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-secondary text-white" style="font-size: 0.65rem;">No Image</span>
+                                    @endif
+                                </div>
                             @endif
+                            
                             @if(!$patient->is_philhealth_member && !$patient->is_senior_citizen_or_pwd)
                                 <span class="text-muted small">No programs enrolled.</span>
                             @endif
@@ -117,21 +171,30 @@
                                         <div class="fw-bold text-dark">{{ \Carbon\Carbon::parse($apt->appointment_date)->format('M d, Y') }}</div>
                                         <small class="text-muted">{{ \Carbon\Carbon::parse($apt->appointment_date)->format('l') }}</small>
                                     </td>
+                                    
                                     <td style="width: 35%;">
                                         @if($apt->medicalRecord)
-                                            <span class="fw-bold text-primary">{{ $apt->medicalRecord->diagnosis }}</span>
+                                            <div class="d-flex justify-content-between align-items-start pe-2">
+                                                <span class="fw-bold text-primary">{{ $apt->medicalRecord->diagnosis }}</span>
+                                                <a href="{{ route('admin.records.edit', $apt->medicalRecord->id) }}" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2 shadow-sm" title="Edit Record">
+                                                    <i class="fas fa-edit" style="font-size: 0.75rem;"></i> Edit
+                                                </a>
+                                            </div>
                                         @else
                                             <span class="text-muted small fst-italic">No record filed</span>
                                         @endif
                                     </td>
+                                    
+                                    {{-- FIXED: Pre-wrap bug removed using Flexbox layout & span --}}
                                     <td>
                                         @if($apt->medicalRecord)
                                             <div class="small text-dark mb-1">
                                                 <strong>Rx:</strong> {{ Str::limit($apt->medicalRecord->prescription, 50) }}
                                             </div>
                                             @if($apt->medicalRecord->notes)
-                                            <div class="small text-muted">
-                                                <i class="fas fa-sticky-note me-1"></i> {{ Str::limit($apt->medicalRecord->notes, 40) }}
+                                            <div class="small text-muted mt-1 p-2 bg-light rounded border border-secondary border-opacity-10 d-flex text-start" style="font-size: 0.8rem;">
+                                                <i class="fas fa-history me-2 mt-1"></i>
+                                                <span style="white-space: pre-wrap; word-break: break-word;">{{ trim($apt->medicalRecord->notes) }}</span>
                                             </div>
                                             @endif
                                         @else
