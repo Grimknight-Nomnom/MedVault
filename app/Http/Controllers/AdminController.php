@@ -9,7 +9,8 @@ use App\Models\MedicineHistory;
 use App\Models\AppointmentSetting;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage; // <-- NEW: Required for deleting images
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -171,5 +172,89 @@ class AdminController extends Controller
         }
 
         return redirect()->back()->with('error', 'Image not found.');
+    }
+
+    // --- NEW: Admin Edit Patient ---
+    public function editPatient($id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+        return view('admin.patients.edit', compact('patient'));
+    }
+
+    public function updatePatient(Request $request, $id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+
+        $validated = $request->validate([
+            // Demographics
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'date_of_birth' => 'required|date',
+            'age' => 'required|string|max:50',
+            'gender' => 'required|string|in:Male,Female,Other',
+            'civil_status' => 'required|string|in:Single,Married,Widowed,Separated',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $patient->id,
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string|max:500',
+
+            // Medical History
+            'allergies' => 'nullable|string',
+            'current_medication' => 'nullable|string',
+            'existing_medical_conditions' => 'nullable|string',
+            
+            // Image Validation (Max 5MB each)
+            'philhealth_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'senior_pwd_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $patient->is_philhealth_member = $request->has('is_philhealth_member');
+        $patient->is_senior_citizen_or_pwd = $request->has('is_senior_citizen_or_pwd');
+
+        // Handle PhilHealth ID Upload
+        if ($request->hasFile('philhealth_id')) {
+            if ($patient->philhealth_id_path) {
+                Storage::disk('public')->delete($patient->philhealth_id_path);
+            }
+            $path = $request->file('philhealth_id')->store('id_uploads', 'public');
+            $patient->philhealth_id_path = $path;
+        }
+
+        // Handle Senior/PWD ID Upload
+        if ($request->hasFile('senior_pwd_id')) {
+            if ($patient->senior_pwd_id_path) {
+                Storage::disk('public')->delete($patient->senior_pwd_id_path);
+            }
+            $path = $request->file('senior_pwd_id')->store('id_uploads', 'public');
+            $patient->senior_pwd_id_path = $path;
+        }
+
+        $patient->fill($validated);
+        $patient->save();
+
+        return redirect()->route('admin.patients.show', $patient->id)->with('success', 'Patient information updated successfully.');
+    }
+
+    // --- NEW: Admin Reset Patient Password ---
+    public function changePatientPassword(Request $request, $id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+
+        $request->validate([
+            'old_password' => 'required',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check if the old password is correct
+        if (!Hash::check($request->old_password, $patient->password)) {
+            return back()->with('error', 'The old password does not match our records.');
+        }
+
+        // Save the new encrypted password
+        $patient->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return back()->with('success', "Password successfully reset for {$patient->first_name}.");
     }
 }

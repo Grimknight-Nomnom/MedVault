@@ -144,10 +144,17 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
             
+            // --- Admin Edit Patient Info ---
+            Route::get('/patients/{id}/edit', 'editPatient')->name('admin.patients.edit');
+            Route::put('/patients/{id}', 'updatePatient')->name('admin.patients.update');
+            
+            // --- NEW: Admin Reset Patient Password ---
+            Route::put('/patients/{id}/change-password', 'changePatientPassword')->name('admin.patients.change_password');
+            
             // --- Bypass Manual Patient Verification ---
             Route::post('/patients/{id}/force-verify', 'verifyPatient')->name('admin.patients.verify');
 
-            // --- NEW: Admin Delete Patient ID Image ---
+            // --- Admin Delete Patient ID Image ---
             Route::delete('/patients/{id}/delete-id/{type}', 'deletePatientId')->name('admin.patients.delete_id');
         });
 

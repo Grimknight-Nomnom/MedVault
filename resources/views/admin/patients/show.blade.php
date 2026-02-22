@@ -3,11 +3,31 @@
 @section('content')
 <div class="container py-4">
 
-    {{-- Alert for Image Deletion & Updates --}}
+    {{-- SUCCESS ALERT --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4 mb-4" role="alert">
             <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- ERROR ALERT (For wrong old password) --}}
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 border-start border-danger border-4 mb-4" role="alert">
+            <i class="fas fa-times-circle me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- VALIDATION ERRORS (For short/mismatched passwords) --}}
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 border-start border-danger border-4 mb-4" role="alert">
+            <ul class="mb-0">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="margin-top: -5px;" aria-label="Close"></button>
         </div>
     @endif
 
@@ -51,7 +71,6 @@
                             <span class="fw-bold">{{ $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->format('M d, Y') : 'N/A' }}</span>
                         </div>
                         
-                        {{-- Email & Contact Aligned --}}
                         <div class="col-6 mb-2">
                             <label class="text-muted d-block">Email</label>
                             <span class="fw-bold text-success text-break">{{ $patient->email }}</span>
@@ -61,6 +80,17 @@
                             <span class="fw-bold">{{ $patient->phone ?? 'N/A' }}</span>
                         </div>
                     </div>
+                    
+                    {{-- FIXED: Edit Info & Password Reset Buttons Side-by-Side --}}
+                    <div class="mt-4 d-flex gap-2">
+                        <a href="{{ route('admin.patients.edit', $patient->id) }}" class="btn btn-outline-success w-50 rounded-pill fw-bold shadow-sm" style="font-size: 0.9rem;">
+                            <i class="fas fa-user-edit me-1"></i> Edit Info
+                        </a>
+                        <button type="button" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" class="btn btn-outline-warning w-50 rounded-pill fw-bold shadow-sm" style="font-size: 0.9rem;">
+                            <i class="fas fa-key me-1"></i> Password
+                        </button>
+                    </div>
+                    
                 </div>
             </div>
 
@@ -185,7 +215,6 @@
                                         @endif
                                     </td>
                                     
-                                    {{-- FIXED: Pre-wrap bug removed using Flexbox layout & span --}}
                                     <td>
                                         @if($apt->medicalRecord)
                                             <div class="small text-dark mb-1">
@@ -216,6 +245,50 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- NEW: CHANGE PASSWORD MODAL --}}
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-warning text-dark py-3 rounded-top-4">
+                <h5 class="modal-title fw-bold" id="resetPasswordModalLabel"><i class="fas fa-key me-2"></i>Reset Patient Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{{ route('admin.patients.change_password', $patient->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Current / Old Password <span class="text-danger">*</span></label>
+                        <input type="password" name="old_password" class="form-control" required placeholder="Enter the current password">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">New Password <span class="text-danger">*</span></label>
+                        <input type="password" name="password" class="form-control" required minlength="8" placeholder="Must be at least 8 characters">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Confirm New Password <span class="text-danger">*</span></label>
+                        <input type="password" name="password_confirmation" class="form-control" required minlength="8" placeholder="Re-type new password">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        {{-- Redirects to the Gmail OTP Forgot Password flow --}}
+                        <a href="{{ route('password.request') }}" class="text-success small fw-bold text-decoration-none" target="_blank">
+                            <i class="fas fa-envelope me-1"></i> Forgot Password?
+                        </a>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">Update Password</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

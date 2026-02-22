@@ -88,24 +88,42 @@
             {{-- BLACK CARD: Standard Doctor Diagnosis --}}
             @else
                 @php
-                    // Logic to extract "Diagnosed by" and "Notes" from the saved string
+                    // Logic to extract "Diagnosed by", "Notes", and "Edits"
                     $diagnosedBy = 'Unknown Staff';
                     $actualNotes = null;
+                    $editLogs = []; // Array to store all the separated edits
                     
                     if ($record->notes) {
-                        // Check if both Diagnosed By and Notes exist
+                        // 1. Separate "Diagnosed by" from the main notes string
                         if (str_contains($record->notes, ' | Notes: ')) {
                             $parts = explode(' | Notes: ', $record->notes);
                             $diagnosedBy = str_replace('Diagnosed by: ', '', $parts[0]);
-                            $actualNotes = $parts[1];
+                            $fullNotesString = $parts[1];
                         } 
-                        // Check if only Diagnosed By exists (no extra notes)
                         elseif (str_starts_with($record->notes, 'Diagnosed by: ')) {
                             $diagnosedBy = str_replace('Diagnosed by: ', '', $record->notes);
+                            $fullNotesString = '';
                         } 
-                        // Legacy records before this update was implemented
                         else {
-                            $actualNotes = $record->notes;
+                            $fullNotesString = $record->notes;
+                        }
+
+                        // 2. Separate Original Notes from Edit Logs
+                        if (!empty($fullNotesString)) {
+                            if (str_contains($fullNotesString, '[Edited on ')) {
+                                // Split the string every time an edit happens
+                                $noteParts = explode('[Edited on ', $fullNotesString);
+                                
+                                // The first part is always the original note
+                                $actualNotes = trim(array_shift($noteParts)); 
+                                
+                                // The remaining parts are edits, re-add the prefix
+                                foreach($noteParts as $edit) {
+                                    $editLogs[] = '[Edited on ' . trim($edit);
+                                }
+                            } else {
+                                $actualNotes = $fullNotesString;
+                            }
                         }
                     }
                 @endphp
@@ -125,15 +143,29 @@
                                 {!! nl2br(e($record->prescription)) !!}</p>
                             </div>
 
+                            {{-- Show Original Notes --}}
                             @if($actualNotes)
                             <div class="text-muted small">
                                 <strong>Doctor's Notes:</strong> <br>
-                                {{ $actualNotes }}
+                                {!! nl2br(e($actualNotes)) !!}
                             </div>
                             @endif
+
+                            {{-- Show Edit History Separately --}}
+                            @if(count($editLogs) > 0)
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="text-muted small text-uppercase fw-bold mb-2">
+                                    <i class="fas fa-history me-1"></i> Edit History
+                                </div>
+                                @foreach($editLogs as $log)
+                                    <div class="p-2 mb-2 bg-warning bg-opacity-10 border border-warning border-opacity-50 rounded text-dark small" style="white-space: pre-wrap; word-break: break-word;">{{ $log }}</div>
+                                @endforeach
+                            </div>
+                            @endif
+
                         </div>
                         
-                        {{-- NEW FOOTER: Shows who diagnosed the patient --}}
+                        {{-- FOOTER: Shows who diagnosed the patient --}}
                         <div class="card-footer bg-white border-top-0 text-muted small pb-3">
                             <i class="fas fa-user-md me-1"></i> Diagnosed by: <span class="fw-bold text-dark">{{ $diagnosedBy }}</span>
                         </div>
