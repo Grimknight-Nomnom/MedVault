@@ -13,10 +13,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .flatpickr-day.selected {
-            background: #0d9488 !important; /* Teal 600 to match your theme */
+            background: #0d9488 !important;
             border-color: #0d9488 !important;
         }
-        /* Make our new custom year dropdown look like the month dropdown */
         .custom-year-select {
             margin-left: 5px;
             padding: 2px;
@@ -29,6 +28,12 @@
         }
         .custom-year-select:hover {
             background: rgba(0,0,0,0.05);
+        }
+        
+        /* Hide default browser eye icon for password inputs */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
         }
     </style>
 
@@ -95,7 +100,6 @@
                         <p class="mt-2 text-gray-500">Fill in your details to generate your secure Medical ID.</p>
                     </div>
 
-                    {{-- Global Error Message --}}
                     @if($errors->has('email') || $errors->has('first_name'))
                         <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
                             <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -128,7 +132,6 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Date of Birth</label>
-                                    {{-- Changed input type to text for Flatpickr, set bg-white so it doesn't look disabled --}}
                                     <input type="text" name="date_of_birth" id="date_of_birth" required 
                                         class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-white text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm cursor-pointer" 
                                         placeholder="Select Date..."
@@ -136,7 +139,7 @@
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Age</label>
-                                    <input type="number" name="age" id="age" required min="0" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-100 text-gray-500 focus:outline-none sm:text-sm" value="{{ old('age') }}" readonly tabindex="-1">
+                                    <input type="text" name="age" id="age" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-100 text-gray-500 focus:outline-none sm:text-sm" value="{{ old('age') }}" readonly tabindex="-1">
                                 </div>
                             </div>
 
@@ -174,21 +177,42 @@
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div class="space-y-1.5 relative">
+                                
+                                {{-- ---------------- 100% FIXED PASSWORD FIELD ---------------- --}}
+                                <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Password</label>
-                                    <input type="password" name="password" id="password" required minlength="8" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm pr-10">
-                                    <button type="button" onclick="togglePassword('password', 'eye-icon-1')" class="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none">
-                                        <svg id="eye-icon-1" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    </button>
-                                    @error('password') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                    
+                                    {{-- Flex Container acting as the "Input Box" --}}
+                                    <div class="flex items-center w-full rounded-xl border border-gray-200 bg-gray-50 focus-within:bg-white focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
+                                        <input type="password" name="password" id="password" required minlength="8" 
+                                               class="flex-1 block w-full px-4 py-3 bg-transparent text-gray-900 sm:text-sm border-0 focus:ring-0 outline-none" style="box-shadow: none;">
+                                        
+                                        <button type="button" onclick="togglePassword('password', 'eye-path-1')" class="px-4 text-gray-400 hover:text-teal-600 focus:outline-none bg-transparent">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path id="eye-path-1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    @error('password') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="space-y-1.5 relative">
+                                
+                                {{-- ---------------- 100% FIXED CONFIRM PASSWORD FIELD ---------------- --}}
+                                <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Confirm Password</label>
-                                    <input type="password" name="password_confirmation" id="password_confirmation" required minlength="8" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm pr-10">
-                                    <button type="button" onclick="togglePassword('password_confirmation', 'eye-icon-2')" class="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none">
-                                        <svg id="eye-icon-2" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    </button>
+                                    
+                                    {{-- Flex Container acting as the "Input Box" --}}
+                                    <div class="flex items-center w-full rounded-xl border border-gray-200 bg-gray-50 focus-within:bg-white focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
+                                        <input type="password" name="password_confirmation" id="password_confirmation" required minlength="8" 
+                                               class="flex-1 block w-full px-4 py-3 bg-transparent text-gray-900 sm:text-sm border-0 focus:ring-0 outline-none" style="box-shadow: none;">
+                                        
+                                        <button type="button" onclick="togglePassword('password_confirmation', 'eye-path-2')" class="px-4 text-gray-400 hover:text-teal-600 focus:outline-none bg-transparent">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path id="eye-path-2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
 
@@ -215,25 +239,16 @@
     {{-- Flatpickr JS --}}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Initialize Flatpickr on the Date of Birth field with a custom Year Dropdown
         flatpickr("#date_of_birth", {
             dateFormat: "Y-m-d",
             maxDate: "today",
             allowInput: true,
-            
-            // This hook triggers right when the calendar is built
             onReady: function(selectedDates, dateStr, instance) {
-                // Find the wrapper that holds Flatpickr's default number input for the year
                 const yearInputWrapper = instance.currentYearElement.parentNode;
-                
-                // Create our own <select> element
                 const yearDropdown = document.createElement("select");
                 yearDropdown.className = "custom-year-select flatpickr-monthDropdown-months";
                 
-                // Get current year
                 const currentYear = new Date().getFullYear();
-                
-                // Populate the dropdown with years (from this year down to 1920)
                 for (let i = currentYear; i >= 1920; i--) {
                     const option = document.createElement("option");
                     option.value = i;
@@ -241,42 +256,56 @@
                     yearDropdown.appendChild(option);
                 }
                 
-                // Set the default selected year in our new dropdown
                 yearDropdown.value = instance.currentYear;
-                
-                // Listen for user selecting a year, and apply it to the calendar
                 yearDropdown.addEventListener("change", function(e) {
                     instance.changeYear(Number(e.target.value));
                 });
-                
-                // Keep dropdown synced if user changes year using other methods
                 instance.config.onYearChange.push(function() {
                     yearDropdown.value = instance.currentYear;
                 });
-                
-                // Replace Flatpickr's number input with our newly built dropdown!
                 yearInputWrapper.parentNode.replaceChild(yearDropdown, yearInputWrapper);
             },
-            
-            // This still automatically calculates age when a full date is selected
             onChange: function(selectedDates, dateStr, instance) {
                 calculateAge(dateStr);
             }
         });
 
+        // Calculate Age with Years and Months
         function calculateAge(dobInput) {
             if (!dobInput) return;
 
             const dob = new Date(dobInput);
             const today = new Date();
-            let age = today.getFullYear() - dob.getFullYear();
-            const monthDiff = today.getMonth() - dob.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                age--;
+
+            let years = today.getFullYear() - dob.getFullYear();
+            let months = today.getMonth() - dob.getMonth();
+            let days = today.getDate() - dob.getDate();
+
+            if (days < 0) {
+                months--;
             }
 
-            document.getElementById('age').value = age > 0 ? age : 0;
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            let ageText = "";
+            
+            if (years > 0) {
+                ageText += years + (years === 1 ? " year" : " years");
+            }
+            
+            if (months > 0) {
+                if (years > 0) ageText += ", ";
+                ageText += months + (months === 1 ? " month" : " months");
+            }
+            
+            if (years === 0 && months === 0) {
+                ageText = "Less than 1 month";
+            }
+
+            document.getElementById('age').value = ageText;
         }
 
         window.onload = function() {
@@ -286,12 +315,19 @@
             }
         };
 
-        function togglePassword(inputId, iconId) {
+        // NEW: Toggle visibility and change icon to an eye-slash
+        function togglePassword(inputId, pathId) {
             const input = document.getElementById(inputId);
+            const path = document.getElementById(pathId);
+            
             if (input.type === 'password') {
                 input.type = 'text';
+                // Eye Slash Icon
+                path.setAttribute('d', 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21');
             } else {
                 input.type = 'password';
+                // Normal Eye Icon
+                path.setAttribute('d', 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z');
             }
         }
     </script>

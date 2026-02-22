@@ -56,7 +56,7 @@
                                 @endif
                                 <div class="flex-grow-1">
                                     <input type="file" name="image" id="image" class="form-control" accept="image/*">
-                                    <div class="form-text">Upload to replace the current image. Leave empty to keep existing.</div>
+                                    <div class="form-text">Upload to replace the current image. Max size: 5MB. Leave empty to keep existing.</div>
                                 </div>
                             </div>
                         </div>

@@ -16,9 +16,25 @@
         </a>
     </div>
 
+    @if(session('success'))
+    <div class="alert alert-success border-start border-success border-4 shadow-sm mb-4">
+        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+    </div>
+    @endif
+
     @if(session('error'))
     <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
         <i class="fas fa-ban me-2"></i> {{ session('error') }}
+    </div>
+    @endif
+    
+    @if($errors->any())
+    <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
+        <ul class="mb-0">
+            @foreach($errors->all() as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
     </div>
     @endif
 
@@ -30,7 +46,8 @@
                     <p class="mb-0 small opacity-75">Please complete all required fields (*) to access clinic services.</p>
                 </div>
                 <div class="card-body p-4 p-md-5">
-                    <form action="{{ route('profile.update') }}" method="POST">
+                    
+                    <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -59,7 +76,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold">Age <span class="text-danger">*</span></label>
-                                    <input type="number" name="age" id="age" class="form-control bg-light" value="{{ old('age', $user->age) }}" required min="0" readonly tabindex="-1">
+                                    <input type="text" name="age" id="age" class="form-control bg-light" value="{{ old('age', $user->age) }}" required readonly tabindex="-1">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold">Gender <span class="text-danger">*</span></label>
@@ -95,7 +112,7 @@
                                         <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}" required placeholder="09123456789">
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <label class="form-label fw-bold">Home Address <span class="text-danger">*</span></label>
                                     <input type="text" name="address" class="form-control" value="{{ old('address', $user->address) }}" required placeholder="House No., Street, Barangay, City">
                                 </div>
@@ -130,23 +147,86 @@
                             <h5 class="text-success fw-bold border-bottom pb-2 mb-4">
                                 <i class="fas fa-hands-helping me-2"></i>Gov't Programs
                             </h5>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <div class="form-check form-switch p-3 bg-light rounded border">
-                                        <input class="form-check-input" type="checkbox" name="is_philhealth_member" id="philhealth" {{ $user->is_philhealth_member ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-bold ms-2" for="philhealth">
-                                            I am a PhilHealth Member
-                                        </label>
+                            <div class="row align-items-stretch">
+                                
+                                {{-- ----------------- PHILHEALTH BOX ----------------- --}}
+                                <div class="col-md-6 mb-3">
+                                    <div class="p-3 bg-light rounded border h-100 shadow-sm transition-all">
+                                        <div class="form-check form-switch mb-1">
+                                            <input class="form-check-input program-toggle" type="checkbox" name="is_philhealth_member" id="philhealth" data-target="philhealth_box" {{ $user->is_philhealth_member ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold ms-2" for="philhealth">
+                                                I am a PhilHealth Member
+                                            </label>
+                                        </div>
+                                        
+                                        <div id="philhealth_box" class="mt-3 pt-3 border-top {{ $user->is_philhealth_member ? '' : 'd-none' }}">
+                                            
+                                            @if($user->philhealth_id_path)
+                                                {{-- ID Is Uploaded: Show View and Delete Buttons --}}
+                                                <div class="text-center p-3 border rounded bg-white mt-2">
+                                                    <i class="fas fa-id-card fa-2x text-success mb-2"></i>
+                                                    <div class="text-success small fw-bold mb-3">ID Successfully Uploaded</div>
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        <a href="{{ asset('storage/' . $user->philhealth_id_path) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold px-3">
+                                                            <i class="fas fa-eye me-1"></i> View Image
+                                                        </a>
+                                                        <button type="submit" form="delete-philhealth-form" class="btn btn-sm btn-outline-danger fw-bold px-3" onclick="return confirm('Delete this ID? You will need to upload a new one to stay verified.');">
+                                                            <i class="fas fa-trash me-1"></i> Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                {{-- Hidden file input so JS validation logic doesn't break --}}
+                                                <input type="file" name="philhealth_id" class="d-none" data-has-file="true">
+                                            @else
+                                                {{-- No ID Uploaded: Show File Input --}}
+                                                <label class="form-label small fw-bold text-muted mb-1">Upload PhilHealth ID Image <span class="text-danger">*</span></label>
+                                                <input type="file" name="philhealth_id" class="form-control form-control-sm mb-2" accept="image/*" data-has-file="false" {{ $user->is_philhealth_member ? 'required' : '' }}>
+                                                <div class="form-text" style="font-size: 0.75rem;">Required to save changes. Max: 5MB</div>
+                                            @endif
+                                            
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-2">
-                                    <div class="form-check form-switch p-3 bg-light rounded border">
-                                        <input class="form-check-input" type="checkbox" name="is_senior_citizen_or_pwd" id="seniorPwd" {{ $user->is_senior_citizen_or_pwd ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-bold ms-2" for="seniorPwd">
-                                            I am a Senior Citizen or PWD
-                                        </label>
+
+                                {{-- ----------------- PWD / SENIOR BOX ----------------- --}}
+                                <div class="col-md-6 mb-3">
+                                    <div class="p-3 bg-light rounded border h-100 shadow-sm transition-all">
+                                        <div class="form-check form-switch mb-1">
+                                            <input class="form-check-input program-toggle" type="checkbox" name="is_senior_citizen_or_pwd" id="seniorPwd" data-target="senior_box" {{ $user->is_senior_citizen_or_pwd ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold ms-2" for="seniorPwd">
+                                                I am a Senior Citizen or PWD
+                                            </label>
+                                        </div>
+                                        
+                                        <div id="senior_box" class="mt-3 pt-3 border-top {{ $user->is_senior_citizen_or_pwd ? '' : 'd-none' }}">
+                                            
+                                            @if($user->senior_pwd_id_path)
+                                                {{-- ID Is Uploaded: Show View and Delete Buttons --}}
+                                                <div class="text-center p-3 border rounded bg-white mt-2">
+                                                    <i class="fas fa-id-card fa-2x text-success mb-2"></i>
+                                                    <div class="text-success small fw-bold mb-3">ID Successfully Uploaded</div>
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        <a href="{{ asset('storage/' . $user->senior_pwd_id_path) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold px-3">
+                                                            <i class="fas fa-eye me-1"></i> View Image
+                                                        </a>
+                                                        <button type="submit" form="delete-senior-form" class="btn btn-sm btn-outline-danger fw-bold px-3" onclick="return confirm('Delete this ID? You will need to upload a new one to stay verified.');">
+                                                            <i class="fas fa-trash me-1"></i> Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                {{-- Hidden file input so JS validation logic doesn't break --}}
+                                                <input type="file" name="senior_pwd_id" class="d-none" data-has-file="true">
+                                            @else
+                                                {{-- No ID Uploaded: Show File Input --}}
+                                                <label class="form-label small fw-bold text-muted mb-1">Upload Senior/PWD ID Image <span class="text-danger">*</span></label>
+                                                <input type="file" name="senior_pwd_id" class="form-control form-control-sm mb-2" accept="image/*" data-has-file="false" {{ $user->is_senior_citizen_or_pwd ? 'required' : '' }}>
+                                                <div class="form-text" style="font-size: 0.75rem;">Required to save changes. Max: 5MB</div>
+                                            @endif
+                                            
+                                        </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
 
@@ -157,15 +237,49 @@
                             </button>
                         </div>
                     </form>
+
+                    {{-- ----------------- EXTERNAL DELETE FORMS ----------------- --}}
+                    {{-- These are linked to the delete buttons via the form="..." attribute --}}
+                    <form id="delete-philhealth-form" action="{{ route('profile.delete_id', 'philhealth') }}" method="POST" class="d-none">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                    <form id="delete-senior-form" action="{{ route('profile.delete_id', 'senior_pwd') }}" method="POST" class="d-none">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Flatpickr JS --}}
+{{-- Flatpickr & Javascript --}}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+    // --- Image Upload Toggle Logic ---
+    document.querySelectorAll('.program-toggle').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const targetBox = document.getElementById(this.getAttribute('data-target'));
+            const fileInput = targetBox.querySelector('input[type="file"]');
+            const hasFile = fileInput.getAttribute('data-has-file') === 'true';
+
+            if(this.checked) {
+                targetBox.classList.remove('d-none');
+                // If they don't already have a file on record, require them to upload one
+                if(!hasFile) {
+                    fileInput.setAttribute('required', 'required');
+                }
+            } else {
+                targetBox.classList.add('d-none');
+                if(fileInput) fileInput.removeAttribute('required'); // Remove required if switch is turned off
+            }
+        });
+    });
+
+
+    // --- Date and Age Logic ---
     flatpickr("#date_of_birth", {
         dateFormat: "Y-m-d",
         maxDate: "today",
@@ -199,18 +313,41 @@
 
     function calculateAge(dobInput) {
         if (!dobInput) return;
+
         const dob = new Date(dobInput);
         const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const monthDiff = today.getMonth() - dob.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-            age--;
+
+        let years = today.getFullYear() - dob.getFullYear();
+        let months = today.getMonth() - dob.getMonth();
+        let days = today.getDate() - dob.getDate();
+
+        if (days < 0) {
+            months--;
         }
-        document.getElementById('age').value = age > 0 ? age : 0;
+
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        let ageText = "";
+        
+        if (years > 0) {
+            ageText += years + (years === 1 ? " year" : " years");
+        }
+        
+        if (months > 0) {
+            if (years > 0) ageText += ", ";
+            ageText += months + (months === 1 ? " month" : " months");
+        }
+        
+        if (years === 0 && months === 0) {
+            ageText = "Less than 1 month";
+        }
+
+        document.getElementById('age').value = ageText;
     }
 
-    // Recalculate on load just in case
     window.onload = function() {
         const existingDate = document.getElementById('date_of_birth').value;
         if(existingDate) {

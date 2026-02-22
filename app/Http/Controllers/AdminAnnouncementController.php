@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
-use App\Models\Staff; // <-- ADD THIS IMPORT
+use App\Models\Staff; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,9 +12,8 @@ class AdminAnnouncementController extends Controller
     public function index()
     {
         $announcements = Announcement::latest()->paginate(10);
-        $staffMembers = Staff::latest()->get(); // <-- FETCH STAFF
+        $staffMembers = Staff::latest()->get(); 
         
-        // Pass both variables to the view
         return view('admin.announcements.index', compact('announcements', 'staffMembers'));
     }
 
@@ -28,12 +27,11 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
             'is_active' => 'boolean',
-            'expires_at' => 'nullable|date|after:today', // Validate future date
+            'expires_at' => 'nullable|date|after:today', 
         ]);
 
-        // Include 'expires_at' in the data array
         $data = $request->only(['title', 'description', 'expires_at']);
         $data['is_active'] = $request->has('is_active');
 
@@ -58,17 +56,15 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
             'is_active' => 'boolean',
-            'expires_at' => 'nullable|date', // Validate date
+            'expires_at' => 'nullable|date', 
         ]);
 
-        // Include 'expires_at' in the data array
         $data = $request->only(['title', 'description', 'expires_at']);
-        $data['is_active'] = $request->has('is_active'); // Checkbox handling
+        $data['is_active'] = $request->has('is_active'); 
 
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($announcement->image_path) {
                 Storage::disk('public')->delete($announcement->image_path);
             }
@@ -98,7 +94,7 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|string|max:255',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
         ]);
 
         $data = $request->only(['name', 'role']);
@@ -118,13 +114,12 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|string|max:255',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
         ]);
 
         $data = $request->only(['name', 'role']);
 
         if ($request->hasFile('picture')) {
-            // Delete old picture if exists
             if ($staff->picture_path) {
                 Storage::disk('public')->delete($staff->picture_path);
             }

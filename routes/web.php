@@ -24,7 +24,6 @@ Route::get('/', function () {
     $announcements = Announcement::where('is_active', true)->latest()->get();
     $staff = Staff::all();
     
-    // FIX: Added 'staff' to the compact function so the view can receive it
     return view('welcome', compact('announcements', 'staff'));
 })->name('welcome');
 
@@ -37,10 +36,8 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
 // --- Email Verification ---
-// THE 'SIGNED' MIDDLEWARE IS NOW REMOVED
 Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->name('verification.verify');
-// NEW: Resend Verification Route
 Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->name('verification.resend'); 
 
 // --- Password Reset Routes ---
@@ -49,7 +46,7 @@ Route::controller(PasswordResetController::class)->group(function () {
     Route::post('/forgot-password', 'sendResetCode')->name('password.email');
     Route::get('/verify-code', 'showVerifyCodeForm')->name('password.verify');
     Route::post('/verify-code', 'verifyCode')->name('password.verify.post');
-    Route::post('/resend-reset-code', 'resendCode')->name('password.resend_code'); // NEW: Resend Code Route
+    Route::post('/resend-reset-code', 'resendCode')->name('password.resend_code'); 
     Route::get('/reset-password', 'showResetForm')->name('password.reset');
     Route::post('/reset-password', 'resetPassword')->name('password.update');
 });
@@ -60,6 +57,9 @@ Route::middleware(['auth'])->group(function () {
     // Profile & User Settings
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    
+    // NEW: Route to delete uploaded IDs
+    Route::delete('/profile/delete-id/{type}', [ProfileController::class, 'deleteIdImage'])->name('profile.delete_id');
 
     // Patient Dashboard
     Route::get('/dashboard', function () {
@@ -143,8 +143,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
-            
-            // --- Bypass Manual Patient Verification ---
             Route::post('/patients/{id}/force-verify', 'verifyPatient');
         });
 

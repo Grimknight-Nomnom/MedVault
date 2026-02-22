@@ -36,7 +36,7 @@
                         <div class="mb-4">
                             <label for="image" class="form-label fw-bold small text-uppercase">Cover Image (Optional)</label>
                             <input type="file" name="image" id="image" class="form-control" accept="image/*">
-                            <div class="form-text">Recommended size: 800x400px. Max size: 2MB.</div>
+                            <div class="form-text">Recommended size: 800x400px. Max size: 5MB.</div>
                         </div>
 
                         <div class="mb-4">
