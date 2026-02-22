@@ -3,34 +3,6 @@
 @section('content')
 <div class="container py-4">
 
-    {{-- SUCCESS ALERT --}}
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4 mb-4" role="alert">
-            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    {{-- ERROR ALERT (For wrong old password) --}}
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 border-start border-danger border-4 mb-4" role="alert">
-            <i class="fas fa-times-circle me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    {{-- VALIDATION ERRORS (For short/mismatched passwords) --}}
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 border-start border-danger border-4 mb-4" role="alert">
-            <ul class="mb-0">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" style="margin-top: -5px;" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <a href="{{ route('admin.patients.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
             <i class="fas fa-arrow-left me-1"></i> Back to List
@@ -81,7 +53,6 @@
                         </div>
                     </div>
                     
-                    {{-- FIXED: Edit Info & Password Reset Buttons Side-by-Side --}}
                     <div class="mt-4 d-flex gap-2">
                         <a href="{{ route('admin.patients.edit', $patient->id) }}" class="btn btn-outline-success w-50 rounded-pill fw-bold shadow-sm" style="font-size: 0.9rem;">
                             <i class="fas fa-user-edit me-1"></i> Edit Info
@@ -250,7 +221,7 @@
     </div>
 </div>
 
-{{-- NEW: CHANGE PASSWORD MODAL --}}
+{{-- CHANGE PASSWORD MODAL --}}
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -279,7 +250,6 @@
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                        {{-- Redirects to the Gmail OTP Forgot Password flow --}}
                         <a href="{{ route('password.request') }}" class="text-success small fw-bold text-decoration-none" target="_blank">
                             <i class="fas fa-envelope me-1"></i> Forgot Password?
                         </a>

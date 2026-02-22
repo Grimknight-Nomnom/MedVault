@@ -16,28 +16,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-    <div class="alert alert-success border-start border-success border-4 shadow-sm mb-4">
-        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
-        <i class="fas fa-ban me-2"></i> {{ session('error') }}
-    </div>
-    @endif
-    
-    @if($errors->any())
-    <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
-        <ul class="mb-0">
-            @foreach($errors->all() as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
-
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card shadow-sm border-0 rounded-4">
@@ -149,7 +127,6 @@
                             </h5>
                             <div class="row align-items-stretch">
                                 
-                                {{-- ----------------- PHILHEALTH BOX ----------------- --}}
                                 <div class="col-md-6 mb-3">
                                     <div class="p-3 bg-light rounded border h-100 shadow-sm transition-all">
                                         <div class="form-check form-switch mb-1">
@@ -162,7 +139,6 @@
                                         <div id="philhealth_box" class="mt-3 pt-3 border-top {{ $user->is_philhealth_member ? '' : 'd-none' }}">
                                             
                                             @if($user->philhealth_id_path)
-                                                {{-- ID Is Uploaded: Show View and Delete Buttons --}}
                                                 <div class="text-center p-3 border rounded bg-white mt-2">
                                                     <i class="fas fa-id-card fa-2x text-success mb-2"></i>
                                                     <div class="text-success small fw-bold mb-3">ID Successfully Uploaded</div>
@@ -175,10 +151,8 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                {{-- Hidden file input so JS validation logic doesn't break --}}
                                                 <input type="file" name="philhealth_id" class="d-none" data-has-file="true">
                                             @else
-                                                {{-- No ID Uploaded: Show File Input --}}
                                                 <label class="form-label small fw-bold text-muted mb-1">Upload PhilHealth ID Image <span class="text-danger">*</span></label>
                                                 <input type="file" name="philhealth_id" class="form-control form-control-sm mb-2" accept="image/*" data-has-file="false" {{ $user->is_philhealth_member ? 'required' : '' }}>
                                                 <div class="form-text" style="font-size: 0.75rem;">Required to save changes. Max: 5MB</div>
@@ -188,7 +162,6 @@
                                     </div>
                                 </div>
 
-                                {{-- ----------------- PWD / SENIOR BOX ----------------- --}}
                                 <div class="col-md-6 mb-3">
                                     <div class="p-3 bg-light rounded border h-100 shadow-sm transition-all">
                                         <div class="form-check form-switch mb-1">
@@ -201,7 +174,6 @@
                                         <div id="senior_box" class="mt-3 pt-3 border-top {{ $user->is_senior_citizen_or_pwd ? '' : 'd-none' }}">
                                             
                                             @if($user->senior_pwd_id_path)
-                                                {{-- ID Is Uploaded: Show View and Delete Buttons --}}
                                                 <div class="text-center p-3 border rounded bg-white mt-2">
                                                     <i class="fas fa-id-card fa-2x text-success mb-2"></i>
                                                     <div class="text-success small fw-bold mb-3">ID Successfully Uploaded</div>
@@ -214,10 +186,8 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                {{-- Hidden file input so JS validation logic doesn't break --}}
                                                 <input type="file" name="senior_pwd_id" class="d-none" data-has-file="true">
                                             @else
-                                                {{-- No ID Uploaded: Show File Input --}}
                                                 <label class="form-label small fw-bold text-muted mb-1">Upload Senior/PWD ID Image <span class="text-danger">*</span></label>
                                                 <input type="file" name="senior_pwd_id" class="form-control form-control-sm mb-2" accept="image/*" data-has-file="false" {{ $user->is_senior_citizen_or_pwd ? 'required' : '' }}>
                                                 <div class="form-text" style="font-size: 0.75rem;">Required to save changes. Max: 5MB</div>
@@ -238,8 +208,6 @@
                         </div>
                     </form>
 
-                    {{-- ----------------- EXTERNAL DELETE FORMS ----------------- --}}
-                    {{-- These are linked to the delete buttons via the form="..." attribute --}}
                     <form id="delete-philhealth-form" action="{{ route('profile.delete_id', 'philhealth') }}" method="POST" class="d-none">
                         @csrf
                         @method('DELETE')
@@ -255,10 +223,8 @@
     </div>
 </div>
 
-{{-- Flatpickr & Javascript --}}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    // --- Image Upload Toggle Logic ---
     document.querySelectorAll('.program-toggle').forEach(toggle => {
         toggle.addEventListener('change', function() {
             const targetBox = document.getElementById(this.getAttribute('data-target'));
@@ -267,19 +233,14 @@
 
             if(this.checked) {
                 targetBox.classList.remove('d-none');
-                // If they don't already have a file on record, require them to upload one
-                if(!hasFile) {
-                    fileInput.setAttribute('required', 'required');
-                }
+                if(!hasFile) fileInput.setAttribute('required', 'required');
             } else {
                 targetBox.classList.add('d-none');
-                if(fileInput) fileInput.removeAttribute('required'); // Remove required if switch is turned off
+                if(fileInput) fileInput.removeAttribute('required'); 
             }
         });
     });
 
-
-    // --- Date and Age Logic ---
     flatpickr("#date_of_birth", {
         dateFormat: "Y-m-d",
         maxDate: "today",
@@ -312,23 +273,33 @@
     });
 
     function calculateAge(dobInput) {
-        if (!dobInput) return;
+        if (!dobInput) {
+            document.getElementById('age').value = "";
+            return;
+        }
 
-        const dob = new Date(dobInput);
+        let dob;
+        if (dobInput.includes('-')) {
+            const parts = dobInput.split('-');
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; 
+            const day = parseInt(parts[2], 10);
+            dob = new Date(year, month, day);
+        } else {
+            dob = new Date(dobInput);
+        }
+
+        if (isNaN(dob.getTime())) return;
+
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         let years = today.getFullYear() - dob.getFullYear();
         let months = today.getMonth() - dob.getMonth();
         let days = today.getDate() - dob.getDate();
 
-        if (days < 0) {
-            months--;
-        }
-
-        if (months < 0) {
-            years--;
-            months += 12;
-        }
+        if (days < 0) months--;
+        if (months < 0) { years--; months += 12; }
 
         let ageText = "";
         
@@ -341,11 +312,14 @@
             ageText += months + (months === 1 ? " month" : " months");
         }
         
-        if (years === 0 && months === 0) {
+        if (years <= 0 && months <= 0) {
             ageText = "Less than 1 month";
         }
 
-        document.getElementById('age').value = ageText;
+        const ageField = document.getElementById('age');
+        if (ageField) {
+            ageField.value = ageText;
+        }
     }
 
     window.onload = function() {

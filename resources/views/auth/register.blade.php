@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    {{-- Flatpickr CSS for the advanced datepicker --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .flatpickr-day.selected {
@@ -30,7 +29,6 @@
             background: rgba(0,0,0,0.05);
         }
         
-        /* Hide default browser eye icon for password inputs */
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear {
             display: none;
@@ -43,7 +41,6 @@
 
     <div class="min-h-screen w-full flex">
         
-        {{-- LEFT SIDE: Hero Section --}}
         <div class="hidden lg:flex lg:w-5/12 relative bg-teal-900 flex-col justify-center overflow-hidden p-12 text-white">
             <div class="absolute inset-0 bg-gradient-to-bl from-slate-900 to-teal-900"></div>
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
@@ -77,7 +74,6 @@
             </div>
         </div>
 
-        {{-- RIGHT SIDE: Registration Form --}}
         <div class="w-full lg:w-7/12 flex flex-col relative bg-white h-screen overflow-y-auto">
             
             <div class="absolute top-6 right-6 z-20">
@@ -177,12 +173,8 @@
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                
-                                {{-- ---------------- 100% FIXED PASSWORD FIELD ---------------- --}}
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Password</label>
-                                    
-                                    {{-- Flex Container acting as the "Input Box" --}}
                                     <div class="flex items-center w-full rounded-xl border border-gray-200 bg-gray-50 focus-within:bg-white focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
                                         <input type="password" name="password" id="password" required minlength="8" 
                                                class="flex-1 block w-full px-4 py-3 bg-transparent text-gray-900 sm:text-sm border-0 focus:ring-0 outline-none" style="box-shadow: none;">
@@ -196,11 +188,8 @@
                                     @error('password') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                 </div>
                                 
-                                {{-- ---------------- 100% FIXED CONFIRM PASSWORD FIELD ---------------- --}}
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Confirm Password</label>
-                                    
-                                    {{-- Flex Container acting as the "Input Box" --}}
                                     <div class="flex items-center w-full rounded-xl border border-gray-200 bg-gray-50 focus-within:bg-white focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
                                         <input type="password" name="password_confirmation" id="password_confirmation" required minlength="8" 
                                                class="flex-1 block w-full px-4 py-3 bg-transparent text-gray-900 sm:text-sm border-0 focus:ring-0 outline-none" style="box-shadow: none;">
@@ -212,7 +201,6 @@
                                         </button>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
 
@@ -270,25 +258,35 @@
             }
         });
 
-        // Calculate Age with Years and Months
+        // FIXED: Robust Age Calculation blocking Timezone timezone shifts
         function calculateAge(dobInput) {
-            if (!dobInput) return;
+            if (!dobInput) {
+                document.getElementById('age').value = "";
+                return;
+            }
 
-            const dob = new Date(dobInput);
+            let dob;
+            if (dobInput.includes('-')) {
+                const parts = dobInput.split('-');
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // 0-indexed month
+                const day = parseInt(parts[2], 10);
+                dob = new Date(year, month, day);
+            } else {
+                dob = new Date(dobInput);
+            }
+
+            if (isNaN(dob.getTime())) return;
+
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
             let years = today.getFullYear() - dob.getFullYear();
             let months = today.getMonth() - dob.getMonth();
             let days = today.getDate() - dob.getDate();
 
-            if (days < 0) {
-                months--;
-            }
-
-            if (months < 0) {
-                years--;
-                months += 12;
-            }
+            if (days < 0) months--;
+            if (months < 0) { years--; months += 12; }
 
             let ageText = "";
             
@@ -301,11 +299,14 @@
                 ageText += months + (months === 1 ? " month" : " months");
             }
             
-            if (years === 0 && months === 0) {
+            if (years <= 0 && months <= 0) {
                 ageText = "Less than 1 month";
             }
 
-            document.getElementById('age').value = ageText;
+            const ageField = document.getElementById('age');
+            if (ageField) {
+                ageField.value = ageText;
+            }
         }
 
         window.onload = function() {
@@ -315,18 +316,15 @@
             }
         };
 
-        // NEW: Toggle visibility and change icon to an eye-slash
         function togglePassword(inputId, pathId) {
             const input = document.getElementById(inputId);
             const path = document.getElementById(pathId);
             
             if (input.type === 'password') {
                 input.type = 'text';
-                // Eye Slash Icon
                 path.setAttribute('d', 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21');
             } else {
                 input.type = 'password';
-                // Normal Eye Icon
                 path.setAttribute('d', 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z');
             }
         }

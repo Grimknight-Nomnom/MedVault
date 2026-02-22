@@ -15,16 +15,6 @@
         </a>
     </div>
 
-    @if($errors->any())
-    <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
-        <ul class="mb-0">
-            @foreach($errors->all() as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
-
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card shadow-sm border-0 rounded-4">
@@ -133,7 +123,6 @@
                             </h5>
                             <div class="row align-items-stretch">
                                 
-                                {{-- PHILHEALTH --}}
                                 <div class="col-md-6 mb-3">
                                     <div class="p-3 bg-light rounded border h-100 shadow-sm">
                                         <div class="form-check form-switch mb-1">
@@ -150,7 +139,6 @@
                                     </div>
                                 </div>
 
-                                {{-- SENIOR/PWD --}}
                                 <div class="col-md-6 mb-3">
                                     <div class="p-3 bg-light rounded border h-100 shadow-sm">
                                         <div class="form-check form-switch mb-1">
@@ -194,25 +182,89 @@
     flatpickr("#date_of_birth", {
         dateFormat: "Y-m-d",
         maxDate: "today",
-        onChange: function(selectedDates, dateStr) {
+        allowInput: true,
+        onReady: function(selectedDates, dateStr, instance) {
+            const yearInputWrapper = instance.currentYearElement.parentNode;
+            const yearDropdown = document.createElement("select");
+            yearDropdown.className = "custom-year-select flatpickr-monthDropdown-months";
+            
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i >= 1920; i--) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = i;
+                yearDropdown.appendChild(option);
+            }
+            
+            yearDropdown.value = instance.currentYear;
+            yearDropdown.addEventListener("change", function(e) {
+                instance.changeYear(Number(e.target.value));
+            });
+            instance.config.onYearChange.push(function() {
+                yearDropdown.value = instance.currentYear;
+            });
+            yearInputWrapper.parentNode.replaceChild(yearDropdown, yearInputWrapper);
+        },
+        onChange: function(selectedDates, dateStr, instance) {
             calculateAge(dateStr);
         }
     });
 
     function calculateAge(dobInput) {
-        if (!dobInput) return;
-        const dob = new Date(dobInput);
+        if (!dobInput) {
+            document.getElementById('age').value = "";
+            return;
+        }
+
+        let dob;
+        if (dobInput.includes('-')) {
+            const parts = dobInput.split('-');
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; 
+            const day = parseInt(parts[2], 10);
+            dob = new Date(year, month, day);
+        } else {
+            dob = new Date(dobInput);
+        }
+
+        if (isNaN(dob.getTime())) return;
+
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         let years = today.getFullYear() - dob.getFullYear();
         let months = today.getMonth() - dob.getMonth();
         let days = today.getDate() - dob.getDate();
+
         if (days < 0) months--;
         if (months < 0) { years--; months += 12; }
+
         let ageText = "";
-        if (years > 0) ageText += years + (years === 1 ? " year" : " years");
-        if (months > 0) { if (years > 0) ageText += ", "; ageText += months + (months === 1 ? " month" : " months"); }
-        if (years === 0 && months === 0) ageText = "Less than 1 month";
-        document.getElementById('age').value = ageText;
+        
+        if (years > 0) {
+            ageText += years + (years === 1 ? " year" : " years");
+        }
+        
+        if (months > 0) {
+            if (years > 0) ageText += ", ";
+            ageText += months + (months === 1 ? " month" : " months");
+        }
+        
+        if (years <= 0 && months <= 0) {
+            ageText = "Less than 1 month";
+        }
+
+        const ageField = document.getElementById('age');
+        if (ageField) {
+            ageField.value = ageText;
+        }
     }
+
+    window.onload = function() {
+        const existingDate = document.getElementById('date_of_birth').value;
+        if(existingDate) {
+            calculateAge(existingDate);
+        }
+    };
 </script>
 @endsection
