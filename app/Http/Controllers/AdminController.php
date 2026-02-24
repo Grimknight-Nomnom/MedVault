@@ -26,6 +26,7 @@ class AdminController extends Controller
         $totalMedicines = Medicine::count();
         $totalAppointments = Appointment::count();
         $totalPatients = User::where('role', 'user')->count();
+        
         $lowStock = Medicine::where('stock_quantity', '<', 10)->get();
         $expiringSoon = Medicine::where('expiry_date', '<=', now()->addDays(30))->get();
         
@@ -34,10 +35,7 @@ class AdminController extends Controller
             ->whereIn('action_type', ['Released', 'Expired'])
             ->get();
 
-        // --- NEW QUERIES FOR ALERT MODAL ON LOGIN ---
         $unverifiedPatients = User::where('role', 'user')->whereNull('email_verified_at')->get();
-        $outOfStockMeds = Medicine::where('stock_quantity', '<=', 0)->get();
-        $expiredMedsAlert = Medicine::whereDate('expiry_date', '<', Carbon::today())->get();
 
         $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
         $startOfMonth = $date->copy()->startOfMonth();
@@ -86,7 +84,7 @@ class AdminController extends Controller
             'todayAppointmentsCount', 'totalMedicines', 'totalAppointments', 'totalPatients',
             'lowStock', 'expiringSoon', 'monthlyDetails',
             'calendar', 'date', 'appointments', 'appointmentsByDate', 'settings',
-            'unverifiedPatients', 'outOfStockMeds', 'expiredMedsAlert' // Passed to view
+            'unverifiedPatients'
         ));
     }
 
@@ -128,6 +126,10 @@ class AdminController extends Controller
             });
         }
         
+        if ($request->has('status') && $request->status === 'unverified') {
+            $query->whereNull('email_verified_at');
+        }
+
         $patients = $query->orderBy('created_at', 'desc')->paginate(10);
         return view('admin.patients.index', compact('patients'));
     }
@@ -271,5 +273,51 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', "Password successfully reset for {$patient->first_name}.");
+    }
+
+    // --- Unverify Account & Cancel Appointments ---
+    public function unverifyPatient($id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+        
+        $patient->update(['email_verified_at' => null]);
+
+        $activeAppointments = Appointment::where('user_id', $id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get();
+
+        $cancelledCount = 0;
+        foreach ($activeAppointments as $appointment) {
+            $date = $appointment->appointment_date;
+            $appointment->update([
+                'status' => 'cancelled',
+                'queue_number' => 0
+            ]);
+            $this->resequenceQueue($date);
+            $cancelledCount++;
+        }
+
+        $message = "Patient {$patient->first_name} has been unverified.";
+        if ($cancelledCount > 0) {
+            $message .= " Additionally, {$cancelledCount} active appointment(s) were automatically cancelled.";
+        }
+
+        return redirect()->back()->with('warning', $message);
+    }
+
+    private function resequenceQueue($date)
+    {
+        $appointments = Appointment::where('appointment_date', $date)
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $queue = 1;
+        foreach ($appointments as $app) {
+            if ($app->queue_number != $queue) {
+                $app->update(['queue_number' => $queue]);
+            }
+            $queue++;
+        }
     }
 }

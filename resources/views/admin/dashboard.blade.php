@@ -218,47 +218,51 @@
                     @endif
                 </div>
 
-                {{-- Out of Stock --}}
+                {{-- Low Stock --}}
                 <div class="mb-4">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
-                        <i class="fas fa-box-open text-danger me-2"></i>Out of Stock Medicines ({{ $outOfStockMeds->count() }})
+                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>Low Stock Alert (Under 10) ({{ $lowStock->count() }})
                     </h6>
-                    @if($outOfStockMeds->count() > 0)
+                    @if($lowStock->count() > 0)
                         <ul class="list-group list-group-flush mb-2">
-                            @foreach($outOfStockMeds->take(5) as $med)
+                            @foreach($lowStock->take(5) as $med)
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
                                     {{ $med->name }}
-                                    <span class="badge bg-danger rounded-pill">0 in stock</span>
+                                    <span class="badge bg-danger rounded-pill">{{ $med->stock_quantity }} in stock</span>
                                 </li>
                             @endforeach
                         </ul>
-                        @if($outOfStockMeds->count() > 5)
+                        @if($lowStock->count() > 5)
                             <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0">No out-of-stock medicines.</p>
+                        <p class="text-muted small mb-0">No low stock items.</p>
                     @endif
                 </div>
 
-                {{-- Expired Meds --}}
+                {{-- Expired/Expiring Meds --}}
                 <div class="mb-2">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
-                        <i class="fas fa-calendar-times text-danger me-2"></i>Expired Medicines ({{ $expiredMedsAlert->count() }})
+                        <i class="fas fa-hourglass-half text-warning me-2"></i>Expiry Alerts (30 Days) ({{ $expiringSoon->count() }})
                     </h6>
-                    @if($expiredMedsAlert->count() > 0)
+                    @if($expiringSoon->count() > 0)
                         <ul class="list-group list-group-flush mb-2">
-                            @foreach($expiredMedsAlert->take(5) as $med)
+                            @foreach($expiringSoon->take(5) as $med)
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
                                     {{ $med->name }}
-                                    <span class="badge bg-danger rounded-pill">Expired on {{ \Carbon\Carbon::parse($med->expiry_date)->format('M d, Y') }}</span>
+                                    @if($med->expiry_date < now())
+                                        <span class="badge bg-danger rounded-pill">Expired {{ \Carbon\Carbon::parse($med->expiry_date)->format('M d, Y') }}</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark rounded-pill">Expiring {{ \Carbon\Carbon::parse($med->expiry_date)->format('M d, Y') }}</span>
+                                    @endif
                                 </li>
                             @endforeach
                         </ul>
-                        @if($expiredMedsAlert->count() > 5)
+                        @if($expiringSoon->count() > 5)
                             <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0">No expired medicines.</p>
+                        <p class="text-muted small mb-0">No immediate expirations.</p>
                     @endif
                 </div>
 
@@ -272,7 +276,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        @if($unverifiedPatients->count() > 0 || $outOfStockMeds->count() > 0 || $expiredMedsAlert->count() > 0)
+        @if($unverifiedPatients->count() > 0 || $lowStock->count() > 0 || $expiringSoon->count() > 0)
             var myModal = new bootstrap.Modal(document.getElementById('adminAlertsModal'), {
                 keyboard: false
             });

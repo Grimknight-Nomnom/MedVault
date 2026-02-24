@@ -16,7 +16,6 @@ use App\Models\Staff;
 
 Route::get('/run-migrations', function () {
     try {
-        // The --force flag is required in production
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         return "Database migration completed successfully!";
     } catch (\Exception $e) {
@@ -62,13 +61,10 @@ Route::middleware(['auth'])->group(function () {
     // Profile & User Settings
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    
-    // NEW: Route to delete uploaded IDs
     Route::delete('/profile/delete-id/{type}', [ProfileController::class, 'deleteIdImage'])->name('profile.delete_id');
 
     // Patient Dashboard
     Route::get('/dashboard', function () {
-        // FIXED: Now correctly marks past unseen appointments as 'incomplete' instead of 'completed'
         Appointment::where('user_id', Auth::id())
             ->whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '<', now()->startOfDay())
@@ -97,7 +93,6 @@ Route::middleware(['auth'])->group(function () {
     // --- Admin Routes Group ---
     Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
-
         Route::post('/admin/patients/{id}/reject-residency', [App\Http\Controllers\AdminController::class, 'rejectResidency'])->name('admin.patients.reject_residency');
         
         // Manage Staff Routes 
@@ -112,7 +107,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/api/trends', [MedicineController::class, 'getTrendsData'])->name('admin.trends.api');
         Route::get('/api/report', [MedicineController::class, 'getPeekData'])->name('admin.report.api');
 
-        // Historical Report Page (Full Page)
+        // Historical Report Page
         Route::get('/historical-report', [MedicineController::class, 'getHistoricalReport'])->name('admin.historical.report');
 
         // Announcements
@@ -126,15 +121,11 @@ Route::middleware(['auth'])->group(function () {
                 'destroy' => 'admin.announcements.delete',
             ]);
 
-
         // Appointments
         Route::controller(AppointmentController::class)->group(function () {
             Route::get('/appointments', 'adminIndex')->name('admin.appointments.index');
             Route::post('/appointments/limit', 'updateDailyLimit')->name('admin.appointments.limit');
-            
-            // --- NEW: Bulk Update Calendar Settings ---
             Route::post('/appointments/bulk-limit', 'bulkUpdateLimit')->name('admin.appointments.bulk_limit');
-            
             Route::get('/appointments/create', 'adminCreate')->name('admin.appointments.create');
             Route::post('/appointments', 'adminStore')->name('admin.appointments.store');
             Route::patch('/appointments/{id}', 'updateStatus')->name('admin.appointments.update');
@@ -155,28 +146,24 @@ Route::middleware(['auth'])->group(function () {
         // Patients
         Route::controller(AdminController::class)->group(function () {
             Route::get('/patients', 'indexPatients')->name('admin.patients.index');
+            
             Route::get('/patients/{id}', 'showPatient')->name('admin.patients.show');
             Route::delete('/patients/{id}', 'destroy')->name('admin.patients.delete');
             
-            // --- Admin Edit Patient Info ---
+            // Admin Edit Patient Info 
             Route::get('/patients/{id}/edit', 'editPatient')->name('admin.patients.edit');
             Route::put('/patients/{id}', 'updatePatient')->name('admin.patients.update');
-            
-            // --- NEW: Admin Reset Patient Password ---
             Route::put('/patients/{id}/change-password', 'changePatientPassword')->name('admin.patients.change_password');
-            
-            // --- Bypass Manual Patient Verification ---
             Route::post('/patients/{id}/force-verify', 'verifyPatient')->name('admin.patients.verify');
-
-            // --- Admin Delete Patient ID Image ---
+            
+            Route::post('/patients/{id}/unverify', 'unverifyPatient')->name('admin.patients.unverify');
             Route::delete('/patients/{id}/delete-id/{type}', 'deletePatientId')->name('admin.patients.delete_id');
+            Route::post('/patients/{id}/reject-residency', 'rejectResidency')->name('admin.patients.reject_residency');
         });
 
         // Records
         Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
         Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
-        
-        // --- NEW: Edit Medical Records ---
         Route::get('/records/{record}/edit', [MedicalRecordController::class, 'edit'])->name('admin.records.edit');
         Route::put('/records/{record}', [MedicalRecordController::class, 'update'])->name('admin.records.update');
     });

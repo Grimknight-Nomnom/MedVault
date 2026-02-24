@@ -2,18 +2,38 @@
 
 @section('content')
 <div class="container py-4">
+    
+    @if(session('warning'))
+        <div class="alert alert-warning fw-bold shadow-sm mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i> {{ session('warning') }}
+        </div>
+    @endif
+
     {{-- Page Header --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-4 gap-3">
         <div>
             <h2 class="fw-bold text-dark mb-1">Registered Patients</h2>
             <p class="text-muted small mb-0">Manage and view patient records.</p>
         </div>
         
-        <form action="{{ route('admin.patients.index') }}" method="GET" class="d-flex gap-2">
-            <input type="text" name="search" class="form-control border-success shadow-none" 
-                   placeholder="Search Name or ID..." value="{{ request('search') }}" style="width: 250px;">
-            <button type="submit" class="btn btn-success"><i class="fas fa-search"></i></button>
-        </form>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            {{-- Filter Unverified Button --}}
+            <a href="{{ route('admin.patients.index', ['status' => 'unverified']) }}" class="btn btn-warning fw-bold text-dark shadow-sm">
+                <i class="fas fa-filter me-1"></i> Unverified Only
+            </a>
+
+            {{-- Clear Filters (Appears if searching or filtering) --}}
+            @if(request()->has('status') || request()->has('search') && request('search') != '')
+                <a href="{{ route('admin.patients.index') }}" class="btn btn-outline-secondary fw-bold shadow-sm">Clear Filter</a>
+            @endif
+            
+            {{-- Search Bar --}}
+            <form action="{{ route('admin.patients.index') }}" method="GET" class="d-flex gap-2 ms-xl-3">
+                <input type="text" name="search" class="form-control border-success shadow-none" 
+                       placeholder="Search Name or ID..." value="{{ request('search') }}" style="width: 220px;">
+                <button type="submit" class="btn btn-success shadow-sm"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
@@ -45,17 +65,25 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
-                                    {{-- Manual Verify Button --}}
+                                    
+                                    {{-- VERIFY / UNVERIFY BUTTONS --}}
                                     @if(is_null($patient->email_verified_at))
                                         <form action="{{ route('admin.patients.verify', $patient->id) }}" method="POST" class="d-inline">
                                             @csrf
-                                            <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold" title="Manually Verify">
+                                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold" title="Manually Verify">
                                                 <i class="fas fa-check-circle"></i> Verify
                                             </button>
                                         </form>
+                                    @else
+                                        {{-- THE UNVERIFY BUTTON --}}
+                                        <button type="button" 
+                                            onclick="openUnverifyModal('{{ route('admin.patients.unverify', $patient->id) }}')"
+                                            class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark" title="Unverify Account">
+                                            <i class="fas fa-times-circle"></i> Unverify
+                                        </button>
                                     @endif
 
-                                    {{-- View Residency Document Button (FIXED ONCLICK) --}}
+                                    {{-- View Residency Document Button --}}
                                     @if($patient->patient_photo_path)
                                         <button type="button" 
                                             onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route('admin.patients.reject_residency', $patient->id) }}')"
@@ -92,6 +120,29 @@
                     {{ $patients->links() }}
                 </div>
             @endif
+        </div>
+    </div>
+</div>
+
+{{-- UNVERIFY CONFIRMATION MODAL --}}
+<div class="modal fade" id="unverifyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Unverify</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="fs-5 mb-2">Are you sure you want to <strong>unverify</strong> this account?</p>
+                <p class="text-danger fw-bold mb-0">If this account has an active appointment, the appointment will be automatically cancelled.</p>
+            </div>
+            <div class="modal-footer bg-light justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <form id="unverifyForm" method="POST" action="">
+                    @csrf
+                    <button type="submit" class="btn btn-warning px-4 fw-bold">Yes, Unverify</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -152,6 +203,14 @@
 </div>
 
 <script>
+    // --- Unverify Modal logic ---
+    function openUnverifyModal(actionUrl) {
+        document.getElementById('unverifyForm').action = actionUrl;
+        var unverifyModal = new bootstrap.Modal(document.getElementById('unverifyModal'));
+        unverifyModal.show();
+    }
+
+    // Delete Modal logic
     function openBootstrapDeleteModal(actionUrl, message) {
         document.getElementById('bootstrapDeleteForm').action = actionUrl;
         document.getElementById('deleteModalBodyMessage').innerText = message;
@@ -159,12 +218,10 @@
         deleteModal.show();
     }
 
-    // FIXED: Form action now correctly accepts the full route URL generated by Laravel
+    // Image Modal logic
     function openImageModal(imageUrl, patientName, rejectUrl) {
         document.getElementById('viewerImage').src = imageUrl;
         document.getElementById('imageModalPatientName').innerText = patientName;
-        
-        // This sets the exact URL regardless of subfolders or hosting environments
         document.getElementById('rejectResidencyForm').action = rejectUrl;
         
         var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
