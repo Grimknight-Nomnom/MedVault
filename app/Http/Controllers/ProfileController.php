@@ -20,7 +20,6 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            // Demographics
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -31,23 +30,20 @@ class ProfileController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:500',
-
-            // Medical History
             'allergies' => 'nullable|string',
             'current_medication' => 'nullable|string',
             'existing_medical_conditions' => 'nullable|string',
             
-            // Image Validation (Max 5MB each)
+            // Image Validation
             'philhealth_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'senior_pwd_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'patient_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
         ]);
 
         $user->is_philhealth_member = $request->has('is_philhealth_member');
         $user->is_senior_citizen_or_pwd = $request->has('is_senior_citizen_or_pwd');
 
-        // Handle PhilHealth ID Upload
         if ($request->hasFile('philhealth_id')) {
-            // Delete old one if exists
             if ($user->philhealth_id_path) {
                 Storage::disk('public')->delete($user->philhealth_id_path);
             }
@@ -55,14 +51,24 @@ class ProfileController extends Controller
             $user->philhealth_id_path = $path;
         }
 
-        // Handle Senior/PWD ID Upload
         if ($request->hasFile('senior_pwd_id')) {
-            // Delete old one if exists
             if ($user->senior_pwd_id_path) {
                 Storage::disk('public')->delete($user->senior_pwd_id_path);
             }
             $path = $request->file('senior_pwd_id')->store('id_uploads', 'public');
             $user->senior_pwd_id_path = $path;
+        }
+
+        // Handle Proof of Residency Upload
+        if ($request->hasFile('patient_photo')) {
+            if ($user->patient_photo_path) {
+                Storage::disk('public')->delete($user->patient_photo_path);
+            }
+            $path = $request->file('patient_photo')->store('patient_photos', 'public');
+            $user->patient_photo_path = $path;
+            
+            // --- CLEAR THE REJECTION WARNING ---
+            $user->residency_rejection_reason = null;
         }
 
         $user->fill($validated);
@@ -71,7 +77,6 @@ class ProfileController extends Controller
         return redirect()->route('dashboard')->with('success', 'Personal records updated successfully. You may now book an appointment.');
     }
 
-    // --- NEW: Delete Image Method ---
     public function deleteIdImage($type)
     {
         $user = Auth::user();
@@ -88,6 +93,13 @@ class ProfileController extends Controller
             $user->senior_pwd_id_path = null;
             $user->save();
             return back()->with('success', 'Senior/PWD ID deleted successfully. Please upload a new one if you are still a member.');
+        }
+        
+        if ($type === 'residency' && $user->patient_photo_path) {
+            Storage::disk('public')->delete($user->patient_photo_path);
+            $user->patient_photo_path = null;
+            $user->save();
+            return back()->with('success', 'Proof of Residency deleted successfully. Please upload a new one.');
         }
 
         return back();

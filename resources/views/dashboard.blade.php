@@ -43,31 +43,80 @@
 </style>
 
 @php
-    // Check for missing Demographics fields directly in the view for UI logic
     $user = Auth::user();
+    
+    // 1. Check if verified by admin
+    $isVerified = !is_null($user->email_verified_at);
+
+    // 2. Check if Residency Photo is missing
+    $missingPhoto = empty($user->patient_photo_path);
+    
+    // 3. Check if Admin rejected the document
+    $hasRejection = !empty($user->residency_rejection_reason);
+
+    // 4. Check for missing general demographics
     $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'civil_status', 'address', 'phone'];
-    $isProfileIncomplete = false;
+    $missingDemographics = false;
     foreach($requiredFields as $field) {
         if(empty($user->$field)) {
-            $isProfileIncomplete = true;
+            $missingDemographics = true;
             break;
         }
     }
+    
+    $isProfileIncomplete = $missingPhoto || $missingDemographics;
 @endphp
 
 <div class="container py-4">
-    
-    @if($isProfileIncomplete)
-    <div class="alert alert-warning border-start border-warning border-4 shadow-sm mb-4" role="alert">
-        <div class="d-flex align-items-center">
-            <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
-            <div>
-                <h5 class="alert-heading fw-bold mb-1">Action Required: Complete Your Personal Records</h5>
-                <p class="mb-0 small">You must fill out your demographics and medical history before you can book an appointment.</p>
+
+    {{-- ALERT LOGIC: Only show ONE relevant warning at a time to prevent double messages --}}
+    @if($hasRejection && $missingPhoto)
+        <div class="alert alert-danger border-start border-danger border-4 shadow-lg mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-times-circle fa-3x me-3 text-danger"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1 text-danger">Residency Document Rejected</h5>
+                    <p class="mb-1 small">The admin could not verify your document. Reason:</p>
+                    <div class="bg-white p-2 rounded border border-danger border-opacity-25 text-dark fw-bold mb-2">
+                        "{{ $user->residency_rejection_reason }}"
+                    </div>
+                    <p class="mb-0 small">Please retake the photo or upload a clearer, readable image to proceed.</p>
+                </div>
+                <a href="{{ route('profile.edit') }}" class="btn btn-danger ms-auto fw-bold px-4 py-2 shadow-sm rounded-pill">Upload New Document</a>
             </div>
-            <a href="{{ route('profile.edit') }}" class="btn btn-warning btn-sm ms-auto fw-bold px-4">Complete Now</a>
         </div>
-    </div>
+    @elseif($missingPhoto)
+        <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-file-image fa-2x me-3 text-danger"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Proof of Residency Required</h5>
+                    <p class="mb-0 small">You must <strong>upload a valid Proof of Residency / Indigency</strong> before the admin can verify your account.</p>
+                </div>
+                <a href="{{ route('profile.edit') }}" class="btn btn-danger btn-sm ms-auto fw-bold px-4">Upload Now</a>
+            </div>
+        </div>
+    @elseif(!$isVerified)
+        <div class="alert alert-warning border-start border-warning border-4 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-clock fa-2x me-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Account Pending Verification</h5>
+                    <p class="mb-0 small">Your proof of residency is on file. You can view your records, but <strong>you cannot book an appointment until the admin approves your account.</strong></p>
+                </div>
+            </div>
+        </div>
+    @elseif($missingDemographics)
+        <div class="alert alert-warning border-start border-warning border-4 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Action Required: Complete Your Profile</h5>
+                    <p class="mb-0 small">Please fill out the rest of your personal records (Gender, Civil Status, etc.) to book an appointment.</p>
+                </div>
+                <a href="{{ route('profile.edit') }}" class="btn btn-warning btn-sm ms-auto fw-bold px-4">Complete Now</a>
+            </div>
+        </div>
     @endif
 
     <div class="row mb-5">
@@ -79,9 +128,18 @@
                             <h1 class="display-5 fw-bold mb-3">Hello, {{ Auth::user()->first_name ?? 'User' }}!</h1>
                             <p class="lead mb-4 opacity-90">Manage your health and check for available free medications in real-time.</p>
                             
-                            @if($isProfileIncomplete)
+                            {{-- Button Logic updated to match the single-warning rule --}}
+                            @if($missingPhoto)
                                 <a href="{{ route('profile.edit') }}" class="btn btn-light text-danger fw-bold px-4 py-2 rounded-pill shadow-sm">
-                                    <i class="fas fa-user-edit me-2"></i>Complete Personal Records to Book
+                                    <i class="fas fa-upload me-2"></i>Upload Residency Document
+                                </a>
+                            @elseif(!$isVerified)
+                                <button class="btn btn-secondary text-white fw-bold px-4 py-2 rounded-pill shadow-sm" disabled style="cursor: not-allowed;">
+                                    <i class="fas fa-lock me-2"></i>Pending Admin Approval
+                                </button>
+                            @elseif($missingDemographics)
+                                <a href="{{ route('profile.edit') }}" class="btn btn-light text-warning fw-bold px-4 py-2 rounded-pill shadow-sm">
+                                    <i class="fas fa-user-edit me-2"></i>Complete Profile to Book
                                 </a>
                             @else
                                 <a href="{{ route('appointments.create') }}" class="btn btn-light text-success fw-bold px-4 py-2 rounded-pill shadow-sm">
@@ -142,7 +200,7 @@
                         <i class="fas fa-user-circle fa-3x"></i>
                     </div>
                     <h4 class="fw-bold mb-3">Personal Records</h4>
-                    <p class="text-muted small mb-4">Update your profile, contact details, and basic demographics.</p>
+                    <p class="text-muted small mb-4">Update your profile, upload your ID, and basic demographics.</p>
                     <div class="mt-auto">
                         <a href="{{ route('profile.edit') }}" class="btn btn-outline-info w-100 rounded-pill fw-bold">
                             {{ $isProfileIncomplete ? 'Update Now (Required)' : 'Update Profile' }}

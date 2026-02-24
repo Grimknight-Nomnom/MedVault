@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
 use App\Models\User;
 
 class AuthController extends Controller
@@ -36,22 +33,11 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             
-            if (Auth::user()->role !== 'admin' && is_null(Auth::user()->email_verified_at)) {
-                $unverified_identifier = $input; // Save what they typed
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
-                // Pass the identifier back so the view knows who to resend the email to
-                return back()->with('unverified_identifier', $unverified_identifier)->withErrors([
-                    'unverified' => 'You must verify your email address before logging in.',
-                ]);
-            }
-
             $request->session()->regenerate();
 
+            // NEW: Added a flash session variable to trigger the modal strictly after login
             if (Auth::user()->role === 'admin') {
-                return redirect()->intended('/admin/dashboard');
+                return redirect()->intended('/admin/dashboard')->with('show_admin_alerts', true);
             }
             return redirect()->intended('/dashboard');
         }
@@ -69,43 +55,6 @@ class AuthController extends Controller
         return redirect('/login');
     }
 
-    // --- RESEND VERIFICATION LINK ---
-    public function resendVerification(Request $request)
-    {
-        $identifier = $request->input('login_identifier');
-        if (!$identifier) return back();
-
-        $fieldType = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'usernumber';
-        $user = User::where($fieldType, $identifier)->first();
-
-        if (!$user) return back()->withErrors(['unverified' => 'User not found.']);
-        if ($user->email_verified_at) return redirect()->route('login')->with('success', 'Your email is already verified. You can log in.');
-
-        // 30 SECOND BACKEND COOLDOWN CHECK
-        if (Cache::has('resend_verify_cooldown_' . $user->id)) {
-            return back()->with('unverified_identifier', $identifier)->withErrors(['unverified' => 'Please wait 30 seconds before resending the link.']);
-        }
-
-        $verifyUrl = route('verification.verify', [
-            'id' => $user->id, 
-            'hash' => sha1($user->email)
-        ]);
-
-        Mail::send('emails.verify_account', [
-            'url' => $verifyUrl,
-            'usernumber' => $user->usernumber,
-            'email' => $user->email,
-        ], function($message) use ($user) {
-            $message->to($user->email)->subject('Welcome to MedVault - Verify Your Account');
-        });
-
-        // Set cooldown in cache for 30 seconds
-        Cache::put('resend_verify_cooldown_' . $user->id, true, now()->addSeconds(30));
-
-        return back()->with('success', 'Verification link has been resent! Please check your email.')
-                     ->with('unverified_identifier', $identifier);
-    }
-
     // --- REGISTRATION LOGIC ---
 
     public function showRegister()
@@ -120,15 +69,13 @@ class AuthController extends Controller
             'middle_name'   => 'nullable|string|max:255',
             'last_name'     => 'required|string|max:255',
             'date_of_birth' => 'required|date',
-            'age'           => 'required|integer|min:1|max:120',
+            'age'           => 'required|string|max:100',
             'phone'         => ['required', 'string', 'unique:users,phone', 'regex:/^\+639\d{9}$/'],
             'address'       => 'nullable|string|max:500',
             'email'         => 'required|string|email|max:255|unique:users',
             'password'      => 'required|string|min:8|confirmed',
-            // Input name stays 'patient_photo' so database and backend logic don't break
             'patient_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', 
         ], [
-            // Custom error messages to reflect it's a document/certificate
             'patient_photo.image' => 'The uploaded file must be a valid image format.',
             'patient_photo.mimes' => 'The document must be a file of type: jpeg, png, jpg.',
             'patient_photo.max' => 'The document may not be greater than 5 Megabytes.',
@@ -152,7 +99,6 @@ class AuthController extends Controller
             ])->withInput();
         }
 
-        // Handle File Upload
         $photoPath = null;
         if ($request->hasFile('patient_photo')) {
             $photoPath = $request->file('patient_photo')->store('patient_photos', 'public');
@@ -174,38 +120,10 @@ class AuthController extends Controller
             'password'      => Hash::make($validated['password']),
             'usernumber'    => $randomNumber,
             'role'          => 'user',
-            'patient_photo_path' => $photoPath, // Saved in existing database column
+            'patient_photo_path' => $photoPath, 
         ]);
-
-        $verifyUrl = route('verification.verify', [
-            'id' => $user->id, 
-            'hash' => sha1($user->email)
-        ]);
-
-        Mail::send('emails.verify_account', [
-            'url' => $verifyUrl,
-            'usernumber' => $user->usernumber,
-            'email' => $user->email,
-        ], function($message) use ($user) {
-            $message->to($user->email)->subject('Welcome to MedVault - Verify Your Account');
-        });
 
         return redirect()->route('login')->with('success', 
-            "Registration successful! We have sent a verification link to your email. Your User Number is: {$randomNumber}. Please verify your email before logging in.");
-    }
-
-    public function verifyEmail(Request $request, $id, $hash)
-    {
-        $user = User::findOrFail($id);
-
-        if (! hash_equals((string) $hash, (string) sha1($user->email))) {
-            abort(403, 'Invalid or expired verification link.');
-        }
-
-        if (! $user->email_verified_at) {
-            $user->update(['email_verified_at' => now()]);
-        }
-
-        return redirect()->route('login')->with('success', 'Your email has been successfully verified! You can now log in.');
+            "Registration successful! Your User Number is: {$randomNumber}. You can now sign in, but please wait for admin approval before you can book an appointment.");
     }
 }

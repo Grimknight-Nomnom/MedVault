@@ -22,7 +22,7 @@ class AppointmentController extends Controller
     private function isProfileIncomplete()
     {
         $user = Auth::user();
-        $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'civil_status', 'address', 'phone'];
+        $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'civil_status', 'address', 'phone', 'patient_photo_path'];
         foreach ($requiredFields as $field) {
             if (empty($user->$field)) return true;
         }
@@ -67,8 +67,13 @@ class AppointmentController extends Controller
 
     public function create(Request $request)
     {
+        // Block unverified users from booking
+        if (is_null(Auth::user()->email_verified_at)) {
+            return redirect()->route('dashboard')->with('error', 'Your account is pending admin verification. You cannot book an appointment yet.');
+        }
+
         if ($this->isProfileIncomplete()) {
-            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete.');
+            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete. Please upload your Proof of Residency and fill all fields.');
         }
 
         $hasActiveAppointment = Appointment::where('user_id', Auth::id())
@@ -193,8 +198,13 @@ class AppointmentController extends Controller
 
     public function store(Request $request)
     {
+        // Block unverified users from booking
+        if (is_null(Auth::user()->email_verified_at)) {
+            return redirect()->route('dashboard')->with('error', 'Your account is pending admin verification. You cannot book an appointment yet.');
+        }
+
         if ($this->isProfileIncomplete()) {
-            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete.');
+            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete. Please upload your Proof of Residency and fill all fields.');
         }
 
         $maxDate = Carbon::today()->addDays(7)->format('Y-m-d');
@@ -257,10 +267,9 @@ class AppointmentController extends Controller
 
     public function adminIndex(Request $request)
     {
-        // Changed 'incomplete' to 'cancelled' to fix database ENUM error
         Appointment::whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '<', Carbon::today())
-            ->update(['status' => 'cancelled']); 
+            ->update(['status' => 'incomplete']);
 
         $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
         
@@ -325,7 +334,6 @@ class AppointmentController extends Controller
             $label = $request->custom_label;
         }
 
-        // Apply only to future dates for the next 1 year (52 weeks)
         $startDate = Carbon::tomorrow();
         $endDate = Carbon::tomorrow()->addYear();
 
@@ -333,12 +341,10 @@ class AppointmentController extends Controller
             if ($date->dayOfWeek === (int)$targetDay) {
                 $dateString = $date->format('Y-m-d');
                 
-                // Check if any active appointments exist on this specific date
                 $hasAppointments = Appointment::where('appointment_date', $dateString)
                     ->where('status', '!=', 'cancelled')
                     ->exists();
 
-                // SKIPS the date if it has patients. Otherwise, updates it!
                 if (!$hasAppointments) {
                     AppointmentSetting::updateOrCreate(
                         ['date' => $dateString],
@@ -351,7 +357,6 @@ class AppointmentController extends Controller
             }
         }
 
-        // FIXED: Cleaned up the success message to be short and simple!
         $currentMonth = now()->format('F');
         return back()->with('success', "Bulk Settings Applied Successfully in {$currentMonth}.");
     }

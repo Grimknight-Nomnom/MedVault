@@ -97,6 +97,9 @@ Route::middleware(['auth'])->group(function () {
     // --- Admin Routes Group ---
     Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
         
+
+        Route::post('/admin/patients/{id}/reject-residency', [App\Http\Controllers\AdminController::class, 'rejectResidency'])->name('admin.patients.reject_residency');
+        
         // Manage Staff Routes 
         Route::post('/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
         Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
@@ -122,6 +125,7 @@ Route::middleware(['auth'])->group(function () {
                 'update' => 'admin.announcements.update',
                 'destroy' => 'admin.announcements.delete',
             ]);
+
 
         // Appointments
         Route::controller(AppointmentController::class)->group(function () {

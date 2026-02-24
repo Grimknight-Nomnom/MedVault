@@ -51,9 +51,21 @@
                             <label class="text-muted d-block">Contact</label>
                             <span class="fw-bold">{{ $patient->phone ?? 'N/A' }}</span>
                         </div>
+
+                        {{-- NEW: Residency Document Section --}}
+                        <div class="col-12 mt-3 pt-3 border-top">
+                            <label class="text-muted d-block mb-2">Proof of Residency</label>
+                            @if($patient->patient_photo_path)
+                                <button type="button" onclick="openResidencyModal('{{ asset('storage/' . $patient->patient_photo_path) }}')" class="btn btn-sm btn-outline-info w-100 rounded-pill fw-bold">
+                                    <i class="fas fa-file-image me-1"></i> View Indigency Certificate
+                                </button>
+                            @else
+                                <span class="text-danger small fw-bold fst-italic">No Document Uploaded</span>
+                            @endif
+                        </div>
                     </div>
                     
-                    <div class="mt-4 d-flex gap-2">
+                    <div class="mt-4 d-flex gap-2 border-top pt-4">
                         <a href="{{ route('admin.patients.edit', $patient->id) }}" class="btn btn-outline-success w-50 rounded-pill fw-bold shadow-sm" style="font-size: 0.9rem;">
                             <i class="fas fa-user-edit me-1"></i> Edit Info
                         </a>
@@ -222,7 +234,7 @@
 </div>
 
 {{-- CHANGE PASSWORD MODAL --}}
-<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header bg-warning text-dark py-3 rounded-top-4">
@@ -263,4 +275,28 @@
         </div>
     </div>
 </div>
+
+{{-- NEW: RESIDENCY IMAGE MODAL --}}
+<div class="modal fade" id="residencyImageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-image me-2"></i>Proof of Residency</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center bg-light">
+                <img id="residencyViewerImage" src="" alt="Residency Document" class="img-fluid rounded shadow-sm border" style="max-height: 70vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to open the image modal in the profile view
+    function openResidencyModal(imageUrl) {
+        document.getElementById('residencyViewerImage').src = imageUrl;
+        var imageModal = new bootstrap.Modal(document.getElementById('residencyImageModal'));
+        imageModal.show();
+    }
+</script>
 @endsection

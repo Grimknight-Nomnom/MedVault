@@ -168,7 +168,6 @@
                             @forelse($expiringSoon ?? [] as $med)
                             <tr>
                                 <td class="ps-3 small fw-bold">{{ $med->name }}</td>
-                                {{-- UPDATED: Format shows Month and Year only (e.g. January 2026) --}}
                                 <td class="small">{{ \Carbon\Carbon::parse($med->expiry_date)->format('F Y') }}</td>
                                 <td class="text-center"><span class="badge {{ $med->expiry_date < now() ? 'bg-danger' : 'bg-warning text-dark' }}">{{ $med->expiry_date < now() ? 'EXPIRED' : 'EXPIRING' }}</span></td>
                             </tr>
@@ -182,6 +181,106 @@
         </div>
     </div>
 </div>
+
+{{-- ADMIN ALERTS MODAL (Shows only after login) --}}
+@if(session('show_admin_alerts'))
+<div class="modal fade" id="adminAlertsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-bell me-2"></i>Action Required</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                {{-- Unverified Accounts --}}
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark border-bottom pb-2">
+                        <i class="fas fa-user-check text-warning me-2"></i>Accounts Pending Verification ({{ $unverifiedPatients->count() }})
+                    </h6>
+                    @if($unverifiedPatients->count() > 0)
+                        <ul class="list-group list-group-flush mb-2">
+                            @foreach($unverifiedPatients->take(5) as $patient)
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                    <div>
+                                        <strong>{{ $patient->first_name }} {{ $patient->last_name }}</strong>
+                                        <span class="text-muted ms-2 small">ID: #{{ $patient->usernumber }}</span>
+                                    </div>
+                                    <a href="{{ route('admin.patients.index') }}?search={{ $patient->usernumber }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Review</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if($unverifiedPatients->count() > 5)
+                            <div class="text-end"><a href="{{ route('admin.patients.index') }}" class="small fw-bold text-decoration-none">View all pending accounts &rarr;</a></div>
+                        @endif
+                    @else
+                        <p class="text-muted small mb-0">All accounts are verified.</p>
+                    @endif
+                </div>
+
+                {{-- Out of Stock --}}
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark border-bottom pb-2">
+                        <i class="fas fa-box-open text-danger me-2"></i>Out of Stock Medicines ({{ $outOfStockMeds->count() }})
+                    </h6>
+                    @if($outOfStockMeds->count() > 0)
+                        <ul class="list-group list-group-flush mb-2">
+                            @foreach($outOfStockMeds->take(5) as $med)
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                    {{ $med->name }}
+                                    <span class="badge bg-danger rounded-pill">0 in stock</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if($outOfStockMeds->count() > 5)
+                            <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
+                        @endif
+                    @else
+                        <p class="text-muted small mb-0">No out-of-stock medicines.</p>
+                    @endif
+                </div>
+
+                {{-- Expired Meds --}}
+                <div class="mb-2">
+                    <h6 class="fw-bold text-dark border-bottom pb-2">
+                        <i class="fas fa-calendar-times text-danger me-2"></i>Expired Medicines ({{ $expiredMedsAlert->count() }})
+                    </h6>
+                    @if($expiredMedsAlert->count() > 0)
+                        <ul class="list-group list-group-flush mb-2">
+                            @foreach($expiredMedsAlert->take(5) as $med)
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                    {{ $med->name }}
+                                    <span class="badge bg-danger rounded-pill">Expired on {{ \Carbon\Carbon::parse($med->expiry_date)->format('M d, Y') }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if($expiredMedsAlert->count() > 5)
+                            <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
+                        @endif
+                    @else
+                        <p class="text-muted small mb-0">No expired medicines.</p>
+                    @endif
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        @if($unverifiedPatients->count() > 0 || $outOfStockMeds->count() > 0 || $expiredMedsAlert->count() > 0)
+            var myModal = new bootstrap.Modal(document.getElementById('adminAlertsModal'), {
+                keyboard: false
+            });
+            myModal.show();
+        @endif
+    });
+</script>
+@endif
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

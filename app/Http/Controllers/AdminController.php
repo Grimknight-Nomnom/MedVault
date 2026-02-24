@@ -18,8 +18,6 @@ class AdminController extends Controller
     {
         $this->captureExpiredMedicines();
 
-        // --- NEW: Global Auto-Cleanup for Past Appointments ---
-        // Automatically marks missed appointments as incomplete across the entire database
         Appointment::whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '<', Carbon::today())
             ->update(['status' => 'incomplete']);
@@ -35,6 +33,11 @@ class AdminController extends Controller
             ->whereYear('performed_at', now()->year)
             ->whereIn('action_type', ['Released', 'Expired'])
             ->get();
+
+        // --- NEW QUERIES FOR ALERT MODAL ON LOGIN ---
+        $unverifiedPatients = User::where('role', 'user')->whereNull('email_verified_at')->get();
+        $outOfStockMeds = Medicine::where('stock_quantity', '<=', 0)->get();
+        $expiredMedsAlert = Medicine::whereDate('expiry_date', '<', Carbon::today())->get();
 
         $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
         $startOfMonth = $date->copy()->startOfMonth();
@@ -82,7 +85,8 @@ class AdminController extends Controller
         return view('admin.dashboard', compact(
             'todayAppointmentsCount', 'totalMedicines', 'totalAppointments', 'totalPatients',
             'lowStock', 'expiringSoon', 'monthlyDetails',
-            'calendar', 'date', 'appointments', 'appointmentsByDate', 'settings'
+            'calendar', 'date', 'appointments', 'appointmentsByDate', 'settings',
+            'unverifiedPatients', 'outOfStockMeds', 'expiredMedsAlert' // Passed to view
         ));
     }
 
@@ -156,6 +160,23 @@ class AdminController extends Controller
         }
 
         return redirect()->back()->with('info', 'Patient is already verified.');
+    }
+
+    public function rejectResidency(Request $request, $id)
+    {
+        $request->validate(['reason' => 'required|string|max:500']);
+        $user = User::findOrFail($id);
+
+        if ($user->patient_photo_path) {
+            Storage::disk('public')->delete($user->patient_photo_path);
+        }
+
+        $user->update([
+            'patient_photo_path' => null,
+            'residency_rejection_reason' => $request->reason,
+        ]);
+
+        return back()->with('success', 'Document rejected. The patient has been notified to re-upload.');
     }
 
     public function deletePatientId($id, $type)

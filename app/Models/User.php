@@ -17,12 +17,13 @@ class User extends Authenticatable
         'age',
         'usernumber',
         'email',
-        'email_verified_at',
+        'email_verified_at', 
         'password',
         'role',
         'phone',
         'address',
-        'patient_photo_path', // <--- ADDED THIS LINE
+        'patient_photo_path',
+        'residency_rejection_reason',
         // New Profile Fields
         'date_of_birth',
         'gender',

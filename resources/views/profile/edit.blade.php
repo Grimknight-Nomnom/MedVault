@@ -16,6 +16,8 @@
         </a>
     </div>
 
+    {{-- DELETED THE DUPLICATE SUCCESS MESSAGE BLOCK HERE --}}
+
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card shadow-sm border-0 rounded-4">
@@ -94,6 +96,40 @@
                                     <label class="form-label fw-bold">Home Address <span class="text-danger">*</span></label>
                                     <input type="text" name="address" class="form-control" value="{{ old('address', $user->address) }}" required placeholder="House No., Street, Barangay, City">
                                 </div>
+
+                                {{-- PROOF OF RESIDENCY --}}
+                                <div class="col-md-12 mt-4">
+                                    <label class="form-label fw-bold">Proof of Residency / Indigency <span class="text-danger">*</span></label>
+                                    <div class="p-4 bg-light rounded border shadow-sm">
+                                        @if($user->patient_photo_path)
+                                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <i class="fas fa-file-image fa-3x text-info"></i>
+                                                    <div>
+                                                        <div class="fw-bold text-success mb-1">Document Uploaded Successfully</div>
+                                                        <small class="text-muted">Your proof of residency is currently on file.</small>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" onclick="openImageModal('{{ asset('storage/' . $user->patient_photo_path) }}', 'Proof of Residency / Indigency')" class="btn btn-outline-primary fw-bold px-4 rounded-pill">
+                                                        <i class="fas fa-eye me-1"></i> View
+                                                    </button>
+                                                    <button type="submit" form="delete-residency-form" class="btn btn-outline-danger fw-bold px-4 rounded-pill" onclick="return confirm('Are you sure you want to delete this document? You will be required to upload a new one to verify your address.');">
+                                                        <i class="fas fa-trash me-1"></i> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <input type="file" name="patient_photo" class="d-none">
+                                        @else
+                                            <div class="alert alert-warning border-warning border-opacity-50 small mb-3">
+                                                <i class="fas fa-exclamation-triangle me-1"></i> You must upload a valid Proof of Residency or Barangay Indigency to maintain clinic access.
+                                            </div>
+                                            <input type="file" name="patient_photo" class="form-control p-2" accept="image/jpeg, image/png, image/jpg" required>
+                                            <div class="form-text small mt-2 text-muted">Please upload a clear copy of your document. (PNG/JPG, Max 5MB).</div>
+                                        @endif
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
@@ -143,9 +179,9 @@
                                                     <i class="fas fa-id-card fa-2x text-success mb-2"></i>
                                                     <div class="text-success small fw-bold mb-3">ID Successfully Uploaded</div>
                                                     <div class="d-flex justify-content-center gap-2">
-                                                        <a href="{{ asset('storage/' . $user->philhealth_id_path) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold px-3">
+                                                        <button type="button" onclick="openImageModal('{{ asset('storage/' . $user->philhealth_id_path) }}', 'PhilHealth ID')" class="btn btn-sm btn-outline-primary fw-bold px-3">
                                                             <i class="fas fa-eye me-1"></i> View Image
-                                                        </a>
+                                                        </button>
                                                         <button type="submit" form="delete-philhealth-form" class="btn btn-sm btn-outline-danger fw-bold px-3" onclick="return confirm('Delete this ID? You will need to upload a new one to stay verified.');">
                                                             <i class="fas fa-trash me-1"></i> Delete
                                                         </button>
@@ -178,9 +214,9 @@
                                                     <i class="fas fa-id-card fa-2x text-success mb-2"></i>
                                                     <div class="text-success small fw-bold mb-3">ID Successfully Uploaded</div>
                                                     <div class="d-flex justify-content-center gap-2">
-                                                        <a href="{{ asset('storage/' . $user->senior_pwd_id_path) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold px-3">
+                                                        <button type="button" onclick="openImageModal('{{ asset('storage/' . $user->senior_pwd_id_path) }}', 'Senior / PWD ID')" class="btn btn-sm btn-outline-primary fw-bold px-3">
                                                             <i class="fas fa-eye me-1"></i> View Image
-                                                        </a>
+                                                        </button>
                                                         <button type="submit" form="delete-senior-form" class="btn btn-sm btn-outline-danger fw-bold px-3" onclick="return confirm('Delete this ID? You will need to upload a new one to stay verified.');">
                                                             <i class="fas fa-trash me-1"></i> Delete
                                                         </button>
@@ -208,11 +244,16 @@
                         </div>
                     </form>
 
+                    {{-- Hidden Forms for Deleting IDs --}}
                     <form id="delete-philhealth-form" action="{{ route('profile.delete_id', 'philhealth') }}" method="POST" class="d-none">
                         @csrf
                         @method('DELETE')
                     </form>
                     <form id="delete-senior-form" action="{{ route('profile.delete_id', 'senior_pwd') }}" method="POST" class="d-none">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                    <form id="delete-residency-form" action="{{ route('profile.delete_id', 'residency') }}" method="POST" class="d-none">
                         @csrf
                         @method('DELETE')
                     </form>
@@ -223,8 +264,32 @@
     </div>
 </div>
 
+{{-- IMAGE VIEWER MODAL --}}
+<div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-image me-2"></i><span id="imageModalTitle">Document Viewer</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center bg-light">
+                <img id="viewerImage" src="" alt="Document" class="img-fluid rounded shadow-sm border" style="max-height: 70vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+    // --- Image Viewer Modal Logic ---
+    function openImageModal(imageUrl, title) {
+        document.getElementById('viewerImage').src = imageUrl;
+        document.getElementById('imageModalTitle').innerText = title;
+        var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
+        imageModal.show();
+    }
+
+    // --- Program Checkbox Logic ---
     document.querySelectorAll('.program-toggle').forEach(toggle => {
         toggle.addEventListener('change', function() {
             const targetBox = document.getElementById(this.getAttribute('data-target'));
@@ -241,6 +306,7 @@
         });
     });
 
+    // --- Date Picker & Age Logic ---
     flatpickr("#date_of_birth", {
         dateFormat: "Y-m-d",
         maxDate: "today",
