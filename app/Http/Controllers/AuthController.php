@@ -69,7 +69,7 @@ class AuthController extends Controller
         return redirect('/login');
     }
 
-    // --- NEW: RESEND VERIFICATION LINK ---
+    // --- RESEND VERIFICATION LINK ---
     public function resendVerification(Request $request)
     {
         $identifier = $request->input('login_identifier');
@@ -125,6 +125,13 @@ class AuthController extends Controller
             'address'       => 'nullable|string|max:500',
             'email'         => 'required|string|email|max:255|unique:users',
             'password'      => 'required|string|min:8|confirmed',
+            // Input name stays 'patient_photo' so database and backend logic don't break
+            'patient_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', 
+        ], [
+            // Custom error messages to reflect it's a document/certificate
+            'patient_photo.image' => 'The uploaded file must be a valid image format.',
+            'patient_photo.mimes' => 'The document must be a file of type: jpeg, png, jpg.',
+            'patient_photo.max' => 'The document may not be greater than 5 Megabytes.',
         ]);
 
         $duplicateUser = User::where('first_name', $validated['first_name'])
@@ -145,6 +152,12 @@ class AuthController extends Controller
             ])->withInput();
         }
 
+        // Handle File Upload
+        $photoPath = null;
+        if ($request->hasFile('patient_photo')) {
+            $photoPath = $request->file('patient_photo')->store('patient_photos', 'public');
+        }
+
         do {
             $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
         } while (User::where('usernumber', $randomNumber)->exists());
@@ -161,6 +174,7 @@ class AuthController extends Controller
             'password'      => Hash::make($validated['password']),
             'usernumber'    => $randomNumber,
             'role'          => 'user',
+            'patient_photo_path' => $photoPath, // Saved in existing database column
         ]);
 
         $verifyUrl = route('verification.verify', [

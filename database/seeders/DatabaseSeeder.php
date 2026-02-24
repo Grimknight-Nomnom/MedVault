@@ -16,11 +16,12 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Admin',
             'middle_name' => null,
             'age' => 30,
-            'usernumber' => '001', // Unique 3-digit code
+            'date_of_birth' => '1990-01-01', // ADDED THIS
+            'usernumber' => '001', 
             'email' => 'admin@clinic.com',
             'password' => Hash::make('password123'),
             'role' => 'admin',
-            'phone' => '09123456789',
+            'phone' => '+639123456789', // Updated to match +639 format
             'address' => 'Clinic Head Office',
         ]);
 
@@ -30,11 +31,12 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Doe',
             'middle_name' => 'A.',
             'age' => 25,
-            'usernumber' => '101', // Unique 3-digit code
+            'date_of_birth' => '1998-05-15', // ADDED THIS
+            'usernumber' => '101', 
             'email' => 'patient@gmail.com',
             'password' => Hash::make('password123'),
             'role' => 'user',
-            'phone' => '09987654321',
+            'phone' => '+639987654321', // Updated to match +639 format
             'address' => '123 Sampaguita St, Manila',
         ]);
     }

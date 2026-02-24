@@ -257,9 +257,10 @@ class AppointmentController extends Controller
 
     public function adminIndex(Request $request)
     {
+        // Changed 'incomplete' to 'cancelled' to fix database ENUM error
         Appointment::whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '<', Carbon::today())
-            ->update(['status' => 'incomplete']);
+            ->update(['status' => 'cancelled']); 
 
         $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::now();
         

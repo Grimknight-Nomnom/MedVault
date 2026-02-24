@@ -17,11 +17,12 @@ class User extends Authenticatable
         'age',
         'usernumber',
         'email',
-        'email_verified_at', // <--- ADD THIS LINE HERE
+        'email_verified_at',
         'password',
         'role',
         'phone',
         'address',
+        'patient_photo_path', // <--- ADDED THIS LINE
         // New Profile Fields
         'date_of_birth',
         'gender',
