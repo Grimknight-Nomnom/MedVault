@@ -3,8 +3,8 @@
 @section('content')
 <div class="container py-4">
     <div class="mb-4">
-        <h2 class="fw-bold text-dark"><i class="fas fa-folder-open me-2 text-primary"></i>My Medical History</h2>
-        <p class="text-muted">A complete timeline of your diagnoses and dispensed medicines.</p>
+        <h2 class="fw-bold text-dark"><i class="fas fa-folder-open me-2 text-primary"></i>Family Medical History</h2>
+        <p class="text-muted">A complete timeline of diagnoses and dispensed medicines for you and your dependents.</p>
     </div>
 
     @if($records->isEmpty())
@@ -23,6 +23,13 @@
         <div class="row mt-3">
             @foreach($records as $record)
             
+            {{-- IDENTIFY WHO THIS RECORD BELONGS TO --}}
+            @php
+                $isMe = $record->user_id === Auth::id();
+                $patientName = $isMe ? 'Me (' . Auth::user()->first_name . ')' : ($record->user ? $record->user->first_name : 'Dependent');
+                $patientBadgeClass = $isMe ? 'bg-success' : 'bg-info text-dark';
+            @endphp
+            
             {{-- CHECK IF THIS RECORD IS A MEDICINE RELEASE (NEW FORMAT) --}}
             @if($record->diagnosis === 'MEDICINE_DISPENSED')
                 
@@ -37,8 +44,11 @@
                 {{-- BLUE CARD: Dispensed Medicine --}}
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm h-100 border-primary border-opacity-50">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-                            <span class="fw-bold"><i class="fas fa-calendar-day me-2"></i>{{ $record->created_at->format('F d, Y') }}</span>
+                        <div class="card-header bg-primary text-white d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center py-3 gap-2">
+                            <div>
+                                <span class="fw-bold"><i class="fas fa-calendar-day me-2"></i>{{ $record->created_at->format('F d, Y') }}</span>
+                                <span class="badge {{ $patientBadgeClass }} ms-sm-2 shadow-sm border border-white mt-2 mt-sm-0"><i class="fas fa-user me-1"></i> {{ $patientName }}</span>
+                            </div>
                             <span class="badge bg-light text-primary rounded-pill">Medicine Released</span>
                         </div>
                         <div class="card-body bg-primary bg-opacity-10">
@@ -69,8 +79,11 @@
 
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm h-100 border-primary border-opacity-50">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-                            <span class="fw-bold"><i class="fas fa-calendar-day me-2"></i>{{ $record->created_at->format('F d, Y') }}</span>
+                        <div class="card-header bg-primary text-white d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center py-3 gap-2">
+                            <div>
+                                <span class="fw-bold"><i class="fas fa-calendar-day me-2"></i>{{ $record->created_at->format('F d, Y') }}</span>
+                                <span class="badge {{ $patientBadgeClass }} ms-sm-2 shadow-sm border border-white mt-2 mt-sm-0"><i class="fas fa-user me-1"></i> {{ $patientName }}</span>
+                            </div>
                             <span class="badge bg-light text-primary rounded-pill">Medicine Released</span>
                         </div>
                         <div class="card-body bg-primary bg-opacity-10">
@@ -130,8 +143,11 @@
 
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm h-100 border-dark">
-                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
-                            <span class="fw-bold"><i class="fas fa-calendar-day me-2"></i>{{ $record->created_at->format('F d, Y') }}</span>
+                        <div class="card-header bg-dark text-white d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center py-3 gap-2">
+                            <div>
+                                <span class="fw-bold"><i class="fas fa-calendar-day me-2"></i>{{ $record->created_at->format('F d, Y') }}</span>
+                                <span class="badge {{ $patientBadgeClass }} ms-sm-2 shadow-sm border border-white mt-2 mt-sm-0"><i class="fas fa-user me-1"></i> {{ $patientName }}</span>
+                            </div>
                             <span class="badge bg-secondary rounded-pill">Diagnosis #{{ $diagnosisCounter-- }}</span>
                         </div>
                         <div class="card-body">

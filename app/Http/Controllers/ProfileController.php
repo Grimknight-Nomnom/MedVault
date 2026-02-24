@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 use App\Models\User;
 
 class ProfileController extends Controller
@@ -34,7 +37,6 @@ class ProfileController extends Controller
             'current_medication' => 'nullable|string',
             'existing_medical_conditions' => 'nullable|string',
             
-            // Image Validation
             'philhealth_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'senior_pwd_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'patient_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
@@ -59,7 +61,6 @@ class ProfileController extends Controller
             $user->senior_pwd_id_path = $path;
         }
 
-        // Handle Proof of Residency Upload
         if ($request->hasFile('patient_photo')) {
             if ($user->patient_photo_path) {
                 Storage::disk('public')->delete($user->patient_photo_path);
@@ -67,7 +68,6 @@ class ProfileController extends Controller
             $path = $request->file('patient_photo')->store('patient_photos', 'public');
             $user->patient_photo_path = $path;
             
-            // --- CLEAR THE REJECTION WARNING ---
             $user->residency_rejection_reason = null;
         }
 
@@ -103,5 +103,108 @@ class ProfileController extends Controller
         }
 
         return back();
+    }
+
+    public function storeDependent(Request $request)
+    {
+        $parent = Auth::user();
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'date_of_birth' => 'required|date|before_or_equal:today',
+            'gender' => 'required|string|in:Male,Female,Other',
+        ]);
+
+        // SMART AGE CALCULATION
+        $dob = Carbon::parse($validated['date_of_birth']);
+        $diff = $dob->diff(Carbon::now());
+        
+        if ($diff->y > 0) {
+            $ageString = $diff->y . ($diff->y == 1 ? " year" : " years");
+        } elseif ($diff->m > 0) {
+            $ageString = $diff->m . ($diff->m == 1 ? " month" : " months");
+        } elseif ($diff->d > 0) {
+            $ageString = $diff->d . ($diff->d == 1 ? " day" : " days");
+        } else {
+            $ageString = "Newborn";
+        }
+
+        do {
+            $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
+        } while (User::where('usernumber', $randomNumber)->exists());
+
+        User::create([
+            'parent_id' => $parent->id,
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name' => $validated['last_name'],
+            'date_of_birth' => $validated['date_of_birth'],
+            'gender' => $validated['gender'],
+            'age' => $ageString,
+            'civil_status' => 'Single',
+            'email' => 'child_' . uniqid() . '@dependent.local', 
+            'password' => Hash::make(Str::random(16)),
+            'phone' => $parent->phone, 
+            'address' => $parent->address, 
+            'role' => 'user',
+            'usernumber' => $randomNumber,
+            'email_verified_at' => $parent->email_verified_at, 
+            'patient_photo_path' => $parent->patient_photo_path, 
+        ]);
+
+        return back()->with('success', 'Child account added successfully. You can now book appointments for them.');
+    }
+
+    public function updateDependent(Request $request, $id)
+    {
+        $child = Auth::user()->children()->findOrFail($id);
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'date_of_birth' => 'required|date|before_or_equal:today',
+            'gender' => 'required|string|in:Male,Female,Other',
+            'allergies' => 'nullable|string',
+            'current_medication' => 'nullable|string',
+            'existing_medical_conditions' => 'nullable|string',
+        ]);
+
+        // SMART AGE CALCULATION
+        $dob = Carbon::parse($validated['date_of_birth']);
+        $diff = $dob->diff(Carbon::now());
+        
+        if ($diff->y > 0) {
+            $ageString = $diff->y . ($diff->y == 1 ? " year" : " years");
+        } elseif ($diff->m > 0) {
+            $ageString = $diff->m . ($diff->m == 1 ? " month" : " months");
+        } elseif ($diff->d > 0) {
+            $ageString = $diff->d . ($diff->d == 1 ? " day" : " days");
+        } else {
+            $ageString = "Newborn";
+        }
+
+        $child->update([
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name' => $validated['last_name'],
+            'date_of_birth' => $validated['date_of_birth'],
+            'gender' => $validated['gender'],
+            'age' => $ageString,
+            'allergies' => $validated['allergies'],
+            'current_medication' => $validated['current_medication'],
+            'existing_medical_conditions' => $validated['existing_medical_conditions'],
+        ]);
+
+        return back()->with('success', "Dependent profile for {$child->first_name} updated successfully.");
+    }
+
+    public function destroyDependent($id)
+    {
+        $child = Auth::user()->children()->findOrFail($id);
+        $child->delete();
+        return back()->with('success', 'Dependent profile removed successfully.');
     }
 }

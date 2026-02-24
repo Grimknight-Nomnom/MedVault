@@ -48,7 +48,6 @@
         </a>
     </div>
 
-    {{-- Error Validation Alert (Catches the 7-day limit backend error) --}}
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm border-0 mb-4">
             <ul class="mb-0 mb-0">
@@ -65,7 +64,6 @@
                 
                 {{-- Navigation Controls --}}
                 <div class="d-flex align-items-center mb-2 mb-md-0 gap-3">
-                    {{-- Previous Month Button (Disabled if it's the current month) --}}
                     @if($date->copy()->startOfMonth()->isSameMonth(now()->startOfMonth()))
                         <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled>
                             <i class="fas fa-chevron-left"></i>
@@ -76,13 +74,11 @@
                         </a>
                     @endif
 
-                    {{-- Dynamic Title --}}
                     <h2 class="fw-bold text-success mb-0 text-center" style="min-width: 180px;">
                         <span class="d-none d-md-inline">{{ $date->format('F Y') }}</span>
                         <span class="d-md-none">{{ $date->format('F Y') }}</span>
                     </h2>
 
-                    {{-- Next Month Button (ALWAYS ENABLED so patients can check future schedules) --}}
                     <a href="{{ route('appointments.create', ['month' => $date->copy()->addMonth()->month, 'year' => $date->copy()->addMonth()->year]) }}" class="btn btn-sm btn-outline-success rounded-circle shadow-sm">
                         <i class="fas fa-chevron-right"></i>
                     </a>
@@ -123,7 +119,6 @@
                             $bgClass = 'bg-normal';
                             $labelText = 'Check-up'; 
 
-                            // Check if this date is TODAY
                             $isToday = $day['date'] === now()->format('Y-m-d');
 
                             if (!empty($day['label'])) {
@@ -144,34 +139,27 @@
                             }
                         @endphp
 
-                        {{-- Changed is_past to is_disabled --}}
                         <div onclick="openModal('{{ $day['date'] }}', {{ $day['is_disabled'] ? 'true' : 'false' }}, {{ $day['is_full'] ? 'true' : 'false' }})"
                              class="day-cell {{ $day['is_disabled'] ? 'disabled' : $bgClass }} {{ $isToday ? 'is-today' : '' }}"
                              data-date="{{ $day['date'] }}">
                             
-                            {{-- Content Container --}}
                             <div class="d-flex justify-content-between align-items-start w-100">
                                 
-                                {{-- Date & Day Name Container --}}
                                 <div class="d-flex flex-column align-items-start">
                                     <span class="fw-bold fs-5">
                                         {{ $day['day'] }}
                                         @if($isToday) <span class="badge bg-danger ms-2 d-md-none">TODAY</span> @endif
                                     </span>
                                     
-                                    {{-- Day Name (Visible on Mobile for ALL days) --}}
                                     <span class="small text-muted d-md-none text-uppercase fw-bold" style="font-size: 0.75rem;">
                                         {{ \Carbon\Carbon::parse($day['date'])->format('l') }}
                                     </span>
                                 </div>
                                 
-                                {{-- Label (Visible on Mobile for ALL days) --}}
                                 <span class="day-label opacity-75" title="{{ $labelText }}">{{ $labelText }}</span>
                             </div>
                             
-                            {{-- Slots (Visible on Mobile for ALL days) --}}
                             <div class="mt-auto text-end w-100">
-                                {{-- Changed is_past to is_disabled --}}
                                 @if(!$day['is_disabled'])
                                     @if($day['is_full'])
                                         <span class="badge bg-danger">FULL</span>
@@ -194,7 +182,7 @@
     </div>
 </div>
 
-{{-- Modal Code (Unchanged) --}}
+{{-- Modal Code --}}
 <div class="modal fade" id="bookingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -208,14 +196,29 @@
                 <h6 class="text-uppercase text-muted fw-bold small">Current Queue</h6>
                 <div class="list-group mb-3 overflow-auto border rounded bg-light" style="max-height: 200px;" id="queueList"></div>
                 <div id="emptyQueueMsg" class="text-center text-muted small py-3 d-none">No bookings yet. Be the first!</div>
+                
                 @if(isset($hasActiveAppointment) && $hasActiveAppointment)
                     <div class="alert alert-secondary text-center border-0 bg-light">
-                        <i class="fas fa-lock me-2"></i> You have an active appointment.<br><small class="text-muted">You cannot book another until it is completed.</small>
+                        <i class="fas fa-lock me-2"></i> Maximum appointments reached.<br><small class="text-muted">You and your dependents already have active appointments scheduled.</small>
                     </div>
                 @else
                     <form id="bookingForm" action="{{ route('appointments.store') }}" method="POST" class="d-none mt-3 border-top pt-3">
                         @csrf
                         <input type="hidden" name="appointment_date" id="inputDate">
+                        
+                        {{-- --- NEW: Dependent / Target Patient Dropdown --- --}}
+                        @if(Auth::user()->children && Auth::user()->children->count() > 0)
+                            <div class="mb-3 p-3 bg-success bg-opacity-10 border border-success rounded-3 shadow-sm">
+                                <label class="form-label fw-bold text-success mb-2"><i class="fas fa-users me-2"></i>Who is this appointment for?</label>
+                                <select name="dependent_id" class="form-select border-success shadow-none cursor-pointer">
+                                    <option value="">Myself ({{ Auth::user()->first_name }} {{ Auth::user()->last_name }})</option>
+                                    @foreach(Auth::user()->children as $child)
+                                        <option value="{{ $child->id }}">{{ $child->first_name }} {{ $child->last_name }} (Child)</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
                         <div class="mb-3">
                             <label class="form-label fw-bold text-dark">Reason for Visit</label>
                             <textarea name="reason" class="form-control bg-light" rows="2" required placeholder="Briefly describe your purpose..."></textarea>
@@ -236,7 +239,7 @@
         bootstrapModal = new bootstrap.Modal(document.getElementById('bookingModal'));
     });
     function openModal(date, isDisabled, isFull) {
-        if (isDisabled) return; // Prevent opening modal if disabled
+        if (isDisabled) return; 
         
         const title = document.getElementById('modalTitle');
         const list = document.getElementById('queueList');
@@ -269,11 +272,8 @@
                         list.innerHTML += item;
                     });
                 }
-                if (data.is_restricted) {
-                    statusDiv.innerHTML = `<div class="alert alert-danger text-center small fw-bold border-danger border-2 bg-danger-subtle"><i class="fas fa-ban me-1"></i> ${data.restriction_message}</div>`;
-                } else if (data.user_has_booking) {
-                    statusDiv.innerHTML = `<div class="alert alert-warning text-center small fw-bold">You already have a booking on this day.</div>`;
-                } else if (data.is_full) {
+
+                if (data.is_full) {
                     statusDiv.innerHTML = `<div class="alert alert-danger text-center small fw-bold">Fully Booked.</div>`;
                 } else {
                     const slotsLeft = data.max_limit - data.slots_taken;

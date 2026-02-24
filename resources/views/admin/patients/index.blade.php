@@ -66,7 +66,7 @@
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
                                     
-                                    {{-- VERIFY / UNVERIFY BUTTONS --}}
+                                    {{-- MANUAL VERIFY BUTTON --}}
                                     @if(is_null($patient->email_verified_at))
                                         <form action="{{ route('admin.patients.verify', $patient->id) }}" method="POST" class="d-inline">
                                             @csrf
@@ -74,13 +74,6 @@
                                                 <i class="fas fa-check-circle"></i> Verify
                                             </button>
                                         </form>
-                                    @else
-                                        {{-- THE UNVERIFY BUTTON --}}
-                                        <button type="button" 
-                                            onclick="openUnverifyModal('{{ route('admin.patients.unverify', $patient->id) }}')"
-                                            class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark" title="Unverify Account">
-                                            <i class="fas fa-times-circle"></i> Unverify
-                                        </button>
                                     @endif
 
                                     {{-- View Residency Document Button --}}
@@ -120,29 +113,6 @@
                     {{ $patients->links() }}
                 </div>
             @endif
-        </div>
-    </div>
-</div>
-
-{{-- UNVERIFY CONFIRMATION MODAL --}}
-<div class="modal fade" id="unverifyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Unverify</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4 text-center">
-                <p class="fs-5 mb-2">Are you sure you want to <strong>unverify</strong> this account?</p>
-                <p class="text-danger fw-bold mb-0">If this account has an active appointment, the appointment will be automatically cancelled.</p>
-            </div>
-            <div class="modal-footer bg-light justify-content-center">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                <form id="unverifyForm" method="POST" action="">
-                    @csrf
-                    <button type="submit" class="btn btn-warning px-4 fw-bold">Yes, Unverify</button>
-                </form>
-            </div>
         </div>
     </div>
 </div>
@@ -203,13 +173,6 @@
 </div>
 
 <script>
-    // --- Unverify Modal logic ---
-    function openUnverifyModal(actionUrl) {
-        document.getElementById('unverifyForm').action = actionUrl;
-        var unverifyModal = new bootstrap.Modal(document.getElementById('unverifyModal'));
-        unverifyModal.show();
-    }
-
     // Delete Modal logic
     function openBootstrapDeleteModal(actionUrl, message) {
         document.getElementById('bootstrapDeleteForm').action = actionUrl;

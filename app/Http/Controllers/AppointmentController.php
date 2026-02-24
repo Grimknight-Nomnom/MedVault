@@ -67,7 +67,6 @@ class AppointmentController extends Controller
 
     public function create(Request $request)
     {
-        // Block unverified users from booking
         if (is_null(Auth::user()->email_verified_at)) {
             return redirect()->route('dashboard')->with('error', 'Your account is pending admin verification. You cannot book an appointment yet.');
         }
@@ -76,10 +75,13 @@ class AppointmentController extends Controller
             return redirect()->route('profile.edit')->with('error', 'Profile Incomplete. Please upload your Proof of Residency and fill all fields.');
         }
 
-        $hasActiveAppointment = Appointment::where('user_id', Auth::id())
+        // Check if entire family is fully booked (allow UI to show if at least 1 person is free)
+        $userIds = collect([Auth::id()])->merge(Auth::user()->children->pluck('id'));
+        $activeAppointmentsCount = Appointment::whereIn('user_id', $userIds)
             ->whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '>=', now()->startOfDay())
-            ->exists();
+            ->count();
+        $hasActiveAppointment = $activeAppointmentsCount >= $userIds->count();
 
         $year = $request->query('year', now()->year);
         $month = $request->query('month', now()->month);
@@ -159,6 +161,7 @@ class AppointmentController extends Controller
         if (!$date) return response()->json(['error' => 'Date required'], 400);
 
         $user = Auth::user();
+        $familyIds = collect([$user->id])->merge($user->children->pluck('id'));
         
         $appointments = Appointment::with('user')
             ->where('appointment_date', $date)
@@ -168,17 +171,19 @@ class AppointmentController extends Controller
             
         $maxLimit = $this->getMaxSlots($date);
 
+        // Note: Client-side validation handles pregnancy logic dynamically upon submitting. 
+        // For general display, default to checking the parent account.
         $isRestricted = $this->isPregnancyRestricted($date, $user);
         $restrictionMessage = $isRestricted ? "This date is reserved for Pregnancy checkups (Females Only)." : "";
 
-        $maskedData = $appointments->map(function ($app) use ($user) {
-            $isMe = $app->user_id === $user->id;
-            $name = $isMe ? $app->user->first_name . ' ' . $app->user->last_name : substr($app->user->first_name ?? '', 0, 1) . "*** " . substr($app->user->last_name ?? '', 0, 1) . "***";
+        $maskedData = $appointments->map(function ($app) use ($familyIds) {
+            $isFamily = $familyIds->contains($app->user_id);
+            $name = $isFamily ? $app->user->first_name . ' ' . $app->user->last_name : substr($app->user->first_name ?? '', 0, 1) . "*** " . substr($app->user->last_name ?? '', 0, 1) . "***";
             return [
                 'queue' => $app->queue_number,
                 'name' => $name,
                 'status' => ucfirst($app->status),
-                'is_me' => $isMe
+                'is_me' => $isFamily
             ];
         });
 
@@ -188,17 +193,16 @@ class AppointmentController extends Controller
             'slots_taken' => $count,
             'max_limit' => $maxLimit,
             'is_full' => $count >= $maxLimit,
-            'user_has_booking' => $appointments->contains('user_id', $user->id),
+            'user_has_booking' => false, // Handled in store method directly now
             'next_queue' => $count + 1,
             'appointments' => $maskedData,
-            'is_restricted' => $isRestricted,
-            'restriction_message' => $restrictionMessage
+            'is_restricted' => false, // Handled dynamically in backend when submitting based on selected patient
+            'restriction_message' => ""
         ]);
     }
 
     public function store(Request $request)
     {
-        // Block unverified users from booking
         if (is_null(Auth::user()->email_verified_at)) {
             return redirect()->route('dashboard')->with('error', 'Your account is pending admin verification. You cannot book an appointment yet.');
         }
@@ -212,22 +216,32 @@ class AppointmentController extends Controller
         $request->validate([
             'appointment_date' => 'required|date|after_or_equal:today|before_or_equal:' . $maxDate, 
             'reason' => 'required|string|max:500'
-        ], [
-            'appointment_date.before_or_equal' => 'Appointments can only be booked up to 7 days in advance.'
         ]);
+
+        // --- NEW: Determine the exact patient (Parent or Child) ---
+        $patientId = Auth::id();
+        $targetPatient = Auth::user();
+
+        if ($request->has('dependent_id') && !empty($request->dependent_id)) {
+            $child = Auth::user()->children()->find($request->dependent_id);
+            if ($child) {
+                $patientId = $child->id;
+                $targetPatient = $child;
+            }
+        }
         
         $date = $request->appointment_date;
-        $user = Auth::user();
 
-        if ($this->isPregnancyRestricted($date, $user)) {
-            return back()->withErrors(['msg' => 'Access Denied: This date is reserved for Pregnancy checkups (Females Only).']);
+        if ($this->isPregnancyRestricted($date, $targetPatient)) {
+            return back()->withErrors(['msg' => "Access Denied: This date is reserved for Pregnancy checkups. ({$targetPatient->first_name} is not eligible)."]);
         }
 
-        if (Appointment::where('user_id', $user->id)
+        // Validate if this SPECIFIC patient already has an active appointment
+        if (Appointment::where('user_id', $patientId)
             ->whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '>=', now()->startOfDay())
             ->exists()) {
-            return redirect()->route('dashboard')->with('error', 'You already have an active appointment.');
+            return redirect()->route('dashboard')->with('error', "{$targetPatient->first_name} already has an active appointment.");
         }
 
         $count = Appointment::where('appointment_date', $date)->where('status', '!=', 'cancelled')->count();
@@ -240,19 +254,21 @@ class AppointmentController extends Controller
         $maxQueue = Appointment::where('appointment_date', $date)->where('status', '!=', 'cancelled')->max('queue_number') ?? 0;
         
         Appointment::create([
-            'user_id' => $user->id,
+            'user_id' => $patientId,
             'appointment_date' => $date,
             'queue_number' => $maxQueue + 1,
             'reason' => $request->reason,
             'status' => 'pending'
         ]);
 
-        return redirect()->route('appointments.index')->with('success', "Booked successfully!");
+        return redirect()->route('appointments.index')->with('success', "Booked successfully for {$targetPatient->first_name}!");
     }
 
     public function destroy(Appointment $appointment)
     {
-        if ($appointment->user_id !== Auth::id()) {
+        $familyIds = collect([Auth::id()])->merge(Auth::user()->children->pluck('id'));
+        
+        if (!$familyIds->contains($appointment->user_id)) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -316,7 +332,6 @@ class AppointmentController extends Controller
         return back()->with('success', 'Settings updated for ' . $request->date);
     }
 
-    // --- Bulk Update Calendar Logic ---
     public function bulkUpdateLimit(Request $request)
     {
         $request->validate([
@@ -362,7 +377,15 @@ class AppointmentController extends Controller
     }
 
     public function index() {
-        $appointments = Appointment::where('user_id', Auth::id())->orderBy('appointment_date', 'desc')->get();
+        $user = Auth::user();
+        
+        // --- NEW: Combine Parent and Children IDs for appointment history ---
+        $userIds = collect([$user->id])->merge($user->children->pluck('id'));
+
+        $appointments = Appointment::whereIn('user_id', $userIds)
+            ->orderBy('appointment_date', 'desc')
+            ->get();
+            
         return view('appointments.index', compact('appointments'));
     }
     

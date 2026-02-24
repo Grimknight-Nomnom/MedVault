@@ -156,40 +156,50 @@
         </div>
     </div>
 
-    @if(isset($activeAppointment) && $activeAppointment)
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 border-start border-5 border-primary shadow-sm">
-                <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="fw-bold text-primary mb-1">
-                            <i class="fas fa-calendar-check me-2"></i>Active Appointment
-                        </h5>
-                        <p class="mb-0 text-muted">
-                            Scheduled for: <strong>{{ $activeAppointment->appointment_date->format('F d, Y') }}</strong>
-                        </p>
-                        <div class="mt-2 d-flex align-items-center gap-3">
-                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
-                                Status: {{ ucfirst($activeAppointment->status) }}
-                            </span>
-                            
-                            <form action="{{ route('appointments.destroy', $activeAppointment->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
-                                    <i class="fas fa-trash-alt me-1"></i> Cancel Appointment
-                                </button>
-                            </form>
+    {{-- LOOP THROUGH ALL ACTIVE APPOINTMENTS (PARENT + CHILDREN) --}}
+    @if(isset($activeAppointments) && $activeAppointments->count() > 0)
+        @foreach($activeAppointments as $appt)
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 border-start border-5 border-primary shadow-sm">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-primary mb-1 d-flex align-items-center">
+                                <i class="fas fa-calendar-check me-2"></i>Active Appointment
+                                
+                                {{-- PATIENT BADGE --}}
+                                @if($appt->user_id === Auth::id())
+                                    <span class="badge bg-success ms-2 small">For Me</span>
+                                @else
+                                    <span class="badge bg-info text-dark ms-2 small"><i class="fas fa-child me-1"></i>For {{ $appt->user->first_name }}</span>
+                                @endif
+                            </h5>
+                            <p class="mb-0 text-muted">
+                                Scheduled for: <strong>{{ \Carbon\Carbon::parse($appt->appointment_date)->format('F d, Y') }}</strong>
+                            </p>
+                            <div class="mt-2 d-flex align-items-center gap-3">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                                    Status: {{ ucfirst($appt->status) }}
+                                </span>
+                                
+                                <form action="{{ route('appointments.destroy', $appt->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                                        <i class="fas fa-trash-alt me-1"></i> Cancel Appointment
+                                    </button>
+                                </form>
                             </div>
-                    </div>
-                    <div class="text-center">
-                        <small class="text-uppercase text-muted fw-bold d-block">Your Queue</small>
-                        <h2 class="display-4 fw-bold text-primary mb-0">#{{ str_pad($activeAppointment->queue_number, 3, '0', STR_PAD_LEFT) }}</h2>
+                        </div>
+                        <div class="text-center">
+                            <small class="text-uppercase text-muted fw-bold d-block">Queue Number</small>
+                            <h2 class="display-4 fw-bold text-primary mb-0">#{{ str_pad($appt->queue_number, 3, '0', STR_PAD_LEFT) }}</h2>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+        @endforeach
     @endif
 
     <div class="row g-4">

@@ -100,12 +100,17 @@ class MedicalRecordController extends Controller
     }
 
     /**
-     * PATIENT: View their own medical history.
+     * PATIENT: View their own medical history AND dependents'.
      */
     public function myRecords()
     {
-        $records = MedicalRecord::where('user_id', Auth::id())
-                    ->with('appointment') 
+        $user = Auth::user();
+        
+        // --- NEW: Combine Parent ID and Child IDs to view full family history ---
+        $userIds = collect([$user->id])->merge($user->children->pluck('id'));
+
+        $records = MedicalRecord::whereIn('user_id', $userIds)
+                    ->with(['appointment', 'user']) 
                     ->latest()
                     ->get();
 

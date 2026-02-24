@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- Flatpickr CSS --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     .flatpickr-day.selected { background: #198754 !important; border-color: #198754 !important; }
@@ -16,11 +15,9 @@
         </a>
     </div>
 
-    {{-- DELETED THE DUPLICATE SUCCESS MESSAGE BLOCK HERE --}}
-
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="card shadow-sm border-0 rounded-4">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
                 <div class="card-header bg-success text-white py-3 rounded-top-4">
                     <h4 class="mb-0 fw-bold"><i class="fas fa-user-edit me-2"></i>Personal Records</h4>
                     <p class="mb-0 small opacity-75">Please complete all required fields (*) to access clinic services.</p>
@@ -97,7 +94,6 @@
                                     <input type="text" name="address" class="form-control" value="{{ old('address', $user->address) }}" required placeholder="House No., Street, Barangay, City">
                                 </div>
 
-                                {{-- PROOF OF RESIDENCY --}}
                                 <div class="col-md-12 mt-4">
                                     <label class="form-label fw-bold">Proof of Residency / Indigency <span class="text-danger">*</span></label>
                                     <div class="p-4 bg-light rounded border shadow-sm">
@@ -260,9 +256,160 @@
 
                 </div>
             </div>
+
+            {{-- --- DEPENDENTS / CHILDREN SECTION --- --}}
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-info text-white py-3 rounded-top-4">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-child me-2"></i>Linked Dependents (Children)</h5>
+                </div>
+                <div class="card-body p-4">
+                    @if($user->children && $user->children->count() > 0)
+                        <ul class="list-group mb-4 shadow-sm">
+                            @foreach($user->children as $child)
+                                <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ $child->first_name }} {{ $child->last_name }}</h6>
+                                        <small class="text-muted">Age: {{ $child->age }} | Gender: {{ $child->gender }} | ID: #{{ $child->usernumber }}</small>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-info rounded-pill px-3 py-2 d-none d-sm-inline"><i class="fas fa-link me-1"></i>Linked</span>
+                                        
+                                        {{-- MODAL TRIGGER: View / Edit Child Button --}}
+                                        <button type="button" 
+                                                class="btn btn-outline-primary btn-sm rounded-circle d-flex justify-content-center align-items-center shadow-sm" 
+                                                style="width: 32px; height: 32px; padding: 0;" title="View/Edit Child" data-bs-toggle="modal" data-bs-target="#viewChildModal{{ $child->id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+
+                                        {{-- MODAL TRIGGER: Remove Child Button --}}
+                                        <button type="button" 
+                                                onclick="openDependentDeleteModal('{{ route('profile.dependent.destroy', $child->id) }}', '{{ addslashes($child->first_name . ' ' . $child->last_name) }}')"
+                                                class="btn btn-outline-danger btn-sm rounded-circle d-flex justify-content-center align-items-center shadow-sm" 
+                                                style="width: 32px; height: 32px; padding: 0;" title="Remove Child">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    <div class="card bg-light border border-info border-opacity-25 shadow-sm">
+                        <div class="card-header bg-info bg-opacity-10 text-info fw-bold py-3">
+                            <i class="fas fa-plus-circle me-1"></i> Add a Child Profile
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="small text-muted mb-3">Adding a child allows you to easily book appointments on their behalf using your verified residency and contact information.</p>
+                            
+                            <form action="{{ route('profile.dependent.store') }}" method="POST">
+                                @csrf
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">First Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="first_name" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Middle Name</label>
+                                        <input type="text" name="middle_name" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Last Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="last_name" class="form-control" value="{{ $user->last_name }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Date of Birth <span class="text-danger">*</span></label>
+                                        <input type="date" name="date_of_birth" class="form-control" required max="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Gender <span class="text-danger">*</span></label>
+                                        <select name="gender" class="form-select" required>
+                                            <option value="">Select...</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mt-4 text-end">
+                                        <button type="submit" class="btn btn-info text-white fw-bold px-4 rounded-pill shadow-sm">Save Child Profile</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+
+{{-- --- GENERATE VIEW/EDIT MODALS FOR EVERY CHILD --- --}}
+@foreach($user->children as $child)
+<div class="modal fade" id="viewChildModal{{ $child->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-child me-2"></i>Dependent Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <form action="{{ route('profile.dependent.update', $child->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    
+                    <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">Basic Information</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">First Name</label>
+                            <input type="text" name="first_name" class="form-control bg-white" value="{{ $child->first_name }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Middle Name</label>
+                            <input type="text" name="middle_name" class="form-control bg-white" value="{{ $child->middle_name }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Last Name</label>
+                            <input type="text" name="last_name" class="form-control bg-white" value="{{ $child->last_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="form-control bg-white" value="{{ $child->date_of_birth ? $child->date_of_birth->format('Y-m-d') : '' }}" required max="{{ date('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Gender</label>
+                            <select name="gender" class="form-select bg-white" required>
+                                <option value="Male" {{ $child->gender == 'Male' ? 'selected' : '' }}>Male</option>
+                                <option value="Female" {{ $child->gender == 'Female' ? 'selected' : '' }}>Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">Medical History</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Allergies</label>
+                            <textarea name="allergies" class="form-control bg-white" rows="2">{{ $child->allergies }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Current Medications</label>
+                            <textarea name="current_medication" class="form-control bg-white" rows="2">{{ $child->current_medication }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Existing Medical Conditions</label>
+                            <textarea name="existing_medical_conditions" class="form-control bg-white" rows="2">{{ $child->existing_medical_conditions }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top text-end">
+                        <button type="button" class="btn btn-secondary px-4 rounded-pill me-2" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endforeach
+
 
 {{-- IMAGE VIEWER MODAL --}}
 <div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true">
@@ -279,6 +426,30 @@
     </div>
 </div>
 
+{{-- DEPENDENT DELETE CONFIRMATION MODAL --}}
+<div class="modal fade" id="dependentDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Removal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="fs-5 mb-2">Are you sure you want to remove <strong id="deleteChildName" class="text-danger"></strong> from your account?</p>
+                <p class="text-muted small mb-0">This action cannot be undone. All medical records and appointments attached to this dependent will be permanently deleted.</p>
+            </div>
+            <div class="modal-footer bg-light justify-content-center border-0 pt-0">
+                <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill shadow-sm" data-bs-dismiss="modal">Cancel</button>
+                <form id="dependentDeleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger px-4 fw-bold rounded-pill shadow-sm">Yes, Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     // --- Image Viewer Modal Logic ---
@@ -287,6 +458,14 @@
         document.getElementById('imageModalTitle').innerText = title;
         var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
         imageModal.show();
+    }
+
+    // --- Dependent Delete Modal Logic ---
+    function openDependentDeleteModal(actionUrl, childName) {
+        document.getElementById('dependentDeleteForm').action = actionUrl;
+        document.getElementById('deleteChildName').innerText = childName;
+        var deleteModal = new bootstrap.Modal(document.getElementById('dependentDeleteModal'));
+        deleteModal.show();
     }
 
     // --- Program Checkbox Logic ---
@@ -306,7 +485,7 @@
         });
     });
 
-    // --- Date Picker & Age Logic ---
+    // --- Date Picker Logic ---
     flatpickr("#date_of_birth", {
         dateFormat: "Y-m-d",
         maxDate: "today",
@@ -338,6 +517,7 @@
         }
     });
 
+    // --- SMART AGE CALCULATOR (FOR PARENT JS PREVIEW) ---
     function calculateAge(dobInput) {
         if (!dobInput) {
             document.getElementById('age').value = "";
@@ -364,22 +544,26 @@
         let months = today.getMonth() - dob.getMonth();
         let days = today.getDate() - dob.getDate();
 
-        if (days < 0) months--;
-        if (months < 0) { years--; months += 12; }
+        if (days < 0) {
+            months--;
+            const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+            days += prevMonth.getDate();
+        }
+        if (months < 0) { 
+            years--; 
+            months += 12; 
+        }
 
         let ageText = "";
         
         if (years > 0) {
-            ageText += years + (years === 1 ? " year" : " years");
-        }
-        
-        if (months > 0) {
-            if (years > 0) ageText += ", ";
-            ageText += months + (months === 1 ? " month" : " months");
-        }
-        
-        if (years <= 0 && months <= 0) {
-            ageText = "Less than 1 month";
+            ageText = years + (years === 1 ? " year" : " years");
+        } else if (months > 0) {
+            ageText = months + (months === 1 ? " month" : " months");
+        } else if (days > 0) {
+            ageText = days + (days === 1 ? " day" : " days");
+        } else {
+            ageText = "Newborn";
         }
 
         const ageField = document.getElementById('age');

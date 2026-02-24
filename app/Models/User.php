@@ -24,7 +24,6 @@ class User extends Authenticatable
         'address',
         'patient_photo_path',
         'residency_rejection_reason',
-        // New Profile Fields
         'date_of_birth',
         'gender',
         'civil_status',
@@ -33,6 +32,7 @@ class User extends Authenticatable
         'existing_medical_conditions',
         'is_philhealth_member',
         'is_senior_citizen_or_pwd',
+        'parent_id', // Allows linking dependents
     ];
 
     protected $hidden = [
@@ -51,10 +51,29 @@ class User extends Authenticatable
         ];
     }
 
-    // Helper to get full name
     public function getFullNameAttribute()
     {
         return "{$this->first_name} " . ($this->middle_name ? "{$this->middle_name} " : "") . $this->last_name;
+    }
+
+    // --- NEW: SMART AGE ACCESSOR ---
+    // This overrides the database value and calculates exact age cleanly on the fly!
+    public function getAgeAttribute($value)
+    {
+        if ($this->date_of_birth) {
+            $diff = $this->date_of_birth->diff(\Carbon\Carbon::now());
+            
+            if ($diff->y > 0) {
+                return $diff->y . ($diff->y == 1 ? ' year' : ' years');
+            } elseif ($diff->m > 0) {
+                return $diff->m . ($diff->m == 1 ? ' month' : ' months');
+            } elseif ($diff->d > 0) {
+                return $diff->d . ($diff->d == 1 ? ' day' : ' days');
+            } else {
+                return 'Newborn';
+            }
+        }
+        return $value;
     }
 
     public function appointments()
@@ -65,5 +84,16 @@ class User extends Authenticatable
     public function medicalRecords()
     {
         return $this->hasMany(MedicalRecord::class);
+    }
+
+    // --- Parent / Child Relationships ---
+    public function children()
+    {
+        return $this->hasMany(User::class, 'parent_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(User::class, 'parent_id');
     }
 }
