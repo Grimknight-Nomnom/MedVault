@@ -314,7 +314,6 @@ public function updatePregnancyRecord(Request $request, $id)
         $record->update($data);
 
         // AUTO-COMPLETE THE APPOINTMENT
-        // Find the patient's active appointment (Today or Future) and mark it completed
         $activeAppointment = \App\Models\Appointment::where('user_id', $patient->id)
             ->whereIn('status', ['pending', 'approved'])
             ->whereDate('appointment_date', '>=', \Carbon\Carbon::today())
@@ -323,9 +322,11 @@ public function updatePregnancyRecord(Request $request, $id)
 
         if ($activeAppointment) {
             $activeAppointment->update(['status' => 'completed']);
+            return back()->with('success', 'Pregnancy Record saved! The booked appointment is now marked as Completed.');
         }
 
-        return back()->with('success', 'Pregnancy Record saved! The booked appointment is now marked as Completed.');
+        // Default message if no active appointment was found
+        return back()->with('success', 'Pregnancy Record updated successfully!');
     }
 
 public function createImmunizationRecord($id)
@@ -374,18 +375,22 @@ public function updateImmunizationRecord(Request $request, $id)
             ]);
 
             // 3. AUTO-COMPLETE THE APPOINTMENT
-            // Find the active appointment for this patient and complete it
             $activeAppointment = \App\Models\Appointment::where('user_id', $patient->id)
                 ->whereIn('status', ['pending', 'approved'])
-                ->whereDate('appointment_date', '<=', now())
-                ->orderBy('appointment_date', 'desc')
+                ->whereDate('appointment_date', '>=', \Carbon\Carbon::today())
+                ->orderBy('appointment_date', 'asc')
                 ->first();
 
             if ($activeAppointment) {
                 $activeAppointment->update(['status' => 'completed']);
+                return back()->with('success', 'Immunization Visit saved! The booked appointment is now marked as Completed.');
             }
+            
+            // Message if a visit was logged, but no appointment was tied to today
+            return back()->with('success', 'Immunization Visit logged successfully!');
         }
 
-        return back()->with('success', 'Immunization Visit saved! The booked appointment is now marked as Completed.');
+        // Default message if they just updated birth details without logging a visit
+        return back()->with('success', 'Baby Birth Details updated successfully!');
     }
 }

@@ -351,11 +351,11 @@
 
 {{-- INCLUDE THE BIG MODALS FROM PARTIALS --}}
 @if($patient->has_pregnancy_record)
-    @include('admin.patients.partials.pregnancy_modal')
+    @include('admin.patients.Partials.pregnancy_modal')
 @endif
 
 @if($patient->has_immunization_record)
-    @include('admin.patients.partials.immunization_modal')
+    @include('admin.patients.Partials.immunization_modal')
 @endif
 
 
