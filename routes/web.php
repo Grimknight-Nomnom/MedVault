@@ -70,7 +70,6 @@ Route::middleware(['auth'])->group(function () {
             ->where('appointment_date', '<', now()->startOfDay())
             ->update(['status' => 'incomplete']);
 
-        // --- FIXED: Fetch ALL active appointments for the family, not just the first one ---
         $activeAppointments = Appointment::with('user')
             ->whereIn('user_id', $userIds)
             ->whereIn('status', ['pending', 'approved'])
@@ -142,6 +141,14 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/patients/{id}/change-password', 'changePatientPassword')->name('admin.patients.change_password');
             Route::post('/patients/{id}/force-verify', 'verifyPatient')->name('admin.patients.verify');
             Route::delete('/patients/{id}/delete-id/{type}', 'deletePatientId')->name('admin.patients.delete_id');
+            
+           // --- NEW ROUTES FOR SPECIAL RECORDS ---
+            Route::post('/patients/{id}/pregnancy-record', 'createPregnancyRecord')->name('admin.patients.create_pregnancy');
+            Route::put('/patients/{id}/pregnancy-record', 'updatePregnancyRecord')->name('admin.patients.update_pregnancy');
+            
+            Route::post('/patients/{id}/immunization-record', 'createImmunizationRecord')->name('admin.patients.create_immunization');
+            // ---> ADD THIS NEW ROUTE:
+            Route::put('/patients/{id}/immunization-record', 'updateImmunizationRecord')->name('admin.patients.update_immunization');
         });
 
         Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');

@@ -33,7 +33,9 @@ class User extends Authenticatable
         'existing_medical_conditions',
         'is_philhealth_member',
         'is_senior_citizen_or_pwd',
-        'parent_id', // Allows linking dependents
+        'parent_id', 
+        'has_pregnancy_record', // NEW
+        'has_immunization_record', // NEW
     ];
 
     protected $hidden = [
@@ -49,6 +51,8 @@ class User extends Authenticatable
             'date_of_birth' => 'date',
             'is_philhealth_member' => 'boolean',
             'is_senior_citizen_or_pwd' => 'boolean',
+            'has_pregnancy_record' => 'boolean', // NEW
+            'has_immunization_record' => 'boolean', // NEW
         ];
     }
 
@@ -57,7 +61,6 @@ class User extends Authenticatable
         return "{$this->first_name} " . ($this->middle_name ? "{$this->middle_name} " : "") . $this->last_name;
     }
 
-    // --- STRICT AGE ACCESSOR ---
     public function getAgeAttribute($value)
     {
         if ($this->date_of_birth) {
@@ -76,16 +79,11 @@ class User extends Authenticatable
         return $value;
     }
 
-    // --- NEW: Check if an 18+ dependent needs their own residency ---
     public function getNeedsOwnResidencyAttribute()
     {
-        // Check if this user is a dependent (has a parent)
         if ($this->parent_id && $this->date_of_birth) {
             $ageInYears = $this->date_of_birth->diffInYears(Carbon::now());
-            
-            // If they are 18 or older
             if ($ageInYears >= 18) {
-                // If they have no photo OR if their photo is exactly the same as the parent's photo
                 if (empty($this->patient_photo_path) || ($this->parent && $this->patient_photo_path === $this->parent->patient_photo_path)) {
                     return true;
                 }
@@ -113,4 +111,17 @@ class User extends Authenticatable
     {
         return $this->belongsTo(User::class, 'parent_id');
     }
+    // Add this right below your public function parent()
+    public function pregnancyRecord()
+    {
+        return $this->hasOne(PregnancyRecord::class);
+    }
+
+    // ADD THIS NEW ONE:
+    public function immunizationRecord()
+    {
+        return $this->hasOne(ImmunizationRecord::class);
+    }
+
+    
 }

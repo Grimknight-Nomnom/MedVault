@@ -34,51 +34,70 @@
                         <th class="text-center">Status</th>
                     </tr>
                 </thead>
-<tbody>
-    @forelse($medicines as $med)
-    <tr>
-        <td class="ps-4">
-            <div class="fw-bold text-dark">{{ $med->name }}</div>
-            
-            {{-- Description Section --}}
-            @if($med->description)
-                <div class="small text-muted mt-1" style="max-width: 300px; line-height: 1.2;">
-                    <i class="fas fa-info-circle me-1 text-primary"></i> {{ $med->description }}
-                </div>
-            @else
-                <div class="small text-muted fst-italic mt-1">No description available.</div>
-            @endif
-        </td>
-        
-        <td>
-            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3">
-                {{ $med->category }}
-            </span>
-        </td>
-        
-        <td class="text-center">
-            @if($med->stock_quantity > 0)
-                <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill">
-                    <i class="fas fa-check-circle me-1"></i> Available
-                </span>
-            @else
-                <span class="badge bg-danger-subtle text-danger border border-danger px-3 rounded-pill">
-                    <i class="fas fa-times-circle me-1"></i> Out of Stock
-                </span>
-            @endif
-        </td>
-    </tr>
-    @empty
-    <tr>
-        <td colspan="3" class="text-center py-5 text-muted">No medicines found matching your search.</td>
-    </tr>
-    @endforelse
-</tbody>
+                <tbody>
+                    @forelse($medicines as $med)
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ $med->name }}</div>
+                            
+                            {{-- Description Section with Read More Dropdown --}}
+                            @if($med->description)
+                                @if(strlen($med->description) > 60)
+                                    <div class="small text-muted mt-1" style="max-width: 300px; line-height: 1.4;">
+                                        <i class="fas fa-info-circle me-1 text-primary"></i>
+                                        
+                                        {{-- Short Description --}}
+                                        <span id="shortDesc{{ $med->id }}">{{ Str::limit($med->description, 60) }}</span>
+                                        
+                                        {{-- Full Collapsible Description --}}
+                                        <div class="collapse mt-2 bg-light p-2 rounded border border-secondary border-opacity-10" id="collapseDesc{{ $med->id }}">
+                                            {{ $med->description }}
+                                        </div>
+                                        
+                                        {{-- Toggle Button --}}
+                                        <a href="#collapseDesc{{ $med->id }}" data-bs-toggle="collapse" 
+                                           class="text-success text-decoration-none ms-1 fw-bold d-inline-block mt-1" 
+                                           onclick="document.getElementById('shortDesc{{ $med->id }}').classList.toggle('d-none'); this.innerText = this.innerText === 'Read more ▼' ? 'Show less ▴' : 'Read more ▼';">Read more ▼</a>
+                                    </div>
+                                @else
+                                    <div class="small text-muted mt-1" style="max-width: 300px; line-height: 1.4;">
+                                        <i class="fas fa-info-circle me-1 text-primary"></i> {{ $med->description }}
+                                    </div>
+                                @endif
+                            @else
+                                <div class="small text-muted fst-italic mt-1">No description available.</div>
+                            @endif
+                        </td>
+                        
+                        <td>
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3">
+                                {{ $med->category }}
+                            </span>
+                        </td>
+                        
+                        <td class="text-center">
+                            @if($med->stock_quantity > 0)
+                                <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill">
+                                    <i class="fas fa-check-circle me-1"></i> Available
+                                </span>
+                            @else
+                                <span class="badge bg-danger-subtle text-danger border border-danger px-3 rounded-pill">
+                                    <i class="fas fa-times-circle me-1"></i> Out of Stock
+                                </span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">No medicines found matching your search.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
             </table>
         </div>
     </div>
     
-    {{-- FIXED: Changed to Bootstrap 5 pagination and centered it --}}
+    {{-- Pagination --}}
     <div class="mt-4 d-flex justify-content-center">
         {{ $medicines->links('pagination::bootstrap-5') }}
     </div>

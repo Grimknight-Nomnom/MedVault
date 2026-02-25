@@ -274,4 +274,74 @@ class AdminController extends Controller
 
         return back()->with('success', "Password successfully reset for {$patient->first_name}.");
     }
+
+    // --- METHODS FOR SPECIAL RECORDS WITH RESTRICTIONS ---
+    // --- METHODS FOR SPECIAL RECORDS WITH RESTRICTIONS ---
+    public function createPregnancyRecord($id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+        
+        if (strtolower($patient->gender) === 'male') {
+            return back()->with('error', 'Cannot create a pregnancy record for a male patient.');
+        }
+
+        if ($patient->date_of_birth && $patient->date_of_birth->diffInYears(now()) < 4) {
+            return back()->with('error', 'Cannot create a pregnancy record for a patient under 4 years old.');
+        }
+
+        $patient->update(['has_pregnancy_record' => true]);
+        
+        // This generates the blank database row so it exists!
+        $patient->pregnancyRecord()->firstOrCreate([]);
+
+        return back()->with('success', 'Pregnancy record initialized for ' . $patient->first_name . '.');
+    }
+
+    public function updatePregnancyRecord(Request $request, $id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+        
+        // Find or create the record
+        $record = $patient->pregnancyRecord()->firstOrCreate([]);
+
+        $data = $request->except(['_token', '_method']);
+        
+        // Handle unchecked checkboxes
+        if (!$request->has('bemonc_cemonc')) {
+            $data['bemonc_cemonc'] = 0;
+        }
+
+        $record->update($data);
+
+        return back()->with('success', 'Pregnancy Record saved successfully for ' . $patient->first_name . '!');
+    }
+
+public function createImmunizationRecord($id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+        
+        if ($patient->date_of_birth && $patient->date_of_birth->diffInYears(now()) > 2) {
+            return back()->with('error', 'Immunization records are only allowed for children 2 years old and below.');
+        }
+
+        $patient->update(['has_immunization_record' => true]);
+        
+        // This generates the blank database row
+        $patient->immunizationRecord()->firstOrCreate([]);
+
+        return back()->with('success', 'Immunization record initialized for ' . $patient->first_name . '.');
+    }
+
+    public function updateImmunizationRecord(Request $request, $id)
+    {
+        $patient = User::where('role', 'user')->findOrFail($id);
+        
+        // Find or create the record
+        $record = $patient->immunizationRecord()->firstOrCreate([]);
+
+        $data = $request->except(['_token', '_method']);
+        $record->update($data);
+
+        return back()->with('success', 'Immunization Record saved successfully for ' . $patient->first_name . '!');
+    }
 }

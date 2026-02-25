@@ -14,6 +14,18 @@
         </div>
     </div>
 
+    {{-- ALERTS --}}
+    @if(session('success'))
+        <div class="alert alert-success border-0 shadow-sm fw-bold mb-4 rounded-3">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger border-0 shadow-sm fw-bold mb-4 rounded-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+        </div>
+    @endif
+
     <div class="row g-4">
         <div class="col-lg-4">
             
@@ -52,7 +64,7 @@
                             <span class="fw-bold">{{ $patient->phone ?? 'N/A' }}</span>
                         </div>
 
-                        {{-- NEW: Residency Document Section --}}
+                        {{-- Residency Document Section --}}
                         <div class="col-12 mt-3 pt-3 border-top">
                             <label class="text-muted d-block mb-2">Proof of Residency</label>
                             @if($patient->patient_photo_path)
@@ -72,6 +84,50 @@
                         <button type="button" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" class="btn btn-outline-warning w-50 rounded-pill fw-bold shadow-sm" style="font-size: 0.9rem;">
                             <i class="fas fa-key me-1"></i> Password
                         </button>
+                    </div>
+
+                    {{-- DYNAMIC BUTTONS: Specialized Record Buttons --}}
+                    <div class="mt-3 d-flex flex-column gap-2 border-top pt-3">
+                        
+                        @php
+                            $ageInYears = $patient->date_of_birth ? $patient->date_of_birth->diffInYears(\Carbon\Carbon::now()) : 0;
+                            $isOverTwo = $ageInYears > 2;
+                            $isUnderFour = $ageInYears < 4;
+                        @endphp
+
+                        {{-- PREGNANCY RECORD LOGIC --}}
+                        @if($patient->has_pregnancy_record)
+                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal">
+                                <i class="fas fa-eye me-1"></i> View Pregnancy Record
+                            </button>
+                        @elseif(strtolower($patient->gender) === 'male')
+                            <button type="button" class="btn btn-secondary rounded-pill fw-bold shadow-sm w-100 opacity-50" style="font-size: 0.85rem;" disabled>
+                                <i class="fas fa-ban me-1"></i> Pregnancy N/A (Male)
+                            </button>
+                        @elseif($isUnderFour)
+                            <button type="button" class="btn btn-secondary rounded-pill fw-bold shadow-sm w-100 opacity-50" style="font-size: 0.85rem;" disabled>
+                                <i class="fas fa-ban me-1"></i> Pregnancy N/A (< 4 yrs)
+                            </button>
+                        @else
+                            <button type="button" class="btn btn-danger rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#confirmPregnancyModal">
+                                <i class="fas fa-baby me-1"></i> Create Pregnancy Record
+                            </button>
+                        @endif
+
+                        {{-- IMMUNIZATION RECORD LOGIC --}}
+                        @if($patient->has_immunization_record)
+                            <button type="button" class="btn btn-outline-primary rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#viewImmunizationModal">
+                                <i class="fas fa-eye me-1"></i> View Immunization Record
+                            </button>
+                        @elseif($isOverTwo)
+                            <button type="button" class="btn btn-secondary rounded-pill fw-bold shadow-sm w-100 opacity-50" style="font-size: 0.85rem;" disabled>
+                                <i class="fas fa-ban me-1"></i> Immunization N/A (> 2 yrs)
+                            </button>
+                        @else
+                            <button type="button" class="btn btn-primary rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#confirmImmunizationModal">
+                                <i class="fas fa-syringe me-1"></i> Create Immunization Record
+                            </button>
+                        @endif
                     </div>
                     
                 </div>
@@ -163,9 +219,23 @@
 
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+                <div class="card-header bg-success text-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <h5 class="mb-0 fw-bold"><i class="fas fa-history me-2"></i>Clinic Consultation History</h5>
-                    <span class="badge bg-white text-success">{{ $consultations->count() }} Records</span>
+                    
+                    {{-- DYNAMIC HEADER VIEW BUTTONS --}}
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        @if($patient->has_pregnancy_record)
+                            <button type="button" class="btn btn-sm btn-light text-danger fw-bold rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal">
+                                <i class="fas fa-eye me-1"></i> Pregnancy
+                            </button>
+                        @endif
+                        @if($patient->has_immunization_record)
+                            <button type="button" class="btn btn-sm btn-light text-primary fw-bold rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#viewImmunizationModal">
+                                <i class="fas fa-eye me-1"></i> Immunization
+                            </button>
+                        @endif
+                        <span class="badge bg-white text-success ms-1">{{ $consultations->count() }} Records</span>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -233,6 +303,62 @@
     </div>
 </div>
 
+{{-- MODAL: CONFIRM PREGNANCY CREATION --}}
+<div class="modal fade" id="confirmPregnancyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-circle me-2"></i>Confirm Initialization</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="fs-5 mb-2">Are you sure you want to create a <strong>Pregnancy Record</strong> for {{ $patient->first_name }}?</p>
+                <p class="text-muted small mb-0">This will permanently unlock the pregnancy tracking dashboard for this patient.</p>
+            </div>
+            <div class="modal-footer bg-light justify-content-center border-0 pt-0">
+                <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill shadow-sm" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ route('admin.patients.create_pregnancy', $patient->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-danger px-4 fw-bold rounded-pill shadow-sm">Yes, Create Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL: CONFIRM IMMUNIZATION CREATION --}}
+<div class="modal fade" id="confirmImmunizationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-circle me-2"></i>Confirm Initialization</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="fs-5 mb-2">Are you sure you want to create an <strong>Immunization Record</strong> for {{ $patient->first_name }}?</p>
+                <p class="text-muted small mb-0">This will permanently unlock the immunization tracking dashboard for this patient.</p>
+            </div>
+            <div class="modal-footer bg-light justify-content-center border-0 pt-0">
+                <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill shadow-sm" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ route('admin.patients.create_immunization', $patient->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">Yes, Create Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- INCLUDE THE BIG MODALS FROM PARTIALS --}}
+@if($patient->has_pregnancy_record)
+    @include('admin.patients.partials.pregnancy_modal')
+@endif
+
+@if($patient->has_immunization_record)
+    @include('admin.patients.partials.immunization_modal')
+@endif
+
+
 {{-- CHANGE PASSWORD MODAL --}}
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -276,7 +402,7 @@
     </div>
 </div>
 
-{{-- NEW: RESIDENCY IMAGE MODAL --}}
+{{-- RESIDENCY IMAGE MODAL --}}
 <div class="modal fade" id="residencyImageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -292,7 +418,6 @@
 </div>
 
 <script>
-    // Function to open the image modal in the profile view
     function openResidencyModal(imageUrl) {
         document.getElementById('residencyViewerImage').src = imageUrl;
         var imageModal = new bootstrap.Modal(document.getElementById('residencyImageModal'));
