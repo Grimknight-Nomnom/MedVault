@@ -135,6 +135,7 @@
 
     {{-- ALERTS ROW --}}
     <div class="row g-4">
+        {{-- LOW STOCK TABLE --}}
         <div class="col-md-6">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
@@ -144,16 +145,34 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light small"><tr><th>Medicine</th><th class="text-center">Current Qty</th></tr></thead>
                         <tbody>
-                            @forelse($lowStock ?? [] as $med)
+                            @forelse(collect($lowStock ?? [])->take(5) as $med)
                             <tr><td class="ps-3 small fw-bold">{{ $med->name }}</td><td class="text-center text-danger fw-bold">{{ $med->stock_quantity }}</td></tr>
                             @empty
                             <tr><td colspan="2" class="text-center text-muted py-3 small">No low stock items.</td></tr>
                             @endforelse
                         </tbody>
+                        
+                        {{-- Collapsible remaining items --}}
+                        @if(collect($lowStock ?? [])->count() > 5)
+                        <tbody class="collapse" id="collapseLowStock">
+                            @foreach(collect($lowStock ?? [])->skip(5) as $med)
+                            <tr><td class="ps-3 small fw-bold">{{ $med->name }}</td><td class="text-center text-danger fw-bold">{{ $med->stock_quantity }}</td></tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-center bg-light p-0">
+                                    <button class="btn btn-link btn-sm text-decoration-none text-muted w-100 py-2 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLowStock" onclick="this.innerText = this.innerText.includes('More') ? 'Show Less ▴' : 'Show More ▼'">Show More ▼</button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                        @endif
                     </table>
                 </div>
             </div>
         </div>
+
+        {{-- EXPIRY ALERT TABLE --}}
         <div class="col-md-6">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
@@ -165,7 +184,7 @@
                             <tr><th>Medicine</th><th>Date</th><th class="text-center">Status</th></tr>
                         </thead>
                         <tbody>
-                            @forelse($expiringSoon ?? [] as $med)
+                            @forelse(collect($expiringSoon ?? [])->take(5) as $med)
                             <tr>
                                 <td class="ps-3 small fw-bold">{{ $med->name }}</td>
                                 <td class="small">{{ \Carbon\Carbon::parse($med->expiry_date)->format('F Y') }}</td>
@@ -175,6 +194,26 @@
                             <tr><td colspan="3" class="text-center text-muted py-3 small">No immediate expirations.</td></tr>
                             @endforelse
                         </tbody>
+                        
+                        {{-- Collapsible remaining items --}}
+                        @if(collect($expiringSoon ?? [])->count() > 5)
+                        <tbody class="collapse" id="collapseExpiry">
+                            @foreach(collect($expiringSoon ?? [])->skip(5) as $med)
+                            <tr>
+                                <td class="ps-3 small fw-bold">{{ $med->name }}</td>
+                                <td class="small">{{ \Carbon\Carbon::parse($med->expiry_date)->format('F Y') }}</td>
+                                <td class="text-center"><span class="badge {{ $med->expiry_date < now() ? 'bg-danger' : 'bg-warning text-dark' }}">{{ $med->expiry_date < now() ? 'EXPIRED' : 'EXPIRING' }}</span></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-center bg-light p-0">
+                                    <button class="btn btn-link btn-sm text-decoration-none text-muted w-100 py-2 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExpiry" onclick="this.innerText = this.innerText.includes('More') ? 'Show Less ▴' : 'Show More ▼'">Show More ▼</button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                        @endif
                     </table>
                 </div>
             </div>
@@ -218,51 +257,53 @@
                     @endif
                 </div>
 
-                {{-- Low Stock --}}
+                {{-- Out of Stock (Derived from $lowStock) --}}
+                @php
+                    $zeroStockMeds = $lowStock->where('stock_quantity', '<=', 0);
+                @endphp
                 <div class="mb-4">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
-                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>Low Stock Alert (Under 10) ({{ $lowStock->count() }})
+                        <i class="fas fa-box-open text-danger me-2"></i>Out of Stock Medicines ({{ $zeroStockMeds->count() }})
                     </h6>
-                    @if($lowStock->count() > 0)
+                    @if($zeroStockMeds->count() > 0)
                         <ul class="list-group list-group-flush mb-2">
-                            @foreach($lowStock->take(5) as $med)
+                            @foreach($zeroStockMeds->take(5) as $med)
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
                                     {{ $med->name }}
-                                    <span class="badge bg-danger rounded-pill">{{ $med->stock_quantity }} in stock</span>
+                                    <span class="badge bg-danger rounded-pill">0 in stock</span>
                                 </li>
                             @endforeach
                         </ul>
-                        @if($lowStock->count() > 5)
+                        @if($zeroStockMeds->count() > 5)
                             <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0">No low stock items.</p>
+                        <p class="text-muted small mb-0">No out-of-stock medicines.</p>
                     @endif
                 </div>
 
-                {{-- Expired/Expiring Meds --}}
+                {{-- Expired Meds (Derived from $expiringSoon) --}}
+                @php
+                    $alreadyExpiredMeds = $expiringSoon->where('expiry_date', '<', now());
+                @endphp
                 <div class="mb-2">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
-                        <i class="fas fa-hourglass-half text-warning me-2"></i>Expiry Alerts (30 Days) ({{ $expiringSoon->count() }})
+                        <i class="fas fa-calendar-times text-danger me-2"></i>Expired Medicines ({{ $alreadyExpiredMeds->count() }})
                     </h6>
-                    @if($expiringSoon->count() > 0)
+                    @if($alreadyExpiredMeds->count() > 0)
                         <ul class="list-group list-group-flush mb-2">
-                            @foreach($expiringSoon->take(5) as $med)
+                            @foreach($alreadyExpiredMeds->take(5) as $med)
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
                                     {{ $med->name }}
-                                    @if($med->expiry_date < now())
-                                        <span class="badge bg-danger rounded-pill">Expired {{ \Carbon\Carbon::parse($med->expiry_date)->format('M d, Y') }}</span>
-                                    @else
-                                        <span class="badge bg-warning text-dark rounded-pill">Expiring {{ \Carbon\Carbon::parse($med->expiry_date)->format('M d, Y') }}</span>
-                                    @endif
+                                    <span class="badge bg-danger rounded-pill">Expired {{ \Carbon\Carbon::parse($med->expiry_date)->format('F Y') }}</span>
                                 </li>
                             @endforeach
                         </ul>
-                        @if($expiringSoon->count() > 5)
+                        @if($alreadyExpiredMeds->count() > 5)
                             <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0">No immediate expirations.</p>
+                        <p class="text-muted small mb-0">No expired medicines.</p>
                     @endif
                 </div>
 
@@ -276,7 +317,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        @if($unverifiedPatients->count() > 0 || $lowStock->count() > 0 || $expiringSoon->count() > 0)
+        @if($unverifiedPatients->count() > 0 || $zeroStockMeds->count() > 0 || $alreadyExpiredMeds->count() > 0)
             var myModal = new bootstrap.Modal(document.getElementById('adminAlertsModal'), {
                 keyboard: false
             });

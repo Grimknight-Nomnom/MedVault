@@ -45,16 +45,15 @@
 @php
     $user = Auth::user();
     
-    // 1. Check if verified by admin
+    // Check various account flags
     $isVerified = !is_null($user->email_verified_at);
-
-    // 2. Check if Residency Photo is missing
     $missingPhoto = empty($user->patient_photo_path);
-    
-    // 3. Check if Admin rejected the document
     $hasRejection = !empty($user->residency_rejection_reason);
 
-    // 4. Check for missing general demographics
+    // --- NEW: 18+ Residency Checks ---
+    $needsOwnResidency = $user->needs_own_residency;
+    $adultChildrenNeedingResidency = $user->children ? $user->children->filter->needs_own_residency : collect();
+
     $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'civil_status', 'address', 'phone'];
     $missingDemographics = false;
     foreach($requiredFields as $field) {
@@ -64,12 +63,14 @@
         }
     }
     
-    $isProfileIncomplete = $missingPhoto || $missingDemographics;
+    // Overall incomplete flag
+    $isProfileIncomplete = $missingPhoto || $missingDemographics || $needsOwnResidency;
 @endphp
 
 <div class="container py-4">
 
     {{-- ALERT LOGIC: Only show ONE relevant warning at a time to prevent double messages --}}
+    
     @if($hasRejection && $missingPhoto)
         <div class="alert alert-danger border-start border-danger border-4 shadow-lg mb-4">
             <div class="d-flex align-items-center">
@@ -85,6 +86,20 @@
                 <a href="{{ route('profile.edit') }}" class="btn btn-danger ms-auto fw-bold px-4 py-2 shadow-sm rounded-pill">Upload New Document</a>
             </div>
         </div>
+
+    {{-- If the logged in user is 18+ and needs to upload their own ID --}}
+    @elseif($needsOwnResidency)
+        <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-id-card fa-2x me-3 text-danger"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Adult Dependent Update Required</h5>
+                    <p class="mb-0 small">You are now 18 or older. You must <strong>upload your own Proof of Residency</strong> in your own name to continue booking appointments.</p>
+                </div>
+                <a href="{{ route('profile.edit') }}" class="btn btn-danger btn-sm ms-auto fw-bold px-4">Upload Now</a>
+            </div>
+        </div>
+
     @elseif($missingPhoto)
         <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
             <div class="d-flex align-items-center">
@@ -96,6 +111,19 @@
                 <a href="{{ route('profile.edit') }}" class="btn btn-danger btn-sm ms-auto fw-bold px-4">Upload Now</a>
             </div>
         </div>
+
+    {{-- If the logged in PARENT has children who turned 18 --}}
+    @elseif($adultChildrenNeedingResidency->count() > 0)
+        <div class="alert alert-warning border-start border-warning border-4 shadow-sm mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-circle fa-2x me-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Dependent Update Required</h5>
+                    <p class="mb-0 small">Your dependent(s) <strong>{{ $adultChildrenNeedingResidency->pluck('first_name')->implode(', ') }}</strong> are now 18 or older. They must log in to their own account to upload their own Proof of Residency before they can be booked for appointments.</p>
+                </div>
+            </div>
+        </div>
+
     @elseif(!$isVerified)
         <div class="alert alert-warning border-start border-warning border-4 shadow-sm mb-4" role="alert">
             <div class="d-flex align-items-center">
@@ -128,8 +156,7 @@
                             <h1 class="display-5 fw-bold mb-3">Hello, {{ Auth::user()->first_name ?? 'User' }}!</h1>
                             <p class="lead mb-4 opacity-90">Manage your health and check for available free medications in real-time.</p>
                             
-                            {{-- Button Logic updated to match the single-warning rule --}}
-                            @if($missingPhoto)
+                            @if($missingPhoto || $needsOwnResidency)
                                 <a href="{{ route('profile.edit') }}" class="btn btn-light text-danger fw-bold px-4 py-2 rounded-pill shadow-sm">
                                     <i class="fas fa-upload me-2"></i>Upload Residency Document
                                 </a>
@@ -167,7 +194,6 @@
                             <h5 class="fw-bold text-primary mb-1 d-flex align-items-center">
                                 <i class="fas fa-calendar-check me-2"></i>Active Appointment
                                 
-                                {{-- PATIENT BADGE --}}
                                 @if($appt->user_id === Auth::id())
                                     <span class="badge bg-success ms-2 small">For Me</span>
                                 @else

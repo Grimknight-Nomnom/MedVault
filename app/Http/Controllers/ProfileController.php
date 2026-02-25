@@ -117,7 +117,7 @@ class ProfileController extends Controller
             'gender' => 'required|string|in:Male,Female,Other',
         ]);
 
-        // SMART AGE CALCULATION
+        // STRICT AGE CALCULATION
         $dob = Carbon::parse($validated['date_of_birth']);
         $diff = $dob->diff(Carbon::now());
         
@@ -135,6 +135,7 @@ class ProfileController extends Controller
             $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
         } while (User::where('usernumber', $randomNumber)->exists());
 
+        // Create the child account
         User::create([
             'parent_id' => $parent->id,
             'first_name' => $validated['first_name'],
@@ -144,8 +145,13 @@ class ProfileController extends Controller
             'gender' => $validated['gender'],
             'age' => $ageString,
             'civil_status' => 'Single',
-            'email' => 'child_' . uniqid() . '@dependent.local', 
-            'password' => Hash::make(Str::random(16)),
+            
+            // Format a cleaner dummy email just in case (e.g., john_123@dependent.local)
+            'email' => strtolower(str_replace(' ', '', $validated['first_name'])) . '_' . $randomNumber . '@dependent.local', 
+            
+            // --- UPDATED: Securely copy the parent's hashed password ---
+            'password' => $parent->password, 
+            
             'phone' => $parent->phone, 
             'address' => $parent->address, 
             'role' => 'user',
@@ -154,7 +160,7 @@ class ProfileController extends Controller
             'patient_photo_path' => $parent->patient_photo_path, 
         ]);
 
-        return back()->with('success', 'Child account added successfully. You can now book appointments for them.');
+        return back()->with('success', "Child account added! They can log in using their User ID (#{$randomNumber}) and your password.");
     }
 
     public function updateDependent(Request $request, $id)
@@ -172,7 +178,7 @@ class ProfileController extends Controller
             'existing_medical_conditions' => 'nullable|string',
         ]);
 
-        // SMART AGE CALCULATION
+        // STRICT AGE CALCULATION
         $dob = Carbon::parse($validated['date_of_birth']);
         $diff = $dob->diff(Carbon::now());
         

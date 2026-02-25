@@ -517,7 +517,7 @@
         }
     });
 
-    // --- SMART AGE CALCULATOR (FOR PARENT JS PREVIEW) ---
+    // --- STRICT AGE CALCULATOR (FOR PARENT UI) ---
     function calculateAge(dobInput) {
         if (!dobInput) {
             document.getElementById('age').value = "";

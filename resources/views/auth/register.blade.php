@@ -345,22 +345,27 @@
             let months = today.getMonth() - dob.getMonth();
             let days = today.getDate() - dob.getDate();
 
-            if (days < 0) months--;
-            if (months < 0) { years--; months += 12; }
+            if (days < 0) {
+                months--;
+                const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                days += prevMonth.getDate();
+            }
+            if (months < 0) { 
+                years--; 
+                months += 12; 
+            }
 
             let ageText = "";
             
+            // STRICT LOGIC: Show ONLY years, OR months, OR days
             if (years > 0) {
-                ageText += years + (years === 1 ? " year" : " years");
-            }
-            
-            if (months > 0) {
-                if (years > 0) ageText += ", ";
-                ageText += months + (months === 1 ? " month" : " months");
-            }
-            
-            if (years <= 0 && months <= 0) {
-                ageText = "Less than 1 month";
+                ageText = years + (years === 1 ? " year" : " years");
+            } else if (months > 0) {
+                ageText = months + (months === 1 ? " month" : " months");
+            } else if (days > 0) {
+                ageText = days + (days === 1 ? " day" : " days");
+            } else {
+                ageText = "Newborn";
             }
 
             const ageField = document.getElementById('age');

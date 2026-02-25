@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Carbon\Carbon;
 
 class User extends Authenticatable
 {
@@ -56,12 +57,11 @@ class User extends Authenticatable
         return "{$this->first_name} " . ($this->middle_name ? "{$this->middle_name} " : "") . $this->last_name;
     }
 
-    // --- NEW: SMART AGE ACCESSOR ---
-    // This overrides the database value and calculates exact age cleanly on the fly!
+    // --- STRICT AGE ACCESSOR ---
     public function getAgeAttribute($value)
     {
         if ($this->date_of_birth) {
-            $diff = $this->date_of_birth->diff(\Carbon\Carbon::now());
+            $diff = $this->date_of_birth->diff(Carbon::now());
             
             if ($diff->y > 0) {
                 return $diff->y . ($diff->y == 1 ? ' year' : ' years');
@@ -76,6 +76,24 @@ class User extends Authenticatable
         return $value;
     }
 
+    // --- NEW: Check if an 18+ dependent needs their own residency ---
+    public function getNeedsOwnResidencyAttribute()
+    {
+        // Check if this user is a dependent (has a parent)
+        if ($this->parent_id && $this->date_of_birth) {
+            $ageInYears = $this->date_of_birth->diffInYears(Carbon::now());
+            
+            // If they are 18 or older
+            if ($ageInYears >= 18) {
+                // If they have no photo OR if their photo is exactly the same as the parent's photo
+                if (empty($this->patient_photo_path) || ($this->parent && $this->patient_photo_path === $this->parent->patient_photo_path)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
@@ -86,7 +104,6 @@ class User extends Authenticatable
         return $this->hasMany(MedicalRecord::class);
     }
 
-    // --- Parent / Child Relationships ---
     public function children()
     {
         return $this->hasMany(User::class, 'parent_id');

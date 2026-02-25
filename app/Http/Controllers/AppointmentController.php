@@ -22,6 +22,10 @@ class AppointmentController extends Controller
     private function isProfileIncomplete()
     {
         $user = Auth::user();
+        
+        // --- NEW: Block booking access if they are an adult dependent missing their own residency ---
+        if ($user->needs_own_residency) return true;
+
         $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'civil_status', 'address', 'phone', 'patient_photo_path'];
         foreach ($requiredFields as $field) {
             if (empty($user->$field)) return true;
@@ -72,10 +76,13 @@ class AppointmentController extends Controller
         }
 
         if ($this->isProfileIncomplete()) {
-            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete. Please upload your Proof of Residency and fill all fields.');
+            // Give specific error if it's because of the 18+ rule
+            if (Auth::user()->needs_own_residency) {
+                return redirect()->route('profile.edit')->with('error', 'You are now 18 or older. Please upload your own Proof of Residency to continue booking.');
+            }
+            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete. Please fill all fields.');
         }
 
-        // Check if entire family is fully booked (allow UI to show if at least 1 person is free)
         $userIds = collect([Auth::id()])->merge(Auth::user()->children->pluck('id'));
         $activeAppointmentsCount = Appointment::whereIn('user_id', $userIds)
             ->whereIn('status', ['pending', 'approved'])
@@ -171,11 +178,6 @@ class AppointmentController extends Controller
             
         $maxLimit = $this->getMaxSlots($date);
 
-        // Note: Client-side validation handles pregnancy logic dynamically upon submitting. 
-        // For general display, default to checking the parent account.
-        $isRestricted = $this->isPregnancyRestricted($date, $user);
-        $restrictionMessage = $isRestricted ? "This date is reserved for Pregnancy checkups (Females Only)." : "";
-
         $maskedData = $appointments->map(function ($app) use ($familyIds) {
             $isFamily = $familyIds->contains($app->user_id);
             $name = $isFamily ? $app->user->first_name . ' ' . $app->user->last_name : substr($app->user->first_name ?? '', 0, 1) . "*** " . substr($app->user->last_name ?? '', 0, 1) . "***";
@@ -193,10 +195,10 @@ class AppointmentController extends Controller
             'slots_taken' => $count,
             'max_limit' => $maxLimit,
             'is_full' => $count >= $maxLimit,
-            'user_has_booking' => false, // Handled in store method directly now
+            'user_has_booking' => false,
             'next_queue' => $count + 1,
             'appointments' => $maskedData,
-            'is_restricted' => false, // Handled dynamically in backend when submitting based on selected patient
+            'is_restricted' => false,
             'restriction_message' => ""
         ]);
     }
@@ -208,7 +210,7 @@ class AppointmentController extends Controller
         }
 
         if ($this->isProfileIncomplete()) {
-            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete. Please upload your Proof of Residency and fill all fields.');
+            return redirect()->route('profile.edit')->with('error', 'Profile Incomplete. Please update your profile.');
         }
 
         $maxDate = Carbon::today()->addDays(7)->format('Y-m-d');
@@ -218,7 +220,6 @@ class AppointmentController extends Controller
             'reason' => 'required|string|max:500'
         ]);
 
-        // --- NEW: Determine the exact patient (Parent or Child) ---
         $patientId = Auth::id();
         $targetPatient = Auth::user();
 
@@ -230,13 +231,17 @@ class AppointmentController extends Controller
             }
         }
         
+        // --- NEW: Block booking if the selected dependent is 18+ and hasn't uploaded their own ID ---
+        if ($targetPatient->needs_own_residency) {
+            return redirect()->route('dashboard')->with('error', "Access Denied: {$targetPatient->first_name} is now 18 or older. They must log in to their own account and upload their own Proof of Residency before booking.");
+        }
+
         $date = $request->appointment_date;
 
         if ($this->isPregnancyRestricted($date, $targetPatient)) {
             return back()->withErrors(['msg' => "Access Denied: This date is reserved for Pregnancy checkups. ({$targetPatient->first_name} is not eligible)."]);
         }
 
-        // Validate if this SPECIFIC patient already has an active appointment
         if (Appointment::where('user_id', $patientId)
             ->whereIn('status', ['pending', 'approved'])
             ->where('appointment_date', '>=', now()->startOfDay())
@@ -379,7 +384,6 @@ class AppointmentController extends Controller
     public function index() {
         $user = Auth::user();
         
-        // --- NEW: Combine Parent and Children IDs for appointment history ---
         $userIds = collect([$user->id])->merge($user->children->pluck('id'));
 
         $appointments = Appointment::whereIn('user_id', $userIds)
