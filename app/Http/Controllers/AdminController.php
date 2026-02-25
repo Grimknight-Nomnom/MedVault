@@ -332,16 +332,48 @@ public function createImmunizationRecord($id)
         return back()->with('success', 'Immunization record initialized for ' . $patient->first_name . '.');
     }
 
-    public function updateImmunizationRecord(Request $request, $id)
+public function updateImmunizationRecord(Request $request, $id)
     {
-        $patient = User::where('role', 'user')->findOrFail($id);
+        $patient = \App\Models\User::where('role', 'user')->findOrFail($id);
         
-        // Find or create the record
+        // 1. Update the base Baby/Birth details
         $record = $patient->immunizationRecord()->firstOrCreate([]);
+        $baseData = $request->only([
+            'birth_time', 'birth_weight', 'birth_length', 'eye_color', 'hair_color', 
+            'birth_hospital', 'mother_name', 'father_name'
+        ]);
+        $record->update($baseData);
 
-        $data = $request->except(['_token', '_method']);
-        $record->update($data);
+        // 2. If the admin filled out a NEW visit date, save it to the History Logs
+        if ($request->filled('log_date')) {
+            \App\Models\ImmunizationLog::create([
+                'user_id' => $patient->id,
+                'date' => $request->log_date,
+                'age' => $request->log_age,
+                'temp' => $request->log_temp,
+                'weight' => $request->log_weight,
+                'length' => $request->log_length,
+                'hc' => $request->log_hc,
+                'cc' => $request->log_cc,
+                'ac' => $request->log_ac,
+                'type_of_bakuna' => $request->log_bakuna,
+                'doctor_instructions' => $request->log_instructions,
+                'next_visit' => $request->log_next_visit,
+            ]);
 
-        return back()->with('success', 'Immunization Record saved successfully for ' . $patient->first_name . '!');
+            // 3. AUTO-COMPLETE THE APPOINTMENT
+            // Find the active appointment for this patient and complete it
+            $activeAppointment = \App\Models\Appointment::where('user_id', $patient->id)
+                ->whereIn('status', ['pending', 'approved'])
+                ->whereDate('appointment_date', '<=', now())
+                ->orderBy('appointment_date', 'desc')
+                ->first();
+
+            if ($activeAppointment) {
+                $activeAppointment->update(['status' => 'completed']);
+            }
+        }
+
+        return back()->with('success', 'Immunization Visit saved! The booked appointment is now marked as Completed.');
     }
 }

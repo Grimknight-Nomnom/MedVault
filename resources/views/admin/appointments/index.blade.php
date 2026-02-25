@@ -127,7 +127,7 @@
                         }
                     @endphp
 
-                    <div onclick="openDayModal('{{ $dayString }}')" class="day-cell {{ $bgClass }}">
+                    <div onclick="openDayModal('{{ $dayString }}', '{{ $labelText }}')" class="day-cell {{ $bgClass }}">
                         <div class="d-flex d-md-none justify-content-between align-items-center w-100">
                             <div class="d-flex flex-column align-items-start">
                                 <div class="d-flex align-items-center gap-2">
@@ -290,7 +290,6 @@
 <script>
     const allAppointments = @json($appointments);
 
-    // Javascript for Bulk Settings Custom Input Logic
     function toggleBulkCustom(val) {
         const customInput = document.getElementById('bulkCustomLabel');
         if (val === 'Custom') {
@@ -311,7 +310,8 @@
         new bootstrap.Modal(document.getElementById('settingsModal')).show();
     }
 
-    function openDayModal(dateString) {
+    // UPDATED FUNCTION: Shows "View" next to "Diagnose" if it is an Immunization Day
+    function openDayModal(dateString, dayLabel) {
         const dayAppointments = allAppointments.filter(app => app.calendar_date === dateString);
         dayAppointments.sort((a, b) => a.queue_number - b.queue_number);
         
@@ -323,6 +323,10 @@
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const isPastDate = dateObj < today;
+        
+        // CHECK IF IT IS AN IMMUNIZATION DAY
+        const lowerLabel = (dayLabel || '').toLowerCase();
+        const isImmunizationDay = lowerLabel.includes('immunization');
         
         if (dayAppointments.length === 0) {
             document.getElementById('emptyState').classList.remove('d-none');
@@ -344,7 +348,17 @@
                 let actions = '';
                 
                 if (!isPastDate && app.status !== 'completed' && app.status !== 'cancelled') {
-                    actions = `<a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3">Diagnose</a>`;
+                    // Show "View" button next to "Diagnose" if it's an Immunization
+                    if (isImmunizationDay) {
+                        actions = `
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3">Diagnose</a>
+                                <a href="/admin/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3"><i class="fas fa-eye me-1"></i>View</a>
+                            </div>
+                        `;
+                    } else {
+                        actions = `<a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3">Diagnose</a>`;
+                    }
                 } else if (app.status === 'completed') {
                     actions = `<span class="text-success small fw-bold"><i class="fas fa-check"></i> Diagnosed</span>`;
                 } else if (isPastDate || displayStatus === 'incomplete') {

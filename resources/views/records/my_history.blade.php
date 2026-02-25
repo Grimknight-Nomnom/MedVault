@@ -2,9 +2,39 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="mb-4">
-        <h2 class="fw-bold text-dark"><i class="fas fa-folder-open me-2 text-primary"></i>Family Medical History</h2>
-        <p class="text-muted">A complete timeline of diagnoses and dispensed medicines for you and your dependents.</p>
+    <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h2 class="fw-bold text-dark"><i class="fas fa-folder-open me-2 text-primary"></i>Family Medical History</h2>
+            <p class="text-muted">A complete timeline of diagnoses and dispensed medicines for you and your dependents.</p>
+        </div>
+        
+        {{-- NEW SPECIAL RECORD BUTTONS --}}
+        <div class="d-flex gap-2 flex-wrap">
+            @if(Auth::user()->has_pregnancy_record)
+                <button type="button" class="btn btn-danger fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#patientPregnancyModal">
+                    <i class="fas fa-baby me-2"></i>My Pregnancy Record
+                </button>
+            @endif
+            @if(Auth::user()->has_immunization_record)
+                <button type="button" class="btn btn-primary fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#patientImmunizationModal">
+                    <i class="fas fa-syringe me-2"></i>My Immunization Record
+                </button>
+            @endif
+            
+            {{-- Check if dependents have special records --}}
+            @foreach(Auth::user()->children as $child)
+                @if($child->has_immunization_record)
+                    <button type="button" class="btn btn-outline-primary fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#dependentImmunizationModal{{ $child->id }}">
+                        <i class="fas fa-child me-2"></i>{{ $child->first_name }}'s Immunization
+                    </button>
+                @endif
+                @if($child->has_pregnancy_record)
+                    <button type="button" class="btn btn-outline-danger fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#dependentPregnancyModal{{ $child->id }}">
+                        <i class="fas fa-baby me-2"></i>{{ $child->first_name }}'s Pregnancy
+                    </button>
+                @endif
+            @endforeach
+        </div>
     </div>
 
     @if($records->isEmpty())
@@ -193,4 +223,15 @@
         </div>
     @endif
 </div>
+
+{{-- INCLUDE PATIENT MODALS --}}
+@include('patient.partials.pregnancy_modal', ['user' => Auth::user(), 'modalId' => 'patientPregnancyModal'])
+@include('patient.partials.immunization_modal', ['user' => Auth::user(), 'modalId' => 'patientImmunizationModal'])
+
+{{-- INCLUDE DEPENDENT MODALS --}}
+@foreach(Auth::user()->children as $child)
+    @include('patient.partials.pregnancy_modal', ['user' => $child, 'modalId' => 'dependentPregnancyModal'.$child->id])
+    @include('patient.partials.immunization_modal', ['user' => $child, 'modalId' => 'dependentImmunizationModal'.$child->id])
+@endforeach
+
 @endsection
