@@ -297,11 +297,11 @@ class AdminController extends Controller
         return back()->with('success', 'Pregnancy record initialized for ' . $patient->first_name . '.');
     }
 
-    public function updatePregnancyRecord(Request $request, $id)
+public function updatePregnancyRecord(Request $request, $id)
     {
-        $patient = User::where('role', 'user')->findOrFail($id);
+        $patient = \App\Models\User::where('role', 'user')->findOrFail($id);
         
-        // Find or create the record
+        // Find or create the pregnancy record
         $record = $patient->pregnancyRecord()->firstOrCreate([]);
 
         $data = $request->except(['_token', '_method']);
@@ -313,7 +313,19 @@ class AdminController extends Controller
 
         $record->update($data);
 
-        return back()->with('success', 'Pregnancy Record saved successfully for ' . $patient->first_name . '!');
+        // AUTO-COMPLETE THE APPOINTMENT
+        // Find the patient's active appointment (Today or Future) and mark it completed
+        $activeAppointment = \App\Models\Appointment::where('user_id', $patient->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereDate('appointment_date', '>=', \Carbon\Carbon::today())
+            ->orderBy('appointment_date', 'asc')
+            ->first();
+
+        if ($activeAppointment) {
+            $activeAppointment->update(['status' => 'completed']);
+        }
+
+        return back()->with('success', 'Pregnancy Record saved! The booked appointment is now marked as Completed.');
     }
 
 public function createImmunizationRecord($id)

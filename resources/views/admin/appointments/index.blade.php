@@ -310,7 +310,7 @@
         new bootstrap.Modal(document.getElementById('settingsModal')).show();
     }
 
-    // UPDATED FUNCTION: Shows "View" next to "Diagnose" if it is an Immunization Day
+    // UPDATED FUNCTION: Added explicit FontAwesome icons to all buttons!
     function openDayModal(dateString, dayLabel) {
         const dayAppointments = allAppointments.filter(app => app.calendar_date === dateString);
         dayAppointments.sort((a, b) => a.queue_number - b.queue_number);
@@ -324,9 +324,11 @@
         today.setHours(0, 0, 0, 0);
         const isPastDate = dateObj < today;
         
-        // CHECK IF IT IS AN IMMUNIZATION DAY
+        // CHECK IF IT IS AN IMMUNIZATION OR PREGNANCY DAY
         const lowerLabel = (dayLabel || '').toLowerCase();
         const isImmunizationDay = lowerLabel.includes('immunization');
+        const isPregnancyDay = lowerLabel.includes('pregnancy');
+        const isSpecialRecordDay = isImmunizationDay || isPregnancyDay;
         
         if (dayAppointments.length === 0) {
             document.getElementById('emptyState').classList.remove('d-none');
@@ -348,23 +350,23 @@
                 let actions = '';
                 
                 if (!isPastDate && app.status !== 'completed' && app.status !== 'cancelled') {
-                    // Show "View" button next to "Diagnose" if it's an Immunization
-                    if (isImmunizationDay) {
+                    // Show "View" button next to "Diagnose" with icons
+                    if (isSpecialRecordDay) {
                         actions = `
                             <div class="d-flex gap-1 justify-content-end">
-                                <a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3">Diagnose</a>
-                                <a href="/admin/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3"><i class="fas fa-eye me-1"></i>View</a>
+                                <a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
+                                <a href="/admin/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>
                             </div>
                         `;
                     } else {
-                        actions = `<a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3">Diagnose</a>`;
+                        actions = `<a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>`;
                     }
                 } else if (app.status === 'completed') {
-                    actions = `<span class="text-success small fw-bold"><i class="fas fa-check"></i> Diagnosed</span>`;
+                    actions = `<span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i> Diagnosed</span>`;
                 } else if (isPastDate || displayStatus === 'incomplete') {
                     actions = `<span class="text-muted small fw-bold"><i class="fas fa-ban me-1"></i> Past Date</span>`;
                 } else if (app.status === 'cancelled') {
-                    actions = `<span class="text-danger small fw-bold"><i class="fas fa-times me-1"></i> Cancelled</span>`;
+                    actions = `<span class="text-danger small fw-bold"><i class="fas fa-times-circle me-1"></i> Cancelled</span>`;
                 }
 
                 tbody.innerHTML += `<tr><td class="ps-4 fw-bold">#${app.queue_number}</td><td>${app.patient_name} <div class="small text-muted">${app.reason}</div></td><td>${statusBadge}</td><td class="text-end pe-4">${actions}</td></tr>`;
