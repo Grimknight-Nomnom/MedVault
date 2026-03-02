@@ -14,7 +14,8 @@ class Appointment extends Model
         'appointment_date',
         'queue_number',
         'status',
-        'reason'
+        'reason',
+        'cancellation_reason' // Added field
     ];
 
     // This converts the database date string into a Carbon object automatically

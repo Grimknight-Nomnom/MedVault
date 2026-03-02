@@ -23,7 +23,6 @@ class AppointmentController extends Controller
     {
         $user = Auth::user();
         
-        // --- NEW: Block booking access if they are an adult dependent missing their own residency ---
         if ($user->needs_own_residency) return true;
 
         $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'civil_status', 'address', 'phone', 'patient_photo_path'];
@@ -76,7 +75,6 @@ class AppointmentController extends Controller
         }
 
         if ($this->isProfileIncomplete()) {
-            // Give specific error if it's because of the 18+ rule
             if (Auth::user()->needs_own_residency) {
                 return redirect()->route('profile.edit')->with('error', 'You are now 18 or older. Please upload your own Proof of Residency to continue booking.');
             }
@@ -231,7 +229,6 @@ class AppointmentController extends Controller
             }
         }
         
-        // --- NEW: Block booking if the selected dependent is 18+ and hasn't uploaded their own ID ---
         if ($targetPatient->needs_own_residency) {
             return redirect()->route('dashboard')->with('error', "Access Denied: {$targetPatient->first_name} is now 18 or older. They must log in to their own account and upload their own Proof of Residency before booking.");
         }
@@ -393,16 +390,25 @@ class AppointmentController extends Controller
         return view('appointments.index', compact('appointments'));
     }
     
+    // UPDATED updateStatus method
     public function updateStatus(Request $request, $id) {
         $appointment = Appointment::findOrFail($id);
-        $appointment->update(['status' => $request->status]);
+        
+        $data = ['status' => $request->status];
+        
+        // Save the reason if the admin is cancelling the appointment
+        if ($request->status === 'cancelled' && $request->has('cancellation_reason')) {
+            $data['cancellation_reason'] = $request->cancellation_reason;
+            $data['queue_number'] = 0;
+        }
+
+        $appointment->update($data);
         
         if ($request->status === 'cancelled') {
-            $appointment->update(['queue_number' => 0]); 
             $this->resequenceQueue($appointment->appointment_date);
         }
         
-        return back()->with('success', 'Status updated.');
+        return back()->with('success', 'Appointment status updated.');
     }
     
     public function adminCreate() {

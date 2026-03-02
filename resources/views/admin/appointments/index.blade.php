@@ -287,6 +287,33 @@
     </div>
 </div>
 
+{{-- 4. CANCEL APPOINTMENT MODAL --}}
+<div class="modal fade" id="cancelAppointmentModal" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white py-2">
+                <h6 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Appointment</h6>
+                <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="cancelAppointmentForm" method="POST">
+                @csrf
+                {{-- CHANGE THIS FROM PUT TO PATCH --}}
+                @method('PATCH') 
+                <input type="hidden" name="status" value="cancelled">
+                <div class="modal-body">
+                    <p class="small text-muted mb-2">Please provide a reason. This will be visible to the patient on their dashboard.</p>
+                    <label class="form-label small fw-bold">Reason for Cancellation <span class="text-danger">*</span></label>
+                    <textarea name="cancellation_reason" class="form-control form-control-sm" rows="3" required placeholder="e.g. Doctor is unavailable, Duplicate booking..."></textarea>
+                </div>
+                <div class="modal-footer p-2 bg-light border-0">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Remove</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     const allAppointments = @json($appointments);
 
@@ -309,8 +336,14 @@
         document.getElementById('settingLabelInput').value = currentLabel;
         new bootstrap.Modal(document.getElementById('settingsModal')).show();
     }
+    
+// Function to open the Cancel Modal and set the correct form action
+    function openCancelModal(id) {
+        // REMOVE the '/status' from the end of this URL string
+        document.getElementById('cancelAppointmentForm').action = `/admin/appointments/${id}`;
+        new bootstrap.Modal(document.getElementById('cancelAppointmentModal')).show();
+    }
 
-    // UPDATED FUNCTION: Added explicit FontAwesome icons to all buttons!
     function openDayModal(dateString, dayLabel) {
         const dayAppointments = allAppointments.filter(app => app.calendar_date === dateString);
         dayAppointments.sort((a, b) => a.queue_number - b.queue_number);
@@ -350,16 +383,22 @@
                 let actions = '';
                 
                 if (!isPastDate && app.status !== 'completed' && app.status !== 'cancelled') {
-                    // Show "View" button next to "Diagnose" with icons
+                    // Show "View" and "Cancel" buttons next to "Diagnose"
                     if (isSpecialRecordDay) {
                         actions = `
                             <div class="d-flex gap-1 justify-content-end">
                                 <a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
                                 <a href="/admin/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>
                             </div>
                         `;
                     } else {
-                        actions = `<a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>`;
+                        actions = `
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>
+                            </div>
+                        `;
                     }
                 } else if (app.status === 'completed') {
                     actions = `<span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i> Diagnosed</span>`;

@@ -50,7 +50,6 @@
     $missingPhoto = empty($user->patient_photo_path);
     $hasRejection = !empty($user->residency_rejection_reason);
 
-    // --- NEW: 18+ Residency Checks ---
     $needsOwnResidency = $user->needs_own_residency;
     $adultChildrenNeedingResidency = $user->children ? $user->children->filter->needs_own_residency : collect();
 
@@ -65,9 +64,41 @@
     
     // Overall incomplete flag
     $isProfileIncomplete = $missingPhoto || $missingDemographics || $needsOwnResidency;
+
+    // --- NEW: Fetch recently cancelled appointments to notify the user ---
+    $familyIdsForCancellation = collect([$user->id])->merge($user->children ? $user->children->pluck('id') : collect());
+    $recentCancellations = \App\Models\Appointment::whereIn('user_id', $familyIdsForCancellation)
+        ->where('status', 'cancelled')
+        ->whereNotNull('cancellation_reason')
+        ->where('updated_at', '>=', now()->subDays(7)) // Show cancellations from the last 7 days
+        ->orderBy('updated_at', 'desc')
+        ->get();
 @endphp
 
 <div class="container py-4">
+
+    {{-- CANCELLED APPOINTMENT ALERTS --}}
+    @if(isset($recentCancellations) && $recentCancellations->count() > 0)
+        @foreach($recentCancellations as $cancelledAppt)
+            <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar-times fa-2x me-3 text-danger"></i>
+                    <div class="w-100">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h5 class="alert-heading fw-bold mb-0">Appointment Cancelled by Admin</h5>
+                            <span class="small text-muted">{{ $cancelledAppt->updated_at->diffForHumans() }}</span>
+                        </div>
+                        <p class="mb-2 small">
+                            The scheduled appointment for <strong>{{ $cancelledAppt->user_id === Auth::id() ? 'You' : $cancelledAppt->user->first_name }}</strong> on <strong>{{ \Carbon\Carbon::parse($cancelledAppt->appointment_date)->format('F d, Y') }}</strong> has been cancelled.
+                        </p>
+                        <div class="bg-white p-2 rounded border border-danger border-opacity-25 text-dark fw-bold mb-0">
+                            <i class="fas fa-comment-dots text-danger me-2"></i> Reason: "{{ $cancelledAppt->cancellation_reason }}"
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
 
     {{-- ALERT LOGIC: Only show ONE relevant warning at a time to prevent double messages --}}
     
