@@ -390,13 +390,11 @@ class AppointmentController extends Controller
         return view('appointments.index', compact('appointments'));
     }
     
-    // UPDATED updateStatus method
     public function updateStatus(Request $request, $id) {
         $appointment = Appointment::findOrFail($id);
         
         $data = ['status' => $request->status];
         
-        // Save the reason if the admin is cancelling the appointment
         if ($request->status === 'cancelled' && $request->has('cancellation_reason')) {
             $data['cancellation_reason'] = $request->cancellation_reason;
             $data['queue_number'] = 0;
@@ -423,13 +421,20 @@ class AppointmentController extends Controller
             'reason' => 'required|string|max:255',
         ]);
         
-        $exists = Appointment::where('user_id', $request->user_id)
-            ->where('appointment_date', $request->appointment_date)
-            ->where('status', '!=', 'cancelled')->exists();
+        // --- UPDATED: Uses 'booking_error' to bypass global app layout alert ---
+        $existingAppointment = Appointment::where('user_id', $request->user_id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->first();
+
+        if ($existingAppointment) {
+            $formattedDate = \Carbon\Carbon::parse($existingAppointment->appointment_date)->format('F d, Y');
+            $status = ucfirst($existingAppointment->status);
             
-        if ($exists) {
-            return back()->withErrors(['user_id' => 'This patient already has an appointment on this date.'])->withInput();
+            return back()
+                ->withInput()
+                ->with('booking_error', "<strong>Booking Failed:</strong> This patient already has an active appointment scheduled for <strong>{$formattedDate}</strong> (Status: {$status}). Please update or cancel their current appointment first.");
         }
+        // ------------------------------------------------------------------------
         
         $maxQueue = Appointment::where('appointment_date', $request->appointment_date)
             ->where('status', '!=', 'cancelled')

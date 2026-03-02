@@ -24,6 +24,16 @@
                 </div>
 
                 <div class="card-body p-4">
+                    
+                    {{-- NEW: Custom HTML session error using 'booking_error' instead of 'error' --}}
+                    @if(session('booking_error'))
+                        <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                            <i class="fas fa-exclamation-circle me-1"></i> {!! session('booking_error') !!}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    {{-- Existing form validation errors --}}
                     @if ($errors->any())
                         <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
                             <ul class="mb-0 small">

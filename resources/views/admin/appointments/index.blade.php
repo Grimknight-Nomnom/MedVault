@@ -52,7 +52,7 @@
                 <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap" data-bs-toggle="modal" data-bs-target="#bulkSettingsModal">
                     <i class="fas fa-layer-group me-2"></i> Bulk Settings
                 </button>
-                <a href="{{ route('admin.appointments.create') }}" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap">
+                <a href="{{ route('admin.appointments.create') }}" class="btn primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap">
                     <i class="fas fa-plus-circle me-2"></i> Book Patient
                 </a>
             </div>
@@ -297,7 +297,6 @@
             </div>
             <form id="cancelAppointmentForm" method="POST">
                 @csrf
-                {{-- CHANGE THIS FROM PUT TO PATCH --}}
                 @method('PATCH') 
                 <input type="hidden" name="status" value="cancelled">
                 <div class="modal-body">
@@ -310,6 +309,25 @@
                     <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Remove</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+{{-- 5. FUTURE DATE WARNING MODAL --}}
+<div class="modal fade" id="futureWarningModal" tabindex="-1" style="z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-dark py-2">
+                <h6 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Future Appointment</h6>
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-3">
+                <p class="small mb-0">This appointment is scheduled for a <strong>future date</strong>. Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer p-2 bg-light border-0 d-flex justify-content-center">
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                <a href="#" id="confirmFutureActionBtn" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold">Proceed</a>
+            </div>
         </div>
     </div>
 </div>
@@ -337,9 +355,15 @@
         new bootstrap.Modal(document.getElementById('settingsModal')).show();
     }
     
-// Function to open the Cancel Modal and set the correct form action
+    // Function to show the warning modal for future appointments
+    function showFutureWarningModal(url) {
+        // Set the link of the "Proceed" button to the intended URL
+        document.getElementById('confirmFutureActionBtn').href = url;
+        new bootstrap.Modal(document.getElementById('futureWarningModal')).show();
+    }
+
+    // Function to open the Cancel Modal and set the correct form action
     function openCancelModal(id) {
-        // REMOVE the '/status' from the end of this URL string
         document.getElementById('cancelAppointmentForm').action = `/admin/appointments/${id}`;
         new bootstrap.Modal(document.getElementById('cancelAppointmentModal')).show();
     }
@@ -355,7 +379,9 @@
         
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        
         const isPastDate = dateObj < today;
+        const isFutureDate = dateObj > today;
         
         // CHECK IF IT IS AN IMMUNIZATION OR PREGNANCY DAY
         const lowerLabel = (dayLabel || '').toLowerCase();
@@ -367,6 +393,9 @@
             document.getElementById('emptyState').classList.remove('d-none');
         } else {
             document.getElementById('emptyState').classList.add('d-none');
+            
+            let futureWarning = isFutureDate ? `onclick="event.preventDefault(); showFutureWarningModal(this.href);"` : '';
+
             dayAppointments.forEach(app => {
                 
                 let displayStatus = app.status;
@@ -387,15 +416,15 @@
                     if (isSpecialRecordDay) {
                         actions = `
                             <div class="d-flex gap-1 justify-content-end">
-                                <a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
-                                <a href="/admin/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>
+                                <a href="/admin/appointments/${app.id}/diagnose" ${futureWarning} class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
+                                <a href="/admin/patients/${app.user_id}" ${futureWarning} class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>
                                 <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>
                             </div>
                         `;
                     } else {
                         actions = `
                             <div class="d-flex gap-1 justify-content-end">
-                                <a href="/admin/appointments/${app.id}/diagnose" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
+                                <a href="/admin/appointments/${app.id}/diagnose" ${futureWarning} class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
                                 <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>
                             </div>
                         `;
