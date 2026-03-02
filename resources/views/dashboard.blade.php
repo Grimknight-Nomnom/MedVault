@@ -77,13 +77,21 @@
 
 <div class="container py-4">
 
-    {{-- CANCELLED APPOINTMENT ALERTS --}}
+{{-- CANCELLED APPOINTMENT ALERTS --}}
     @if(isset($recentCancellations) && $recentCancellations->count() > 0)
         @foreach($recentCancellations as $cancelledAppt)
-            <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4">
+            <div class="alert alert-danger border-start border-danger border-4 shadow-sm mb-4 position-relative">
+                
+                {{-- CLOSE BUTTON TO DELETE THE RECORD --}}
+                <form action="{{ route('appointments.destroy', $cancelledAppt->id) }}" method="POST" class="position-absolute top-0 end-0 mt-2 me-2">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn-close shadow-none" title="Dismiss Notification" aria-label="Close"></button>
+                </form>
+
                 <div class="d-flex align-items-center">
                     <i class="fas fa-calendar-times fa-2x me-3 text-danger"></i>
-                    <div class="w-100">
+                    <div class="w-100 pe-4"> {{-- Added pe-4 to prevent text from hitting the close button --}}
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <h5 class="alert-heading fw-bold mb-0">Appointment Cancelled by Admin</h5>
                             <span class="small text-muted">{{ $cancelledAppt->updated_at->diffForHumans() }}</span>

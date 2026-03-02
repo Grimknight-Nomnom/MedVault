@@ -14,18 +14,6 @@
         </div>
     </div>
 
-    {{-- ALERTS --}}
-    @if(session('success'))
-        <div class="alert alert-success border-0 shadow-sm fw-bold mb-4 rounded-3">
-            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger border-0 shadow-sm fw-bold mb-4 rounded-3">
-            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
-        </div>
-    @endif
-
     <div class="row g-4">
         <div class="col-lg-4">
             

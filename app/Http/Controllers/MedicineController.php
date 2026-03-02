@@ -11,6 +11,7 @@ use App\Models\Staff;
 use App\Models\MedicalRecord;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class MedicineController extends Controller
 {
@@ -166,7 +167,7 @@ class MedicineController extends Controller
 
         $medicines = $query->get();
         $patients = User::where('role', 'user')->orderBy('first_name')->get();
-        $staffList = Staff::orderBy('name')->get(); // Fetch Staff list to pass to the view
+        $staffList = Staff::orderBy('name')->get(); 
 
         return view('admin.medicines.index', compact('medicines', 'patients', 'staffList'));
     }
@@ -247,7 +248,7 @@ class MedicineController extends Controller
         $request->validate([
             'patient_id' => 'required|exists:users,id',
             'quantity' => 'required|integer|min:1',
-            'released_by' => 'required|string', // Ensuring the admin selects a staff member
+            'released_by' => 'required|string', 
         ]);
 
         $medicine = Medicine::findOrFail($id);
@@ -267,13 +268,13 @@ class MedicineController extends Controller
             "Released {$request->quantity} items to Patient: {$patient->first_name} {$patient->last_name} (By: {$request->released_by})"
         );
 
-        // 2. Create Medical Record for the Patient (Using special formatting)
+        // 2. Create Medical Record for the Patient
         MedicalRecord::create([
             'user_id' => $patient->id,
             'appointment_id' => null, 
-            'diagnosis' => 'MEDICINE_DISPENSED', // Using this exact string as a flag for the view
-            'prescription' => $medicine->name, // Store Med Name here temporarily
-            'notes' => "{$request->quantity}|{$medicine->description}|{$request->released_by}", // Use a pipe "|" separator for parsing
+            'diagnosis' => 'MEDICINE_DISPENSED',
+            'prescription' => $medicine->name,
+            'notes' => "{$request->quantity}|{$medicine->description}|{$request->released_by}", 
         ]);
 
         return redirect()->route('admin.medicines.index')->with('success', 'Medicine released successfully!');
@@ -328,9 +329,6 @@ class MedicineController extends Controller
     }
 
     /**
-     * Export Expired and Out of Stock Medicines to Excel (CSV)
-     */
-/**
      * Export Expired and Out of Stock Medicines to Excel (.xls)
      */
     public function exportExpired()
@@ -376,11 +374,16 @@ class MedicineController extends Controller
                 $isExpired = $medicine->expiry_date <= $today;
 
                 echo '<tr>';
-                // Column A: Number sequence (1, 2, 3...)
-                echo '<td>' . $counter++ . '</td>'; 
+                
+                // Column A: Number sequence (1, 2, 3...) - NOW BOLD
+                echo '<td style="font-weight: bold;">' . $counter++ . '</td>'; 
+                
                 echo '<td>' . htmlspecialchars($medicine->name) . '</td>';
                 echo '<td>' . htmlspecialchars($medicine->category) . '</td>';
-                echo '<td>' . htmlspecialchars($medicine->description) . '</td>';
+                
+                // Truncate Description to 50 characters maximum
+                $shortDescription = Str::limit($medicine->description, 50, '...');
+                echo '<td>' . htmlspecialchars($shortDescription) . '</td>';
                 
                 // Highlight Stock Cell RED if 0
                 if ($isZeroStock) {
@@ -418,10 +421,7 @@ class MedicineController extends Controller
     {
         $today = Carbon::today()->format('Y-m-d');
 
-        // Check conditions: Expired date AND Stock exists
         if ($medicine->expiry_date <= $today && $medicine->stock_quantity > 0) {
-            
-            // Format to Month Year (e.g. "January 2026")
             $formattedExpiry = Carbon::parse($medicine->expiry_date)->format('F Y');
 
             $this->logHistory(
@@ -431,7 +431,6 @@ class MedicineController extends Controller
                 "Medicine expired on " . $formattedExpiry
             );
 
-            // Set stock to 0 immediately
             $medicine->update(['stock_quantity' => 0]);
         }
     }
@@ -443,13 +442,11 @@ class MedicineController extends Controller
     {
         $today = Carbon::today()->format('Y-m-d');
         
-        // Only fetch medicines that look expired and have stock
         $medicines = Medicine::where('expiry_date', '<=', $today)
                              ->where('stock_quantity', '>', 0)
                              ->get();
 
         foreach ($medicines as $medicine) {
-            // Safety check to avoid double logging on dashboard refresh
             $alreadyLogged = MedicineHistory::where('medicine_name', $medicine->name)
                 ->where('action_type', 'Expired')
                 ->whereDate('performed_at', Carbon::today())

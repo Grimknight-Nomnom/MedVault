@@ -266,7 +266,7 @@ class AppointmentController extends Controller
         return redirect()->route('appointments.index')->with('success', "Booked successfully for {$targetPatient->first_name}!");
     }
 
-    public function destroy(Appointment $appointment)
+public function destroy(Appointment $appointment)
     {
         $familyIds = collect([Auth::id()])->merge(Auth::user()->children->pluck('id'));
         
@@ -275,9 +275,17 @@ class AppointmentController extends Controller
         }
 
         $date = $appointment->appointment_date;
+        $wasAlreadyCancelled = $appointment->status === 'cancelled';
+        
         $appointment->delete();
         $this->resequenceQueue($date);
 
+        // If they are just dismissing the notification for an already cancelled appointment
+        if ($wasAlreadyCancelled) {
+            return redirect()->route('dashboard')->with('success', 'Cancellation notification dismissed.');
+        }
+
+        // Standard cancellation message
         return redirect()->route('dashboard')->with('success', 'Appointment cancelled successfully. Queue has been updated.');
     }
 
