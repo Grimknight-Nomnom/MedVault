@@ -33,12 +33,15 @@ class ProfileController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:500',
-            'allergies' => 'nullable|string',
-            'current_medication' => 'nullable|string',
-            'existing_medical_conditions' => 'nullable|string',
+            
+            // Medical History is strictly required
+            'allergies' => 'required|string',
+            'current_medication' => 'required|string',
+            'existing_medical_conditions' => 'required|string',
             
             'philhealth_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'senior_pwd_id' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            // Residency photo restored
             'patient_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', 
         ]);
 
@@ -61,6 +64,7 @@ class ProfileController extends Controller
             $user->senior_pwd_id_path = $path;
         }
 
+        // Restored Residency / Indigency logic
         if ($request->hasFile('patient_photo')) {
             if ($user->patient_photo_path) {
                 Storage::disk('public')->delete($user->patient_photo_path);
@@ -95,6 +99,7 @@ class ProfileController extends Controller
             return back()->with('success', 'Senior/PWD ID deleted successfully. Please upload a new one if you are still a member.');
         }
         
+        // Restored Residency delete logic
         if ($type === 'residency' && $user->patient_photo_path) {
             Storage::disk('public')->delete($user->patient_photo_path);
             $user->patient_photo_path = null;
@@ -146,10 +151,10 @@ class ProfileController extends Controller
             'age' => $ageString,
             'civil_status' => 'Single',
             
-            // Format a cleaner dummy email just in case (e.g., john_123@dependent.local)
+            // Format a cleaner dummy email just in case
             'email' => strtolower(str_replace(' ', '', $validated['first_name'])) . '_' . $randomNumber . '@dependent.local', 
             
-            // --- UPDATED: Securely copy the parent's hashed password ---
+            // Securely copy the parent's hashed password
             'password' => $parent->password, 
             
             'phone' => $parent->phone, 
@@ -157,7 +162,7 @@ class ProfileController extends Controller
             'role' => 'user',
             'usernumber' => $randomNumber,
             'email_verified_at' => $parent->email_verified_at, 
-            'patient_photo_path' => $parent->patient_photo_path, 
+            'patient_photo_path' => $parent->patient_photo_path, // Restored child inheriting parent's residency
         ]);
 
         return back()->with('success', "Child account added! They can log in using their User ID (#{$randomNumber}) and your password.");
@@ -173,9 +178,11 @@ class ProfileController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'date_of_birth' => 'required|date|before_or_equal:today',
             'gender' => 'required|string|in:Male,Female,Other',
-            'allergies' => 'nullable|string',
-            'current_medication' => 'nullable|string',
-            'existing_medical_conditions' => 'nullable|string',
+            
+            // Medical History is strictly required for dependents
+            'allergies' => 'required|string',
+            'current_medication' => 'required|string',
+            'existing_medical_conditions' => 'required|string',
         ]);
 
         // STRICT AGE CALCULATION

@@ -304,7 +304,8 @@ public function updatePregnancyRecord(Request $request, $id)
         // Find or create the pregnancy record
         $record = $patient->pregnancyRecord()->firstOrCreate([]);
 
-        $data = $request->except(['_token', '_method']);
+        // Exclude our new hidden field along with standard tokens
+        $data = $request->except(['_token', '_method', 'redirect_to_calendar']);
         
         // Handle unchecked checkboxes
         if (!$request->has('bemonc_cemonc')) {
@@ -320,13 +321,21 @@ public function updatePregnancyRecord(Request $request, $id)
             ->orderBy('appointment_date', 'asc')
             ->first();
 
+        $message = 'Pregnancy Record updated successfully!';
+
         if ($activeAppointment) {
             $activeAppointment->update(['status' => 'completed']);
-            return back()->with('success', 'Pregnancy Record saved! The booked appointment is now marked as Completed.');
+            $message = 'Pregnancy Record saved! The booked appointment is now marked as Completed.';
         }
 
-        // Default message if no active appointment was found
-        return back()->with('success', 'Pregnancy Record updated successfully!');
+        // REDIRECT LOGIC
+        if ($request->redirect_to_calendar == '1') {
+            return redirect()->route('admin.appointments.index')
+                             ->with('success', $message . ' You can now select a date here to book the next visit.');
+        }
+
+        // Default behavior (stay on the same page)
+        return back()->with('success', $message);
     }
 
 public function createImmunizationRecord($id)

@@ -9,31 +9,13 @@
             <div class="modal-body p-0 bg-white">
                 @php
                     $pr = $patient->pregnancyRecord;
-                    
-                    // 1. Force the current date to a plain string
-                    $todayString = \Carbon\Carbon::today()->toDateString();
-
-                    // 2. Fetch dates safely using multiple LIKE conditions to bypass case-sensitivity issues
-                    $allowedPregnancyDates = \App\Models\AppointmentSetting::where(function($query) {
-                            $query->where('label', 'LIKE', '%Pregnancy%')
-                                  ->orWhere('label', 'LIKE', '%pregnancy%')
-                                  ->orWhere('label', 'LIKE', '%PREGNANCY%');
-                        })
-                        ->whereDate('date', '>=', $todayString)
-                        ->where('is_closed', false) // Ensures the clinic is not closed
-                        ->pluck('date')
-                        ->map(function ($date) {
-                            return \Carbon\Carbon::parse($date)->format('Y-m-d'); // Guarantee perfect YYYY-MM-DD format
-                        })
-                        ->values()
-                        ->toArray();
                 @endphp
 
                 <form action="{{ route('admin.patients.update_pregnancy', $patient->id) }}" method="POST" id="pregnancyForm">
                     @csrf
                     @method('PUT')
                     
-                    <input type="hidden" name="next_appointment_date" id="hidden_appt_date">
+                    <input type="hidden" name="redirect_to_calendar" id="redirect_to_calendar" value="0">
                     
                     <div class="bg-light border-bottom px-4 pt-3">
                         <ul class="nav nav-tabs nav-tabs-custom border-0" id="pregnancyTabs" role="tablist">
@@ -548,22 +530,15 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 bg-white text-center">
-                <p class="text-muted small mb-3">
-                    Would you like to schedule a date for the patient's next visit?
+                <p class="text-muted small mb-4">
+                    Would you like to go to the Clinic Calendar to book the patient's next visit after saving?
                 </p>
 
-                <div class="mb-4">
-                    <input type="text" id="modal_appt_date" style="display: none;">
-                    <div id="no_dates_warning" class="text-danger small mt-1" style="display: none; font-weight: 600;">
-                        <i class="fas fa-exclamation-triangle me-1"></i>No upcoming Pregnancy dates available in schedule.
-                    </div>
-                </div>
-
                 <div class="d-flex flex-column gap-2 mt-2">
-                    <button type="button" class="btn btn-primary fw-bold rounded-pill shadow-sm" onclick="submitWithAppointment()">
-                        <i class="fas fa-check me-2"></i>Yes, Book & Save
+                    <button type="button" class="btn btn-primary fw-bold rounded-pill shadow-sm" onclick="submitAndRedirect()">
+                        <i class="fas fa-calendar-alt me-2"></i>Yes, Save & Go to Calendar
                     </button>
-                    <button type="button" class="btn btn-light border fw-bold rounded-pill text-secondary" onclick="submitWithoutAppointment()">
+                    <button type="button" class="btn btn-light border fw-bold rounded-pill text-secondary" onclick="submitOnly()">
                         No, Just Save Record
                     </button>
                 </div>
@@ -572,43 +547,8 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
 <script>
-    // Ensure the PHP array is properly parsed into a global Javascript variable
-    window.allowedPregnancyDates = @json($allowedPregnancyDates);
-
     document.addEventListener('DOMContentLoaded', function() {
-        
-        let flatpickrInstance = null;
-
-        // --- Initialize Flatpickr only when the Book Visit Modal is opened ---
-        document.getElementById('bookNextVisitModal').addEventListener('shown.bs.modal', function () {
-            
-            console.log("Pregnancy Dates found in DB: ", window.allowedPregnancyDates);
-
-            if (window.allowedPregnancyDates && window.allowedPregnancyDates.length > 0) {
-                
-                // Destroy previous instance to prevent multiple calendars from rendering
-                if(flatpickrInstance) flatpickrInstance.destroy();
-
-                flatpickrInstance = flatpickr("#modal_appt_date", {
-                    enable: window.allowedPregnancyDates, // This physically locks all other dates!
-                    inline: true,  // <--- This makes the calendar instantly visible inside the modal!
-                    dateFormat: "Y-m-d",
-                    minDate: "today",
-                    disableMobile: true 
-                });
-
-                document.getElementById('no_dates_warning').style.display = 'none';
-
-            } else {
-                document.getElementById('modal_appt_date').style.display = 'none';
-                document.getElementById('no_dates_warning').style.display = 'block';
-            }
-        });
-
         // --- Cascading Logic for BANC, Vaccines, etc. ---
         function setupSequentialGroup(form, config) {
             const resolvedSteps = config.steps.map(stepNames => {
@@ -772,21 +712,16 @@
 
     });
 
-    // --- Form Submission Logic ---
-    function submitWithAppointment() {
-        const dateInput = document.getElementById('modal_appt_date');
-
-        if (!dateInput.value) {
-            alert('Please click on a valid date on the calendar first.');
-            return;
-        }
-
-        document.getElementById('hidden_appt_date').value = dateInput.value;
+    // --- SUBMISSION AND REDIRECTION LOGIC ---
+    function submitAndRedirect() {
+        // Mark that we want to redirect to calendar after save
+        document.getElementById('redirect_to_calendar').value = '1';
         document.getElementById('pregnancyForm').submit();
     }
 
-    function submitWithoutAppointment() {
-        document.getElementById('hidden_appt_date').value = '';
+    function submitOnly() {
+        // Keep the user on the patient profile page after save
+        document.getElementById('redirect_to_calendar').value = '0';
         document.getElementById('pregnancyForm').submit();
     }
 </script>

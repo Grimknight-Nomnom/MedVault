@@ -94,6 +94,7 @@
                                     <input type="text" name="address" class="form-control" value="{{ old('address', $user->address) }}" required placeholder="House No., Street, Barangay, City">
                                 </div>
 
+                                {{-- RESTORED: Proof of Residency / Indigency --}}
                                 <div class="col-md-12 mt-4">
                                     <label class="form-label fw-bold">Proof of Residency / Indigency <span class="text-danger">*</span></label>
                                     <div class="p-4 bg-light rounded border shadow-sm">
@@ -134,21 +135,21 @@
                                 <i class="fas fa-notes-medical me-2"></i>Medical History
                             </h5>
                             <div class="alert alert-light border border-secondary border-opacity-10 small mb-3">
-                                <i class="fas fa-info-circle me-1 text-info"></i> Please list 'None' or 'N/A' if not applicable.
+                                <i class="fas fa-info-circle me-1 text-danger"></i> These fields are required. Please list 'None' or 'N/A' if not applicable.
                             </div>
                             
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <label class="form-label fw-bold">Allergies</label>
-                                    <textarea name="allergies" class="form-control" rows="2" placeholder="e.g. Penicillin, Peanuts...">{{ old('allergies', $user->allergies) }}</textarea>
+                                    <label class="form-label fw-bold">Allergies <span class="text-danger">*</span></label>
+                                    <textarea name="allergies" class="form-control" rows="2" placeholder="e.g. Penicillin, Peanuts, or type 'N/A'" required>{{ old('allergies', $user->allergies) }}</textarea>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label fw-bold">Current Medications</label>
-                                    <textarea name="current_medication" class="form-control" rows="2" placeholder="List medications you are currently taking...">{{ old('current_medication', $user->current_medication) }}</textarea>
+                                    <label class="form-label fw-bold">Current Medications <span class="text-danger">*</span></label>
+                                    <textarea name="current_medication" class="form-control" rows="2" placeholder="List medications you are currently taking or type 'N/A'" required>{{ old('current_medication', $user->current_medication) }}</textarea>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label fw-bold">Existing Medical Conditions</label>
-                                    <textarea name="existing_medical_conditions" class="form-control" rows="2" placeholder="e.g., Hypertension, Diabetes...">{{ old('existing_medical_conditions', $user->existing_medical_conditions) }}</textarea>
+                                    <label class="form-label fw-bold">Existing Medical Conditions <span class="text-danger">*</span></label>
+                                    <textarea name="existing_medical_conditions" class="form-control" rows="2" placeholder="e.g., Hypertension, Diabetes, or type 'None'" required>{{ old('existing_medical_conditions', $user->existing_medical_conditions) }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -249,6 +250,7 @@
                         @csrf
                         @method('DELETE')
                     </form>
+                    {{-- RESTORED: Form for Deleting Residency ID --}}
                     <form id="delete-residency-form" action="{{ route('profile.delete_id', 'residency') }}" method="POST" class="d-none">
                         @csrf
                         @method('DELETE')
@@ -383,19 +385,22 @@
                         </div>
                     </div>
 
-                    <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">Medical History</h6>
+                    <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">Medical History</h6>
+                    <div class="alert alert-light border border-secondary border-opacity-10 small mb-3">
+                        <i class="fas fa-info-circle me-1 text-danger"></i> Required fields. Please type 'N/A' or 'None' if not applicable.
+                    </div>
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label small fw-bold">Allergies</label>
-                            <textarea name="allergies" class="form-control bg-white" rows="2">{{ $child->allergies }}</textarea>
+                            <label class="form-label small fw-bold">Allergies <span class="text-danger">*</span></label>
+                            <textarea name="allergies" class="form-control bg-white" rows="2" placeholder="Type 'N/A' if none" required>{{ $child->allergies }}</textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-bold">Current Medications</label>
-                            <textarea name="current_medication" class="form-control bg-white" rows="2">{{ $child->current_medication }}</textarea>
+                            <label class="form-label small fw-bold">Current Medications <span class="text-danger">*</span></label>
+                            <textarea name="current_medication" class="form-control bg-white" rows="2" placeholder="Type 'N/A' if none" required>{{ $child->current_medication }}</textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-bold">Existing Medical Conditions</label>
-                            <textarea name="existing_medical_conditions" class="form-control bg-white" rows="2">{{ $child->existing_medical_conditions }}</textarea>
+                            <label class="form-label small fw-bold">Existing Medical Conditions <span class="text-danger">*</span></label>
+                            <textarea name="existing_medical_conditions" class="form-control bg-white" rows="2" placeholder="Type 'N/A' if none" required>{{ $child->existing_medical_conditions }}</textarea>
                         </div>
                     </div>
 
