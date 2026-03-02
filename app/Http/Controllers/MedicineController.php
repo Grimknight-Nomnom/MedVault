@@ -327,6 +327,87 @@ class MedicineController extends Controller
         return view('patient.medicines.index', compact('medicines'));
     }
 
+    /**
+     * Export Expired and Out of Stock Medicines to Excel (CSV)
+     */
+/**
+     * Export Expired and Out of Stock Medicines to Excel (.xls)
+     */
+    public function exportExpired()
+    {
+        $today = Carbon::today()->format('Y-m-d');
+        
+        // Fetch medicines that have 0 stock OR are expired
+        $medicines = Medicine::where('stock_quantity', '<=', 0)
+                             ->orWhere('expiry_date', '<=', $today)
+                             ->get();
+
+        // Change extension to .xls so Excel renders the HTML formatting
+        $fileName = 'Expired_And_Empty_Stock_Meds_' . date('Y-m-d') . '.xls';
+
+        $headers = array(
+            "Content-type"        => "application/vnd.ms-excel",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        );
+
+        $callback = function() use($medicines, $today) {
+            // Echo HTML table structure (Excel reads this natively)
+            echo '<html><body><table border="1">';
+            
+            // ROW 1: Headers (All Bold)
+            echo '<tr>';
+            echo '<th style="font-weight:bold; background-color:#f8f9fa;">#</th>'; // A1 is the number header
+            echo '<th style="font-weight:bold; background-color:#f8f9fa;">Name</th>';
+            echo '<th style="font-weight:bold; background-color:#f8f9fa;">Category</th>';
+            echo '<th style="font-weight:bold; background-color:#f8f9fa;">Description</th>';
+            echo '<th style="font-weight:bold; background-color:#f8f9fa;">Stock</th>';
+            echo '<th style="font-weight:bold; background-color:#f8f9fa;">Expiry Date</th>';
+            echo '</tr>';
+
+            $counter = 1; // Start the counter for Column A
+
+            // ROWS 2+: Data
+            foreach ($medicines as $medicine) {
+                // Check if they are expired or out of stock to apply styling
+                $isZeroStock = $medicine->stock_quantity <= 0;
+                $isExpired = $medicine->expiry_date <= $today;
+
+                echo '<tr>';
+                // Column A: Number sequence (1, 2, 3...)
+                echo '<td>' . $counter++ . '</td>'; 
+                echo '<td>' . htmlspecialchars($medicine->name) . '</td>';
+                echo '<td>' . htmlspecialchars($medicine->category) . '</td>';
+                echo '<td>' . htmlspecialchars($medicine->description) . '</td>';
+                
+                // Highlight Stock Cell RED if 0
+                if ($isZeroStock) {
+                    echo '<td style="background-color: #ffcccc; color: #cc0000; font-weight: bold;">' . $medicine->stock_quantity . '</td>';
+                } else {
+                    echo '<td>' . $medicine->stock_quantity . '</td>';
+                }
+
+                // Format Date to Month and Year only (e.g. "January 2026")
+                $formattedExpiry = \Carbon\Carbon::parse($medicine->expiry_date)->format('F Y');
+
+                // Highlight Expiry Cell RED if expired
+                if ($isExpired) {
+                    echo '<td style="background-color: #ffcccc; color: #cc0000; font-weight: bold;">' . $formattedExpiry . '</td>';
+                } else {
+                    echo '<td>' . $formattedExpiry . '</td>';
+                }
+                
+                echo '</tr>';
+            }
+
+            echo '</table></body></html>';
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     // --- HELPER FUNCTIONS ---
 
     /**

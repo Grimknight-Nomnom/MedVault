@@ -123,6 +123,8 @@ Route::middleware(['auth'])->group(function () {
 
         Route::controller(MedicineController::class)->group(function () {
             Route::get('/medicines', 'index')->name('admin.medicines.index');
+            Route::get('/medicines/export-expired', 'exportExpired')->name('admin.medicines.export_expired');
+            
             Route::get('/medicines/create', 'create')->name('admin.medicines.create');
             Route::post('/medicines', 'store')->name('admin.medicines.store');
             Route::get('/medicines/history', 'history')->name('admin.medicines.history');

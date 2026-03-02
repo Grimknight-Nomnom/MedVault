@@ -8,7 +8,12 @@
             <h2 class="fw-bold text-primary mb-1">Medicine Inventory</h2>
             <p class="text-muted small mb-0">Manage stock, track expiry dates, and dispense medicines.</p>
         </div>
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-3 flex-wrap">
+            {{-- NEW EXPORT EXCEL BUTTON --}}
+            <a href="{{ route('admin.medicines.export_expired') }}" class="btn btn-success shadow-sm rounded-pill px-4">
+                <i class="fas fa-file-excel me-2"></i>Export Expired/0 Stock
+            </a>
+
             <a href="{{ route('admin.medicines.history') }}" class="btn btn-secondary shadow-sm rounded-pill px-4">
                 <i class="fas fa-history me-2"></i>View History
             </a>
