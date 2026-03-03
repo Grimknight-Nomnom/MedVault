@@ -48,16 +48,6 @@
         </a>
     </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger shadow-sm border-0 mb-4">
-            <ul class="mb-0 mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="card shadow border-0 rounded-4">
         <div class="card-body p-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">

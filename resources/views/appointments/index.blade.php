@@ -28,16 +28,7 @@
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success border-0 shadow-sm fw-bold mb-4 rounded-3">
-            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger border-0 shadow-sm fw-bold mb-4 rounded-3">
-            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-        </div>
-    @endif
+    {{-- DUPLICATE ALERTS REMOVED FROM HERE --}}
 
     @if($appointments->isEmpty())
         <div class="card border-0 shadow-sm rounded-4 text-center py-5">

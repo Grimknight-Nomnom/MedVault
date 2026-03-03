@@ -50,6 +50,32 @@ class AppointmentController extends Controller
         return false; 
     }
 
+    private function isImmunizationRestricted($date, $user)
+    {
+        $setting = AppointmentSetting::where('date', $date)->first();
+        $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+        $label = '';
+        
+        if ($setting && !empty($setting->label)) {
+            $label = $setting->label;
+        } elseif ($dayOfWeek === Carbon::WEDNESDAY) { 
+            $label = 'Immunization';
+        }
+
+        if (Str::contains(Str::lower($label), 'immunization')) {
+            if ($user->date_of_birth) {
+                $ageInYears = $user->date_of_birth->diffInYears(Carbon::now());
+                
+                // If patient is 2 years old or older, restrict them.
+                // This means ONLY patients strictly less than 2 (age 0 and 1) are allowed.
+                if ($ageInYears >= 2) {
+                    return true; 
+                }
+            }
+        }
+        return false; 
+    }
+
     private function resequenceQueue($date)
     {
         $appointments = Appointment::where('appointment_date', $date)
@@ -235,8 +261,14 @@ class AppointmentController extends Controller
 
         $date = $request->appointment_date;
 
+        // 1. Pregnancy Check
         if ($this->isPregnancyRestricted($date, $targetPatient)) {
             return back()->withErrors(['msg' => "Access Denied: This date is reserved for Pregnancy checkups. ({$targetPatient->first_name} is not eligible)."]);
+        }
+
+        // 2. Immunization Age Check (< 2 years old allowed)
+        if ($this->isImmunizationRestricted($date, $targetPatient)) {
+            return back()->withErrors(['msg' => "Booking Failed: This date is reserved for Immunization. {$targetPatient->first_name} is {$targetPatient->age}. Only patients less than 2 years old are eligible for this schedule."]);
         }
 
         if (Appointment::where('user_id', $patientId)
