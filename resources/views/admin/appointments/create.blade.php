@@ -10,7 +10,8 @@
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             
-            <a href="{{ route('admin.appointments.index') }}" class="text-decoration-none text-muted mb-3 d-inline-block">
+            {{-- DYNAMIC ROUTE: Back to List --}}
+            <a href="{{ route(auth()->user()->role . '.appointments.index') }}" class="text-decoration-none text-muted mb-3 d-inline-block">
                 <i class="fas fa-arrow-left me-1"></i> Back to List
             </a>
 
@@ -25,7 +26,6 @@
 
                 <div class="card-body p-4">
                     
-                    {{-- NEW: Custom HTML session error using 'booking_error' instead of 'error' --}}
                     @if(session('booking_error'))
                         <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
                             <i class="fas fa-exclamation-circle me-1"></i> {!! session('booking_error') !!}
@@ -33,7 +33,6 @@
                         </div>
                     @endif
 
-                    {{-- Existing form validation errors --}}
                     @if ($errors->any())
                         <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
                             <ul class="mb-0 small">
@@ -45,7 +44,8 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('admin.appointments.store') }}" method="POST">
+                    {{-- DYNAMIC ROUTE: Form Action --}}
+                    <form action="{{ route(auth()->user()->role . '.appointments.store') }}" method="POST">
                         @csrf
 
                         <div class="mb-4">
@@ -56,7 +56,7 @@
                                     <option value="">-- Choose a Patient --</option>
                                     @foreach($patients as $patient)
                                         <option value="{{ $patient->id }}" {{ old('user_id') == $patient->id ? 'selected' : '' }}>
-                                            {{ $patient->last_name }}, {{ $patient->first_name }} (ID: {{ $patient->id }})
+                                            {{ $patient->last_name }}, {{ $patient->first_name }} (ID: {{ $patient->usernumber ?? $patient->id }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -104,7 +104,7 @@
 <script>
     flatpickr("#appointment_date", {
         dateFormat: "Y-m-d",
-        minDate: "today", // Disables past dates
+        minDate: "today", 
         allowInput: true
     });
 </script>

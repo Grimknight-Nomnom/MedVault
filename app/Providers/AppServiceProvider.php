@@ -5,8 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Facades\Gate; // <-- 1. Import Gate
-use App\Models\User;                 // <-- 2. Import User model
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use Illuminate\Pagination\Paginator; // <-- 1. Import Paginator
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,11 +24,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // --- ADD THIS: Define the 'admin' Gate ---
+        // --- ADD THIS: Force Laravel to use Bootstrap 5 for Pagination ---
+        Paginator::useBootstrapFive();
+        // -----------------------------------------------------------------
+
+        // Define the 'admin' Gate
         Gate::define('admin', function (User $user) {
             return $user->role === 'admin';
         });
-        // -----------------------------------------
+
+        // Define the 'staff' Gate
+        Gate::define('staff', function (User $user) {
+            return $user->role === 'staff';
+        });
 
         // Your custom email verification logic
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {

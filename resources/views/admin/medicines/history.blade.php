@@ -3,14 +3,16 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold text-primary">Inventory History</h2>
-    <a href="{{ route('admin.medicines.index') }}" class="btn btn-outline-secondary">
+    {{-- DYNAMIC ROUTE: Goes back to either staff.medicines.index or admin.medicines.index --}}
+    <a href="{{ route(auth()->user()->role . '.medicines.index') }}" class="btn btn-outline-secondary">
         &larr; Back to Inventory
     </a>
 </div>
 
 <div class="card shadow border-0 mb-4">
     <div class="card-body py-3">
-        <form action="{{ route('admin.medicines.history') }}" method="GET" class="d-flex gap-2">
+        {{-- DYNAMIC ROUTE for Search Form Action --}}
+        <form action="{{ route(auth()->user()->role . '.medicines.history') }}" method="GET" class="d-flex gap-2">
             <input type="text" 
                    name="search" 
                    class="form-control" 
@@ -22,7 +24,8 @@
             </button>
             
             @if(request('search'))
-                <a href="{{ route('admin.medicines.history') }}" class="btn btn-outline-danger">
+                {{-- DYNAMIC ROUTE for Clear Button --}}
+                <a href="{{ route(auth()->user()->role . '.medicines.history') }}" class="btn btn-outline-danger">
                     Clear
                 </a>
             @endif
@@ -47,8 +50,8 @@
                     @forelse($history as $log)
                     <tr>
                         <td>
-                            <div class="fw-bold">{{ $log->performed_at->format('F d, Y') }}</div>
-                            <small class="text-muted">{{ $log->performed_at->format('h:i A') }}</small>
+                            <div class="fw-bold">{{ \Carbon\Carbon::parse($log->performed_at)->format('F d, Y') }}</div>
+                            <small class="text-muted">{{ \Carbon\Carbon::parse($log->performed_at)->format('h:i A') }}</small>
                         </td>
                         <td class="fw-bold">{{ $log->medicine_name }}</td>
                         <td>

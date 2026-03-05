@@ -9,12 +9,10 @@
             <p class="text-muted small mb-0">Manage stock, track expiry dates, and dispense medicines.</p>
         </div>
         <div class="d-flex gap-3 flex-wrap">
-            {{-- ONLY ADMIN CAN EXPORT OR ADD --}}
-            @if(auth()->user()->role === 'admin')
                 <a href="{{ route('admin.medicines.export_expired') }}" class="btn btn-success shadow-sm rounded-pill px-4">
                     <i class="fas fa-file-excel me-2"></i>Export Expired/0 Stock
                 </a>
-            @endif
+   
 
             <a href="{{ route(auth()->user()->role . '.medicines.history') }}" class="btn btn-secondary shadow-sm rounded-pill px-4">
                 <i class="fas fa-history me-2"></i>View History

@@ -68,6 +68,24 @@ Route::prefix('staff')->middleware(['auth', 'verified', 'can:staff'])->group(fun
     // Staff Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\StaffController::class, 'dashboard'])->name('staff.dashboard');
 
+    // Announcements (Staff can view, create, and edit, but NO DELETE)
+    Route::get('/announcements', [\App\Http\Controllers\AdminAnnouncementController::class, 'index'])->name('staff.announcements.index');
+    Route::get('/announcements/create', [\App\Http\Controllers\AdminAnnouncementController::class, 'create'])->name('staff.announcements.create');
+    Route::post('/announcements', [\App\Http\Controllers\AdminAnnouncementController::class, 'store'])->name('staff.announcements.store');
+    Route::get('/announcements/{announcement}/edit', [\App\Http\Controllers\AdminAnnouncementController::class, 'edit'])->name('staff.announcements.edit');
+    Route::put('/announcements/{announcement}', [\App\Http\Controllers\AdminAnnouncementController::class, 'update'])->name('staff.announcements.update');
+
+    // Staff Member Management (Staff can add and edit, but NO DELETE)
+    Route::post('/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('staff.staff.store');
+    Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('staff.staff.update');
+
+    // ADD THESE: Read-Only Announcements (Active Posts)
+    Route::get('/announcements', [\App\Http\Controllers\AdminAnnouncementController::class, 'index'])->name('staff.announcements.index');
+
+    // ADD THESE: Chart API Routes for Staff Dashboard
+    Route::get('/api/trends', [\App\Http\Controllers\MedicineController::class, 'getTrendsData'])->name('staff.trends.api');
+    Route::get('/api/report', [\App\Http\Controllers\MedicineController::class, 'getPeekData'])->name('staff.report.api');
+
     // RESTRICTED ACCOUNT VIEWING (Read-Only)
     Route::get('/patients', [\App\Http\Controllers\AdminController::class, 'indexPatients'])->name('staff.patients.index');
     Route::get('/patients/{id}', [\App\Http\Controllers\AdminController::class, 'showPatient'])->name('staff.patients.show');
@@ -75,6 +93,18 @@ Route::prefix('staff')->middleware(['auth', 'verified', 'can:staff'])->group(fun
     // MEDICINE INVENTORY (Read-Only)
     Route::get('/medicines', [\App\Http\Controllers\MedicineController::class, 'index'])->name('staff.medicines.index');
     Route::get('/medicines/history', [\App\Http\Controllers\MedicineController::class, 'history'])->name('staff.medicines.history');
+
+    // ADD THESE: Patient Verification Routes for Staff
+    Route::post('/patients/{id}/force-verify', [\App\Http\Controllers\AdminController::class, 'verifyPatient'])->name('staff.patients.verify');
+    Route::post('/patients/{id}/reject-residency', [\App\Http\Controllers\AdminController::class, 'rejectResidency'])->name('staff.patients.reject_residency');
+    Route::post('/patients/{id}/approve-residency', [\App\Http\Controllers\AdminController::class, 'approveResidency'])->name('staff.patients.approve_residency');
+
+    // ADD THESE: Export Medicines
+    Route::get('/medicines/export-expired', [\App\Http\Controllers\MedicineController::class, 'exportExpired'])->name('staff.medicines.export_expired');
+
+    // ADD THESE: Book Walk-In Appointments
+    Route::get('/appointments/create', [\App\Http\Controllers\AppointmentController::class, 'adminCreate'])->name('staff.appointments.create');
+    Route::post('/appointments', [\App\Http\Controllers\AppointmentController::class, 'adminStore'])->name('staff.appointments.store');
 
     // APPOINTMENTS (Read-Only)
     Route::get('/appointments', [\App\Http\Controllers\AppointmentController::class, 'adminIndex'])->name('staff.appointments.index');
@@ -183,9 +213,28 @@ Route::post('/patients/{id}/reject-residency', [App\Http\Controllers\AdminContro
             Route::put('/patients/{id}/immunization-record/complete', 'completeImmunizationRecord')->name('admin.patients.complete_immunization');
         });
 
-        Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
+Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
         Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
         Route::get('/records/{record}/edit', [MedicalRecordController::class, 'edit'])->name('admin.records.edit');
         Route::put('/records/{record}', [MedicalRecordController::class, 'update'])->name('admin.records.update');
+    }); // <-- End of admin group
+
+    // --- ADD THE STAFF ROUTE GROUP HERE ---
+    Route::prefix('staff')->middleware(['can:staff'])->group(function () {
+        // Staff Dashboard
+        Route::get('/dashboard', [\App\Http\Controllers\StaffController::class, 'dashboard'])->name('staff.dashboard');
+
+        // Patients (Read-Only)
+        Route::get('/patients', [AdminController::class, 'indexPatients'])->name('staff.patients.index');
+        Route::get('/patients/{id}', [AdminController::class, 'showPatient'])->name('staff.patients.show');
+
+        // Medicines (Read-Only)
+        Route::get('/medicines', [MedicineController::class, 'index'])->name('staff.medicines.index');
+        Route::get('/medicines/history', [MedicineController::class, 'history'])->name('staff.medicines.history');
+
+        // Appointments (Read-Only)
+        Route::get('/appointments', [AppointmentController::class, 'adminIndex'])->name('staff.appointments.index');
     });
-});
+    // ---------------------------------------
+
+}); // <-- End of auth, verified group

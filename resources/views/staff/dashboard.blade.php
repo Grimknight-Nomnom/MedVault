@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    .bg-primary-opacity { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-danger-opacity { background-color: rgba(220, 53, 69, 0.1); }
+</style>
+
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -16,12 +21,12 @@
     {{-- STATS ROW --}}
     <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="card h-100 border-0 border-start border-4 border-primary shadow-sm">
+            <div class="card h-100 border-0 border-start border-4 border-primary shadow-sm" style="transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
                         <p class="text-muted mb-1 fw-bold text-uppercase small">Total Medicines</p>
-                        <h3 class="fw-bold mb-0">{{ $totalMedicines }}</h3>
-                        <span class="text-muted small fw-bold">Inventory Overview</span>
+                        <h3 class="fw-bold mb-0">{{ \App\Models\Medicine::count() }}</h3>
+                        <a href="{{ route('staff.medicines.index') }}" class="text-primary text-decoration-none small fw-bold stretched-link">Inventory Overview <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="bg-primary bg-opacity-10 p-3 rounded-circle"><i class="fas fa-pills fa-2x text-primary"></i></div>
                 </div>
@@ -29,12 +34,12 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card h-100 border-0 border-start border-4 border-info shadow-sm">
+            <div class="card h-100 border-0 border-start border-4 border-info shadow-sm" style="transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
                         <p class="text-muted mb-1 fw-bold text-uppercase small">Today's Appointments</p>
                         <h3 class="fw-bold mb-0">{{ $todayAppointmentsCount ?? 0 }}</h3>
-                        <span class="text-muted small fw-bold">Daily Schedule</span>
+                        <a href="{{ route('staff.appointments.index') }}" class="text-info text-decoration-none small fw-bold stretched-link">Daily Schedule <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="bg-info bg-opacity-10 p-3 rounded-circle"><i class="fas fa-calendar-check fa-2x text-info"></i></div>
                 </div>
@@ -42,12 +47,12 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card h-100 border-0 border-start border-4 border-success shadow-sm">
+            <div class="card h-100 border-0 border-start border-4 border-success shadow-sm" style="transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
                         <p class="text-muted mb-1 fw-bold text-uppercase small">Registered Patients</p>
-                        <h3 class="fw-bold mb-0">{{ $totalPatients }}</h3>
-                        <span class="text-muted small fw-bold">Patient Records</span>
+                        <h3 class="fw-bold mb-0">{{ \App\Models\User::where('role', 'user')->count() }}</h3>
+                        <a href="{{ route('staff.patients.index') }}" class="text-success text-decoration-none small fw-bold stretched-link">Patient Records <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="bg-success bg-opacity-10 p-3 rounded-circle"><i class="fas fa-users fa-2x text-success"></i></div>
                 </div>
@@ -55,14 +60,77 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card h-100 border-0 border-start border-4 border-warning shadow-sm">
+            <div class="card h-100 border-0 border-start border-4 border-warning shadow-sm" style="transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
                         <p class="text-muted mb-1 fw-bold text-uppercase small">Announcements</p>
                         <h3 class="fw-bold mb-0">{{ \App\Models\Announcement::where('is_active', true)->count() }}</h3>
-                        <span class="text-muted small fw-bold">Active Posts</span>
+                        <a href="{{ route('staff.announcements.index') }}" class="text-warning text-decoration-none small fw-bold stretched-link">Active Posts <i class="fas fa-arrow-right ms-1"></i></a>
                     </div>
                     <div class="bg-warning bg-opacity-10 p-3 rounded-circle"><i class="fas fa-bullhorn fa-2x text-warning"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- CHARTS ROW --}}
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-chart-line me-2 text-primary"></i>Inventory Trends</h5>
+                    <select id="trendsFilter" class="form-select form-select-sm border-secondary" style="width: auto;">
+                        <option value="month" selected>Monthly (Last 6 Months)</option>
+                        <option value="week">Weekly (Last 12 Weeks)</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100 border-top border-4 border-dark">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-history me-2"></i>Historical Peek</h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="peekMode" id="modeMonth" value="month" checked autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="modeMonth">Month</label>
+                            <input type="radio" class="btn-check" name="peekMode" id="modeWeek" value="week" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="modeWeek">Week</label>
+                        </div>
+                    </div>
+                    <div id="monthSelectors" class="d-flex gap-1 justify-content-end">
+                        <select id="reportMonth" class="form-select form-select-sm border-0 bg-light" style="width: 100px;">
+                            @foreach(range(1, 12) as $m)
+                                <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                            @endforeach
+                        </select>
+                        <select id="reportYear" class="form-select form-select-sm border-0 bg-light" style="width: 80px;">
+                            @foreach(range(date('Y')-1, date('Y')+1) as $y)
+                                <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div id="weekSelectors" class="d-flex justify-content-end" style="display: none !important;">
+                        <input type="week" id="reportWeek" class="form-control form-control-sm bg-light border-0" value="{{ date('Y-\WW') }}">
+                    </div>
+                </div>
+                <div class="card-body text-center position-relative">
+                    <p id="formattedDate" class="fw-bold text-muted mb-4">-</p>
+                    <div class="row mb-4">
+                        <div class="col-6 border-end">
+                            <h2 id="releaseCount" class="fw-bold text-primary mb-0">0</h2>
+                            <small class="text-uppercase text-muted fw-bold">Released</small>
+                        </div>
+                        <div class="col-6">
+                            <h2 id="expiryCount" class="fw-bold text-danger mb-0">0</h2>
+                            <small class="text-uppercase text-muted fw-bold">Expired</small>
+                        </div>
+                    </div>
+                    <canvas id="peekChart" style="max-height: 150px;"></canvas>
                 </div>
             </div>
         </div>
@@ -153,4 +221,79 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let peekChart;
+    let trendsChart;
+
+    function fetchTrendsData() {
+        const filter = document.getElementById('trendsFilter').value;
+        fetch(`{{ route('staff.trends.api') }}?filter=${filter}`)
+            .then(res => res.json())
+            .then(data => {
+                if (trendsChart) trendsChart.destroy();
+                const ctx = document.getElementById('trendsChart').getContext('2d');
+                trendsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            { label: 'Releases', data: data.releases, borderColor: '#0d6efd', backgroundColor: '#0d6efd', tension: 0.3, fill: false },
+                            { label: 'Expirations', data: data.expirations, borderColor: '#dc3545', backgroundColor: '#dc3545', tension: 0.3, fill: false }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } } }
+                });
+            });
+    }
+
+    function updatePeekReport() {
+        const mode = document.querySelector('input[name="peekMode"]:checked').value;
+        let queryParams = `mode=${mode}`;
+
+        if (mode === 'month') {
+            document.getElementById('monthSelectors').style.setProperty('display', 'flex', 'important');
+            document.getElementById('weekSelectors').style.setProperty('display', 'none', 'important');
+            queryParams += `&month=${document.getElementById('reportMonth').value}&year=${document.getElementById('reportYear').value}`;
+        } else {
+            document.getElementById('monthSelectors').style.setProperty('display', 'none', 'important');
+            document.getElementById('weekSelectors').style.setProperty('display', 'flex', 'important');
+            queryParams += `&week=${document.getElementById('reportWeek').value}`;
+        }
+
+        fetch(`{{ route('staff.report.api') }}?${queryParams}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('releaseCount').innerText = data.releases;
+                document.getElementById('expiryCount').innerText = data.expirations;
+                document.getElementById('formattedDate').innerText = data.formatted_date;
+                if (peekChart) peekChart.destroy();
+                const ctx = document.getElementById('peekChart').getContext('2d');
+                peekChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Released', 'Expired'],
+                        datasets: [{ data: [data.releases, data.expirations], backgroundColor: ['#0d6efd', '#dc3545'], borderWidth: 0 }]
+                    },
+                    options: { plugins: { legend: { display: false } }, cutout: '70%', responsive: true, maintainAspectRatio: false }
+                });
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if(document.getElementById('trendsFilter')) {
+             fetchTrendsData();
+             document.getElementById('trendsFilter').addEventListener('change', fetchTrendsData);
+        }
+        if(document.querySelector('input[name="peekMode"]')) {
+             updatePeekReport();
+             const peekInputs = ['reportMonth', 'reportYear', 'reportWeek'];
+             if(document.getElementById('reportMonth')) {
+                 peekInputs.forEach(id => document.getElementById(id).addEventListener('change', updatePeekReport));
+                 document.querySelectorAll('input[name="peekMode"]').forEach(radio => radio.addEventListener('change', updatePeekReport));
+             }
+        }
+    });
+</script>
 @endsection

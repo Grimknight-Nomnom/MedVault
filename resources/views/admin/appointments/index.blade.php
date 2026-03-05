@@ -53,10 +53,10 @@
                     <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap" data-bs-toggle="modal" data-bs-target="#bulkSettingsModal">
                         <i class="fas fa-layer-group me-2"></i> Bulk Settings
                     </button>
-                    <a href="{{ route('admin.appointments.create') }}" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap">
-                        <i class="fas fa-plus-circle me-2"></i> Book Patient
-                    </a>
                 @endif
+                <a href="{{ route(auth()->user()->role . '.appointments.create') }}" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap">
+                    <i class="fas fa-plus-circle me-2"></i> Book Patient
+                </a>
             </div>
         </div>
     </div>
@@ -408,10 +408,10 @@
                 
                 if (!isPastDate && app.status !== 'completed' && app.status !== 'cancelled') {
                     
-                    // Conditionally build buttons based on isAdmin
+                    // The "View Patient" button is now restricted to admin only, just like Diagnose and Cancel
                     let diagnoseBtn = isAdmin ? `<a href="/admin/appointments/${app.id}/diagnose" ${futureWarning} class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>` : '';
                     let cancelBtn = isAdmin ? `<button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>` : '';
-                    let viewPatientBtn = `<a href="/${rolePrefix}/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>`;
+                    let viewPatientBtn = isAdmin ? `<a href="/admin/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>` : '';
 
                     if (isSpecialRecordDay) {
                         actions = `
@@ -422,11 +422,11 @@
                             </div>
                         `;
                     } else {
-                        // For regular days, staff doesn't need to see any buttons here unless you want them to 'View'
                         actions = `
                             <div class="d-flex gap-1 justify-content-end">
                                 ${diagnoseBtn}
-                                ${isAdmin ? cancelBtn : viewPatientBtn}
+                                ${viewPatientBtn}
+                                ${cancelBtn}
                             </div>
                         `;
                     }

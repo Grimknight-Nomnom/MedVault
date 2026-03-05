@@ -11,8 +11,8 @@
             <p class="text-muted mb-0">Control the news and updates visible on the homepage.</p>
         </div>
         
-        {{-- Button moved below the title --}}
-        <a href="{{ route('admin.announcements.create') }}" class="btn btn-primary rounded-pill shadow-sm fw-bold px-4">
+        {{-- Visible to Admin & Staff (Dynamic Route) --}}
+        <a href="{{ route(auth()->user()->role . '.announcements.create') }}" class="btn btn-primary rounded-pill shadow-sm fw-bold px-4">
             <i class="fas fa-plus-circle me-2"></i> Create New
         </a>
     </div>
@@ -68,17 +68,20 @@
                             </td>
                             <td class="pe-4 text-end">
                                 <div class="btn-group">
-                                    <a href="{{ route('admin.announcements.edit', $item->id) }}" class="btn btn-sm btn-outline-primary rounded-start px-3" title="Edit">
+                                    {{-- Edit is dynamic --}}
+                                    <a href="{{ route(auth()->user()->role . '.announcements.edit', $item->id) }}" class="btn btn-sm btn-outline-primary {{ auth()->user()->role === 'staff' ? 'rounded px-3' : 'rounded-start px-3' }}" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     
-                                    {{-- TRIGGER DELETE MODAL --}}
+                                    {{-- Delete is admin only --}}
+                                    @if(auth()->user()->role === 'admin')
                                     <button type="button" 
                                             class="btn btn-sm btn-outline-danger rounded-end px-3" 
                                             title="Delete"
                                             onclick="openDeleteModal('{{ route('admin.announcements.delete', $item->id) }}', 'Are you sure you want to delete this announcement? It will be removed from the homepage.')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -102,7 +105,7 @@
     </div>
 
     {{-- ========================================================= --}}
-    {{-- MANAGE STAFF SECTION (NEW) --}}
+    {{-- MANAGE STAFF SECTION --}}
     {{-- ========================================================= --}}
     <hr class="my-5 border-secondary opacity-25">
 
@@ -148,12 +151,14 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary rounded-start px-3" data-bs-toggle="modal" data-bs-target="#editStaffModal{{ $staff->id }}" title="Edit">
+                                    <button class="btn btn-sm btn-outline-primary {{ auth()->user()->role === 'staff' ? 'rounded px-3' : 'rounded-start px-3' }}" data-bs-toggle="modal" data-bs-target="#editStaffModal{{ $staff->id }}" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    @if(auth()->user()->role === 'admin')
                                     <button class="btn btn-sm btn-outline-danger rounded-end px-3" data-bs-toggle="modal" data-bs-target="#deleteStaffModal{{ $staff->id }}" title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -166,10 +171,10 @@
                                         <h6 class="modal-title fw-bold">Edit Staff Member</h6>
                                         <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form action="{{ route('admin.staff.update', $staff->id) }}" method="POST" enctype="multipart/form-data">
+                                    <form action="{{ route(auth()->user()->role . '.staff.update', $staff->id) }}" method="POST" enctype="multipart/form-data">
                                         @csrf
                                         @method('PUT')
-                                        <div class="modal-body p-4">
+                                        <div class="modal-body p-4 text-start">
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold small text-uppercase">Full Name</label>
                                                 <input type="text" name="name" class="form-control" value="{{ $staff->name }}" required>
@@ -193,7 +198,8 @@
                             </div>
                         </div>
 
-                        {{-- DELETE MODAL FOR THIS STAFF --}}
+                        {{-- DELETE MODAL FOR THIS STAFF (ADMIN ONLY) --}}
+                        @if(auth()->user()->role === 'admin')
                         <div class="modal fade" id="deleteStaffModal{{ $staff->id }}" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered modal-sm">
                                 <div class="modal-content border-0 shadow">
@@ -213,6 +219,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         @empty
                         <tr>
@@ -237,7 +244,7 @@
                 <h6 class="modal-title fw-bold"><i class="fas fa-plus me-2"></i>Add New Staff</h6>
                 <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.staff.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route(auth()->user()->role . '.staff.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body p-4">
                     <div class="mb-3">
@@ -263,7 +270,9 @@
     </div>
 </div>
 
-{{-- INCLUDE GLOBAL DELETE MODAL COMPONENT (For Announcements) --}}
-@include('components.delete-modal')
+{{-- INCLUDE GLOBAL DELETE MODAL COMPONENT (Admin Only) --}}
+@if(auth()->user()->role === 'admin')
+    @include('components.delete-modal')
+@endif
 
 @endsection

@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use App\Models\Staff; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class AdminAnnouncementController extends Controller
 {
@@ -27,7 +28,7 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', 
             'is_active' => 'boolean',
             'expires_at' => 'nullable|date|after:today', 
         ]);
@@ -42,7 +43,7 @@ class AdminAnnouncementController extends Controller
 
         Announcement::create($data);
 
-        return redirect()->route('admin.announcements.index')
+        return redirect()->route(Auth::user()->role . '.announcements.index')
             ->with('success', 'Announcement created successfully.');
     }
 
@@ -56,7 +57,7 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', 
             'is_active' => 'boolean',
             'expires_at' => 'nullable|date', 
         ]);
@@ -74,7 +75,7 @@ class AdminAnnouncementController extends Controller
 
         $announcement->update($data);
 
-        return redirect()->route('admin.announcements.index')
+        return redirect()->route(Auth::user()->role . '.announcements.index')
             ->with('success', 'Announcement updated successfully.');
     }
 
@@ -94,7 +95,7 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|string|max:255',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', 
         ]);
 
         $data = $request->only(['name', 'role']);
@@ -106,7 +107,7 @@ class AdminAnnouncementController extends Controller
 
         Staff::create($data);
 
-        return redirect()->route('admin.announcements.index')->with('success', 'Staff member added successfully.');
+        return redirect()->route(Auth::user()->role . '.announcements.index')->with('success', 'Staff member added successfully.');
     }
 
     public function updateStaff(Request $request, Staff $staff)
@@ -114,7 +115,7 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|string|max:255',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // FIXED: 5MB
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', 
         ]);
 
         $data = $request->only(['name', 'role']);
@@ -129,7 +130,7 @@ class AdminAnnouncementController extends Controller
 
         $staff->update($data);
 
-        return redirect()->route('admin.announcements.index')->with('success', 'Staff member updated successfully.');
+        return redirect()->route(Auth::user()->role . '.announcements.index')->with('success', 'Staff member updated successfully.');
     }
 
     public function destroyStaff(Staff $staff)

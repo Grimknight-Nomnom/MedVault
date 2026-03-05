@@ -33,7 +33,7 @@ class AuthController extends Controller
             'password' => $request->input('password')
         ];
 
-        if (Auth::attempt($credentials)) {
+if (Auth::attempt($credentials)) {
             
             // --- UNVERIFIED CHECK: Boots them out and shows the resend link ---
             if (!Auth::user()->hasVerifiedEmail()) {
@@ -49,9 +49,14 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
+            // --- UPDATE THIS BLOCK ---
             if (Auth::user()->role === 'admin') {
                 return redirect()->intended('/admin/dashboard')->with('show_admin_alerts', true);
+            } elseif (Auth::user()->role === 'staff') {
+                return redirect()->intended('/staff/dashboard'); // Send staff to their dashboard
             }
+            
+            // Default fallback for patients ('user' role)
             return redirect()->intended('/dashboard');
         }
 

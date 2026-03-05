@@ -69,48 +69,59 @@
                                 </div>
                             </td>
                             <td class="text-end pe-4">
-                                <div class="d-flex justify-content-end gap-2">
+                                <div class="d-flex justify-content-end align-items-center gap-2">
                                     
-                                    {{-- MANUAL VERIFY EMAIL BUTTON (ADMIN ONLY) --}}
-                                    @if(auth()->user()->role === 'admin' && is_null($patient->email_verified_at))
-                                        <form action="{{ route('admin.patients.verify', $patient->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark shadow-sm" title="Manually Verify Email">
-                                                <i class="fas fa-envelope-circle-check"></i> Verify Email
-                                            </button>
-                                        </form>
-                                    @endif
+                                    {{-- BOTH ADMIN AND STAFF CAN VERIFY EMAILS AND DOCUMENTS --}}
+                                    @if(in_array(auth()->user()->role, ['admin', 'staff']))
+                                        
+                                        {{-- MANUAL VERIFY EMAIL BUTTON --}}
+                                        @if(is_null($patient->email_verified_at))
+                                            <form action="{{ route(auth()->user()->role . '.patients.verify', $patient->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark shadow-sm" title="Manually Verify Email">
+                                                    <i class="fas fa-envelope-circle-check"></i> Verify Email
+                                                </button>
+                                            </form>
+                                        @endif
 
-                                    {{-- VIEW RESIDENCY DOCUMENT BUTTON --}}
-                                    @if($patient->patient_photo_path)
-                                        @if(is_null($patient->admin_verified_at))
-                                            <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.reject_residency', $patient->id).`'` : 'null' }}, {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.approve_residency', $patient->id).`'` : 'null' }})"
-                                                class="btn btn-danger btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
-                                                <i class="fas fa-file-image"></i> Not approved residency
-                                            </button>
-                                        @else
-                                            <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.reject_residency', $patient->id).`'` : 'null' }}, {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.approve_residency', $patient->id).`'` : 'null' }})"
-                                                class="btn btn-success btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
-                                                <i class="fas fa-file-image"></i> Approved residency
-                                            </button>
+                                        {{-- VIEW RESIDENCY DOCUMENT BUTTON --}}
+                                        @if($patient->patient_photo_path)
+                                            @if(is_null($patient->admin_verified_at))
+                                                <button type="button" 
+                                                    onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route(auth()->user()->role . '.patients.reject_residency', $patient->id) }}', '{{ route(auth()->user()->role . '.patients.approve_residency', $patient->id) }}')"
+                                                    class="btn btn-danger btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
+                                                    <i class="fas fa-file-image"></i> Not approved residency
+                                                </button>
+                                            @else
+                                                <button type="button" 
+                                                    onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route(auth()->user()->role . '.patients.reject_residency', $patient->id) }}', '{{ route(auth()->user()->role . '.patients.approve_residency', $patient->id) }}')"
+                                                    class="btn btn-success btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
+                                                    <i class="fas fa-file-image"></i> Approved residency
+                                                </button>
+                                            @endif
                                         @endif
                                     @endif
 
-                                    {{-- View Button --}}
-                                    <a href="{{ route(auth()->user()->role . '.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                                        View
-                                    </a>
-                                    
-                                    {{-- Delete Button (ADMIN ONLY) --}}
+                                    {{-- ONLY ADMIN CAN VIEW PROFILE AND DELETE ACCOUNT --}}
                                     @if(auth()->user()->role === 'admin')
+                                        {{-- View Button --}}
+                                        <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                                            View
+                                        </a>
+                                        
+                                        {{-- Delete Button --}}
                                         <button type="button" 
                                             onclick="openBootstrapDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
                                             class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     @endif
+
+                                    {{-- DISPLAY "READ ONLY" FOR STAFF IF EVERYTHING IS ALREADY VERIFIED --}}
+                                    @if(auth()->user()->role === 'staff' && !is_null($patient->email_verified_at) && (!is_null($patient->admin_verified_at) || !$patient->patient_photo_path))
+                                        <span class="badge bg-secondary rounded-pill px-3 py-2 shadow-sm">Read Only</span>
+                                    @endif
+
                                 </div>
                             </td>
                         </tr>
@@ -133,7 +144,7 @@
 </div>
 
 @if(auth()->user()->role === 'admin')
-{{-- GLOBAL BOOTSTRAP DELETE MODAL --}}
+{{-- GLOBAL BOOTSTRAP DELETE MODAL (ADMIN ONLY) --}}
 <div class="modal fade" id="bootstrapDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -157,7 +168,7 @@
 </div>
 @endif
 
-{{-- IMAGE VIEWER MODAL WITH DYNAMIC APPROVE/REJECT UI --}}
+{{-- IMAGE VIEWER MODAL WITH DYNAMIC APPROVE/REJECT UI (BOTH STAFF AND ADMIN) --}}
 <div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -168,7 +179,8 @@
             <div class="modal-body p-4 text-center bg-light">
                 <img id="viewerImage" src="" alt="Residency Document" class="img-fluid rounded shadow-sm border mb-4" style="max-height: 50vh; object-fit: contain;">
                 
-                @if(auth()->user()->role === 'admin')
+                {{-- VISIBLE TO BOTH ADMIN AND STAFF --}}
+                @if(in_array(auth()->user()->role, ['admin', 'staff']))
                 <div id="adminResidencyControls" class="row g-3">
                     <div class="col-md-6">
                         <div class="card border-success text-start shadow-sm h-100">

@@ -51,28 +51,35 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     @auth
-                        @if(Auth::user()->role === 'admin')
+                        {{-- CHECK IF USER IS ADMIN OR STAFF --}}
+                        @if(in_array(Auth::user()->role, ['admin', 'staff']))
+                            @php
+                                // Dynamically grab the role to output either 'admin' or 'staff' in the route names
+                                $rolePrefix = Auth::user()->role; 
+                            @endphp
+                            
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                                <a class="nav-link" href="{{ route($rolePrefix . '.dashboard') }}">
                                     <i class="fas fa-chart-line me-1"></i> Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.medicines.index') }}">
+                                <a class="nav-link" href="{{ route($rolePrefix . '.medicines.index') }}">
                                     <i class="fas fa-pills me-1"></i> Inventory
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.appointments.index') }}">
+                                <a class="nav-link" href="{{ route($rolePrefix . '.appointments.index') }}">
                                     <i class="fas fa-calendar-check me-1"></i> Appointments
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.patients.index') }}">
+                                <a class="nav-link" href="{{ route($rolePrefix . '.patients.index') }}">
                                     <i class="fas fa-users me-1"></i> Patients
                                 </a>
                             </li>
                         @else
+                            {{-- PATIENT LINKS --}}
                             <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}"><i class="fas fa-home me-1"></i> Home</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ route('profile.edit') }}"><i class="fas fa-user-circle me-1"></i> Profile</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ route('patient.records') }}"><i class="fas fa-file-medical me-1"></i> Medical History</a></li>
@@ -80,6 +87,7 @@
                             <li class="nav-item"><a class="nav-link" href="{{ route('appointments.index') }}"><i class="fas fa-calendar-alt me-1"></i> Appointments</a></li>
                         @endif
                         
+                        {{-- LOGOUT BUTTON --}}
                         <li class="nav-item ms-3">
                             <form action="{{ route('logout') }}" method="POST" class="d-inline">
                                 @csrf
