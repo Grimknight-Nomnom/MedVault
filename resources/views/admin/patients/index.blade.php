@@ -70,7 +70,8 @@
                                     @if(is_null($patient->admin_verified_at))
                                         <span class="badge bg-danger"><i class="fas fa-id-card"></i> Residency Pending</span>
                                     @else
-                                        <span class="badge bg-info text-white"><i class="fas fa-check-circle"></i> Residency Approved</span>
+                                        {{-- CHANGED TO GREEN (bg-success) --}}
+                                        <span class="badge bg-success"><i class="fas fa-check-circle"></i> Residency Approved</span>
                                     @endif
                                 </div>
                             </td>
@@ -92,15 +93,15 @@
                                         @if(is_null($patient->admin_verified_at))
                                             {{-- RED: NOT APPROVED --}}
                                             <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/approve-residency') }}')"
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route('admin.patients.reject_residency', $patient->id) }}', '{{ route('admin.patients.approve_residency', $patient->id) }}')"
                                                 class="btn btn-danger btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
                                                 <i class="fas fa-file-image"></i> Not approved residency
                                             </button>
                                         @else
-                                            {{-- LIGHT BLUE: APPROVED --}}
+                                            {{-- GREEN: APPROVED (btn-success) --}}
                                             <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/approve-residency') }}')"
-                                                class="btn btn-info btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route('admin.patients.reject_residency', $patient->id) }}', '{{ route('admin.patients.approve_residency', $patient->id) }}')"
+                                                class="btn btn-success btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
                                                 <i class="fas fa-file-image"></i> Approved residency
                                             </button>
                                         @endif
@@ -221,7 +222,7 @@
         deleteModal.show();
     }
 
-    // Image Modal logic (Now accepts approveUrl)
+    // Image Modal logic
     function openImageModal(imageUrl, patientName, rejectUrl, approveUrl) {
         document.getElementById('viewerImage').src = imageUrl;
         document.getElementById('imageModalPatientName').innerText = patientName;

@@ -169,9 +169,10 @@ public function verifyPatient($id)
     {
         $patient = User::findOrFail($id);
 
-        // Clear any previous rejection reasons to mark it as approved
+        // Clear any previous rejection reasons AND mark as verified!
         $patient->update([
-            'residency_rejection_reason' => null
+            'residency_rejection_reason' => null,
+            'admin_verified_at' => now() // <-- THIS LINE WAS MISSING
         ]);
 
         return back()->with('success', "Residency document approved for {$patient->first_name}.");
@@ -186,11 +187,10 @@ public function rejectResidency(Request $request, $id)
             Storage::disk('public')->delete($user->patient_photo_path);
         }
 
-        // REMOVE 'admin_verified_at' from this array!
         $user->update([
             'patient_photo_path' => null,
             'residency_rejection_reason' => $request->reason,
-            'email_verified_at' => null // Optional: this un-verifies them if they were previously verified and you reject a newly uploaded document
+            'admin_verified_at' => null // <-- CHANGED: Now correctly resets the Admin Approval instead of the Email!
         ]);
 
         return back()->with('success', 'Document rejected. The patient has been notified to re-upload.');
@@ -292,7 +292,7 @@ public function rejectResidency(Request $request, $id)
 
     // --- METHODS FOR SPECIAL RECORDS WITH RESTRICTIONS ---
     // --- METHODS FOR SPECIAL RECORDS WITH RESTRICTIONS ---
-    public function createPregnancyRecord($id)
+public function createPregnancyRecord($id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
         
@@ -306,30 +306,41 @@ public function rejectResidency(Request $request, $id)
 
         $patient->update(['has_pregnancy_record' => true]);
         
-        // This generates the blank database row so it exists!
-        $patient->pregnancyRecord()->firstOrCreate([]);
+        // Ensure the current one is completed before allowing a new one
+        $latest = $patient->pregnancyRecords()->latest()->first();
+        if ($latest && !$latest->is_completed) {
+            return back()->with('error', 'There is already an active pregnancy record for this patient.');
+        }
+        
+        // Generate a fresh new row for the new pregnancy
+        $patient->pregnancyRecords()->create([]);
 
-        return back()->with('success', 'Pregnancy record initialized for ' . $patient->first_name . '.');
+        return back()->with('success', 'New pregnancy term initialized for ' . $patient->first_name . '.');
     }
 
-public function updatePregnancyRecord(Request $request, $id)
+    public function updatePregnancyRecord(Request $request, $id)
     {
         $patient = \App\Models\User::where('role', 'user')->findOrFail($id);
         
-        // Find or create the pregnancy record
-        $record = $patient->pregnancyRecord()->firstOrCreate([]);
+        // Fetch the latest record, or create it if missing
+        $record = $patient->pregnancyRecords()->latest()->first();
+        if (!$record) {
+            $record = $patient->pregnancyRecords()->create([]);
+        }
 
-        // Exclude our new hidden field along with standard tokens
+        // Security check
+        if ($record->is_completed) {
+            return back()->with('error', 'Cannot update a completed pregnancy record.');
+        }
+
         $data = $request->except(['_token', '_method', 'redirect_to_calendar']);
         
-        // Handle unchecked checkboxes
         if (!$request->has('bemonc_cemonc')) {
             $data['bemonc_cemonc'] = 0;
         }
 
         $record->update($data);
 
-        // AUTO-COMPLETE THE APPOINTMENT
         $activeAppointment = \App\Models\Appointment::where('user_id', $patient->id)
             ->whereIn('status', ['pending', 'approved'])
             ->whereDate('appointment_date', '>=', \Carbon\Carbon::today())
@@ -343,14 +354,27 @@ public function updatePregnancyRecord(Request $request, $id)
             $message = 'Pregnancy Record saved! The booked appointment is now marked as Completed.';
         }
 
-        // REDIRECT LOGIC
         if ($request->redirect_to_calendar == '1') {
             return redirect()->route('admin.appointments.index')
                              ->with('success', $message . ' You can now select a date here to book the next visit.');
         }
 
-        // Default behavior (stay on the same page)
         return back()->with('success', $message);
+    }
+
+    public function completePregnancyRecord($id)
+    {
+        $patient = \App\Models\User::where('role', 'user')->findOrFail($id);
+        
+        $record = $patient->pregnancyRecords()->latest()->first();
+
+        if (!$record) {
+            return back()->with('error', 'Pregnancy record not found.');
+        }
+
+        $record->update(['is_completed' => true]);
+
+        return back()->with('success', "Pregnancy term marked as successfully completed for {$patient->first_name}.");
     }
 
 public function createImmunizationRecord($id)
@@ -372,16 +396,19 @@ public function createImmunizationRecord($id)
 public function updateImmunizationRecord(Request $request, $id)
     {
         $patient = \App\Models\User::where('role', 'user')->findOrFail($id);
-        
-        // 1. Update the base Baby/Birth details
         $record = $patient->immunizationRecord()->firstOrCreate([]);
+        
+        // --- NEW SECURITY CHECK ---
+        if ($record->is_completed) {
+            return back()->with('error', 'Cannot update a completed immunization record.');
+        }
+
         $baseData = $request->only([
             'birth_time', 'birth_weight', 'birth_length', 'eye_color', 'hair_color', 
             'birth_hospital', 'mother_name', 'father_name'
         ]);
         $record->update($baseData);
 
-        // 2. If the admin filled out a NEW visit date, save it to the History Logs
         if ($request->filled('log_date')) {
             \App\Models\ImmunizationLog::create([
                 'user_id' => $patient->id,
@@ -398,7 +425,6 @@ public function updateImmunizationRecord(Request $request, $id)
                 'next_visit' => $request->log_next_visit,
             ]);
 
-            // 3. AUTO-COMPLETE THE APPOINTMENT
             $activeAppointment = \App\Models\Appointment::where('user_id', $patient->id)
                 ->whereIn('status', ['pending', 'approved'])
                 ->whereDate('appointment_date', '>=', \Carbon\Carbon::today())
@@ -410,11 +436,24 @@ public function updateImmunizationRecord(Request $request, $id)
                 return back()->with('success', 'Immunization Visit saved! The booked appointment is now marked as Completed.');
             }
             
-            // Message if a visit was logged, but no appointment was tied to today
             return back()->with('success', 'Immunization Visit logged successfully!');
         }
 
-        // Default message if they just updated birth details without logging a visit
         return back()->with('success', 'Baby Birth Details updated successfully!');
+    }
+
+    public function completeImmunizationRecord($id)
+    {
+        $patient = \App\Models\User::where('role', 'user')->findOrFail($id);
+        
+        $record = $patient->immunizationRecord;
+
+        if (!$record) {
+            return back()->with('error', 'Immunization record not found.');
+        }
+
+        $record->update(['is_completed' => true]);
+
+        return back()->with('success', "Immunization program marked as complete for {$patient->first_name}.");
     }
 }

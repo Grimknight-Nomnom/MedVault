@@ -4,6 +4,19 @@
 <style>
     .bg-primary-opacity { background-color: rgba(13, 110, 253, 0.1); }
     .bg-danger-opacity { background-color: rgba(220, 53, 69, 0.1); }
+    
+    /* Bell Animation */
+    .bell-shake { animation: shake 1s cubic-bezier(.36,.07,.19,.97) both; transform-origin: top center; }
+    @keyframes shake {
+        0% { transform: rotate(0); }
+        15% { transform: rotate(15deg); }
+        30% { transform: rotate(-15deg); }
+        45% { transform: rotate(10deg); }
+        60% { transform: rotate(-10deg); }
+        75% { transform: rotate(5deg); }
+        85% { transform: rotate(-5deg); }
+        100% { transform: rotate(0); }
+    }
 </style>
 
 <div class="container py-4">
@@ -12,7 +25,26 @@
             <h2 class="fw-bold text-dark">Admin Dashboard</h2>
             <p class="text-muted">Overview of clinic operations.</p>
         </div>
-        <span class="text-muted"><i class="far fa-clock me-1"></i> {{ date('F d, Y') }}</span>
+        
+        <div class="d-flex align-items-center gap-3">
+            {{-- NOTIFICATION BELL --}}
+            @php
+                // Count how many patients have uploaded a photo but are NOT verified yet
+                $pendingCount = \App\Models\User::where('role', 'user')->whereNull('admin_verified_at')->whereNotNull('patient_photo_path')->count();
+            @endphp
+            
+            <button type="button" class="btn btn-light position-relative border shadow-sm rounded-circle p-2" data-bs-toggle="modal" data-bs-target="#adminAlertsModal" style="width: 45px; height: 45px;">
+                <i class="fas fa-bell text-secondary fs-5 {{ $pendingCount > 0 ? 'bell-shake text-danger' : '' }}"></i>
+                @if($pendingCount > 0)
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light">
+                        {{ $pendingCount }}
+                        <span class="visually-hidden">unread messages</span>
+                    </span>
+                @endif
+            </button>
+
+            <span class="text-muted border-start ps-3"><i class="far fa-clock me-1"></i> {{ date('F d, Y') }}</span>
+        </div>
     </div>
 
     {{-- STATS ROW --}}
@@ -221,8 +253,7 @@
     </div>
 </div>
 
-{{-- ADMIN ALERTS MODAL (Shows only after login) --}}
-@if(session('show_admin_alerts'))
+{{-- ADMIN ALERTS MODAL --}}
 <div class="modal fade" id="adminAlertsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -235,25 +266,29 @@
                 {{-- Unverified Accounts --}}
                 <div class="mb-4">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
-                        <i class="fas fa-user-check text-warning me-2"></i>Accounts Pending Verification ({{ $unverifiedPatients->count() }})
+                        <i class="fas fa-id-card text-warning me-2"></i>Residency Pending Approval ({{ $pendingCount }})
                     </h6>
-                    @if($unverifiedPatients->count() > 0)
+                    @php
+                        $pendingPatients = \App\Models\User::where('role', 'user')->whereNull('admin_verified_at')->whereNotNull('patient_photo_path')->get();
+                    @endphp
+                    
+                    @if($pendingPatients->count() > 0)
                         <ul class="list-group list-group-flush mb-2">
-                            @foreach($unverifiedPatients->take(5) as $patient)
+                            @foreach($pendingPatients->take(5) as $patient)
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
                                     <div>
                                         <strong>{{ $patient->first_name }} {{ $patient->last_name }}</strong>
                                         <span class="text-muted ms-2 small">ID: #{{ $patient->usernumber }}</span>
                                     </div>
-                                    <a href="{{ route('admin.patients.index') }}?search={{ $patient->usernumber }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Review</a>
+                                    <a href="{{ route('admin.patients.index') }}?search=%23{{ $patient->usernumber }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Review Document</a>
                                 </li>
                             @endforeach
                         </ul>
-                        @if($unverifiedPatients->count() > 5)
-                            <div class="text-end"><a href="{{ route('admin.patients.index') }}" class="small fw-bold text-decoration-none">View all pending accounts &rarr;</a></div>
+                        @if($pendingPatients->count() > 5)
+                            <div class="text-end mt-2"><a href="{{ route('admin.patients.index', ['status' => 'unverified']) }}" class="small fw-bold text-decoration-none">View all pending accounts &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0">All accounts are verified.</p>
+                        <p class="text-muted small mb-0 mt-2"><i class="fas fa-check-circle text-success me-1"></i>All uploaded residency documents have been verified.</p>
                     @endif
                 </div>
 
@@ -278,7 +313,7 @@
                             <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0">No out-of-stock medicines.</p>
+                        <p class="text-muted small mb-0 mt-2"><i class="fas fa-check-circle text-success me-1"></i>No out-of-stock medicines.</p>
                     @endif
                 </div>
 
@@ -303,7 +338,7 @@
                             <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0">No expired medicines.</p>
+                        <p class="text-muted small mb-0 mt-2"><i class="fas fa-check-circle text-success me-1"></i>No expired medicines.</p>
                     @endif
                 </div>
 
@@ -317,7 +352,8 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        @if($unverifiedPatients->count() > 0 || $zeroStockMeds->count() > 0 || $alreadyExpiredMeds->count() > 0)
+        // Auto-show modal ONLY if it's explicitly called from session
+        @if(session('show_admin_alerts'))
             var myModal = new bootstrap.Modal(document.getElementById('adminAlertsModal'), {
                 keyboard: false
             });
@@ -325,7 +361,6 @@
         @endif
     });
 </script>
-@endif
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

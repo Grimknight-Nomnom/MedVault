@@ -8,30 +8,79 @@
             <p class="text-muted">A complete timeline of diagnoses and dispensed medicines for you and your dependents.</p>
         </div>
         
-        {{-- NEW SPECIAL RECORD BUTTONS --}}
+        {{-- SPECIAL RECORD BUTTONS --}}
         <div class="d-flex gap-2 flex-wrap">
-            @if(Auth::user()->has_pregnancy_record)
-                <button type="button" class="btn btn-danger fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#patientPregnancyModal">
-                    <i class="fas fa-baby me-2"></i>My Pregnancy Record
-                </button>
+            
+            {{-- PATIENT PREGNANCY BUTTON WITH PAST RECORDS DROPDOWN --}}
+            @if(Auth::user()->has_pregnancy_record && Auth::user()->pregnancyRecords->count() > 0)
+                @php $myLatestPregnancy = Auth::user()->pregnancyRecord; @endphp
+                @if(Auth::user()->pregnancyRecords->count() > 1)
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-danger fw-bold shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#patientPregnancyModal_{{ $myLatestPregnancy->id }}" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;">
+                            <i class="fas fa-baby me-2"></i>My Pregnancy Record
+                        </button>
+                        <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split shadow-sm px-3" data-bs-toggle="dropdown" aria-expanded="false" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu shadow-sm border-0">
+                            <li><h6 class="dropdown-header">Past Records</h6></li>
+                            @foreach(Auth::user()->pregnancyRecords->sortByDesc('created_at')->skip(1) as $oldPr)
+                                <li>
+                                    <a class="dropdown-item small" href="#" data-bs-toggle="modal" data-bs-target="#patientPregnancyModal_{{ $oldPr->id }}">
+                                        Term: {{ $oldPr->created_at->format('M d, Y') }} (Completed)
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @else
+                    <button type="button" class="btn btn-danger fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#patientPregnancyModal_{{ $myLatestPregnancy->id }}">
+                        <i class="fas fa-baby me-2"></i>My Pregnancy Record
+                    </button>
+                @endif
             @endif
+
             @if(Auth::user()->has_immunization_record)
                 <button type="button" class="btn btn-primary fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#patientImmunizationModal">
                     <i class="fas fa-syringe me-2"></i>My Immunization Record
                 </button>
             @endif
             
-            {{-- Check if dependents have special records --}}
+            {{-- DEPENDENT RECORD BUTTONS --}}
             @foreach(Auth::user()->children as $child)
                 @if($child->has_immunization_record)
                     <button type="button" class="btn btn-outline-primary fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#dependentImmunizationModal{{ $child->id }}">
                         <i class="fas fa-child me-2"></i>{{ $child->first_name }}'s Immunization
                     </button>
                 @endif
-                @if($child->has_pregnancy_record)
-                    <button type="button" class="btn btn-outline-danger fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#dependentPregnancyModal{{ $child->id }}">
-                        <i class="fas fa-baby me-2"></i>{{ $child->first_name }}'s Pregnancy
-                    </button>
+
+                {{-- DEPENDENT PREGNANCY BUTTON WITH PAST RECORDS DROPDOWN --}}
+                @if($child->has_pregnancy_record && $child->pregnancyRecords->count() > 0)
+                    @php $childLatestPregnancy = $child->pregnancyRecord; @endphp
+                    @if($child->pregnancyRecords->count() > 1)
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-danger fw-bold shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#dependentPregnancyModal_{{ $child->id }}_{{ $childLatestPregnancy->id }}" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;">
+                                <i class="fas fa-baby me-2"></i>{{ $child->first_name }}'s Pregnancy
+                            </button>
+                            <button type="button" class="btn btn-outline-danger dropdown-toggle dropdown-toggle-split shadow-sm px-3" data-bs-toggle="dropdown" aria-expanded="false" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><h6 class="dropdown-header">Past Records</h6></li>
+                                @foreach($child->pregnancyRecords->sortByDesc('created_at')->skip(1) as $oldPr)
+                                    <li>
+                                        <a class="dropdown-item small" href="#" data-bs-toggle="modal" data-bs-target="#dependentPregnancyModal_{{ $child->id }}_{{ $oldPr->id }}">
+                                            Term: {{ $oldPr->created_at->format('M d, Y') }} (Completed)
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @else
+                        <button type="button" class="btn btn-outline-danger fw-bold rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#dependentPregnancyModal_{{ $child->id }}_{{ $childLatestPregnancy->id }}">
+                            <i class="fas fa-baby me-2"></i>{{ $child->first_name }}'s Pregnancy
+                        </button>
+                    @endif
                 @endif
             @endforeach
         </div>
@@ -225,12 +274,12 @@
 </div>
 
 {{-- INCLUDE PATIENT MODALS --}}
-@include('patient.partials.pregnancy_modal', ['user' => Auth::user(), 'modalId' => 'patientPregnancyModal'])
+@include('patient.partials.pregnancy_modal', ['user' => Auth::user(), 'modalPrefix' => 'patientPregnancyModal'])
 @include('patient.partials.immunization_modal', ['user' => Auth::user(), 'modalId' => 'patientImmunizationModal'])
 
 {{-- INCLUDE DEPENDENT MODALS --}}
 @foreach(Auth::user()->children as $child)
-    @include('patient.partials.pregnancy_modal', ['user' => $child, 'modalId' => 'dependentPregnancyModal'.$child->id])
+    @include('patient.partials.pregnancy_modal', ['user' => $child, 'modalPrefix' => 'dependentPregnancyModal_'.$child->id])
     @include('patient.partials.immunization_modal', ['user' => $child, 'modalId' => 'dependentImmunizationModal'.$child->id])
 @endforeach
 

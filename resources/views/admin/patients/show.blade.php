@@ -83,11 +83,41 @@
                             $isUnderFour = $ageInYears < 4;
                         @endphp
 
-                        {{-- PREGNANCY RECORD LOGIC --}}
-                        @if($patient->has_pregnancy_record)
-                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal">
-                                <i class="fas fa-eye me-1"></i> View Pregnancy Record
+{{-- PREGNANCY RECORD LOGIC --}}
+                        @if($patient->has_pregnancy_record && $patient->pregnancyRecords->count() > 0)
+                            @php
+                                $latestRecord = $patient->pregnancyRecord;
+                            @endphp
+                            
+                            <button type="button" class="btn btn-outline-danger rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal_{{ $latestRecord->id }}">
+                                <i class="fas fa-eye me-1"></i> View Latest Pregnancy
                             </button>
+                            
+                            {{-- IF LATEST IS COMPLETED, SHOW ADD NEW BUTTON --}}
+                            @if($latestRecord->is_completed)
+                                <button type="button" class="btn btn-danger rounded-pill fw-bold shadow-sm w-100 mt-2" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#confirmPregnancyModal">
+                                    <i class="fas fa-plus me-1"></i> Add New Pregnancy Term
+                                </button>
+                            @endif
+
+                            {{-- DROPDOWN FOR PAST RECORDS --}}
+                            @if($patient->pregnancyRecords->count() > 1)
+                                <div class="dropdown mt-2 w-100">
+                                    <button class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown" style="font-size: 0.85rem;">
+                                        <i class="fas fa-history me-1"></i> Past Records
+                                    </button>
+                                    <ul class="dropdown-menu w-100 shadow-sm border-0">
+                                        @foreach($patient->pregnancyRecords->sortByDesc('created_at')->skip(1) as $oldPr)
+                                            <li>
+                                                <a class="dropdown-item small" href="#" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal_{{ $oldPr->id }}">
+                                                    Term: {{ $oldPr->created_at->format('M d, Y') }} (Completed)
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                            
                         @elseif(strtolower($patient->gender) === 'male')
                             <button type="button" class="btn btn-secondary rounded-pill fw-bold shadow-sm w-100 opacity-50" style="font-size: 0.85rem;" disabled>
                                 <i class="fas fa-ban me-1"></i> Pregnancy N/A (Male)

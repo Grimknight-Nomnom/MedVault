@@ -100,8 +100,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
 
     Route::prefix('admin')->middleware(['can:admin'])->group(function () {
-        Route::post('/admin/patients/{id}/reject-residency', [App\Http\Controllers\AdminController::class, 'rejectResidency'])->name('admin.patients.reject_residency');
-        Route::post('/admin/patients/{id}/approve-residency', [App\Http\Controllers\AdminController::class, 'approveResidency'])->name('admin.patients.approve_residency');
+Route::post('/patients/{id}/reject-residency', [App\Http\Controllers\AdminController::class, 'rejectResidency'])->name('admin.patients.reject_residency');
+        Route::post('/patients/{id}/approve-residency', [App\Http\Controllers\AdminController::class, 'approveResidency'])->name('admin.patients.approve_residency');
         
         Route::post('/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
         Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
@@ -157,9 +157,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             
             Route::post('/patients/{id}/pregnancy-record', 'createPregnancyRecord')->name('admin.patients.create_pregnancy');
             Route::put('/patients/{id}/pregnancy-record', 'updatePregnancyRecord')->name('admin.patients.update_pregnancy');
+            Route::put('/patients/{id}/pregnancy-record/complete', 'completePregnancyRecord')->name('admin.patients.complete_pregnancy');
             
             Route::post('/patients/{id}/immunization-record', 'createImmunizationRecord')->name('admin.patients.create_immunization');
             Route::put('/patients/{id}/immunization-record', 'updateImmunizationRecord')->name('admin.patients.update_immunization');
+            Route::put('/patients/{id}/immunization-record/complete', 'completeImmunizationRecord')->name('admin.patients.complete_immunization');
         });
 
         Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');

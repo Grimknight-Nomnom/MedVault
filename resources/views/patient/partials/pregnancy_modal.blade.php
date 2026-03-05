@@ -1,14 +1,33 @@
-@if($user->has_pregnancy_record && $user->pregnancyRecord)
-@php $pr = $user->pregnancyRecord; @endphp
-<div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
+@if($user->has_pregnancy_record && $user->pregnancyRecords)
+@foreach($user->pregnancyRecords as $pr)
+<div class="modal fade" id="{{ $modalPrefix }}_{{ $pr->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold"><i class="fas fa-baby me-2"></i>Pregnancy Record - {{ $user->first_name }}</h5>
+                <h5 class="modal-title fw-bold"><i class="fas fa-baby me-2"></i>Pregnancy Record - {{ $user->first_name }} ({{ $pr->created_at->format('Y') }})</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 bg-light">
                 
+                {{-- STATUS BANNER --}}
+                @if($pr->is_completed)
+                    <div class="alert alert-success shadow-sm border-0 py-2 d-flex align-items-center mb-4">
+                        <i class="fas fa-check-circle fa-2x me-3"></i>
+                        <div>
+                            <strong class="d-block">Pregnancy Term Completed</strong>
+                            <span class="small">This record is fully completed and locked.</span>
+                        </div>
+                    </div>
+                @else
+                    <div class="alert alert-warning shadow-sm border-0 py-2 d-flex align-items-center mb-4">
+                        <i class="fas fa-spinner fa-spin fa-2x me-3 text-warning"></i>
+                        <div class="text-dark">
+                            <strong class="d-block">Active Pregnancy Tracking</strong>
+                            <span class="small">This is your current ongoing pregnancy record.</span>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Key Dates --}}
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
@@ -158,4 +177,5 @@
         </div>
     </div>
 </div>
+@endforeach
 @endif

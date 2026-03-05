@@ -64,15 +64,15 @@ class ProfileController extends Controller
             $user->senior_pwd_id_path = $path;
         }
 
-        // Restored Residency / Indigency logic
-        if ($request->hasFile('patient_photo')) {
+if ($request->hasFile('patient_photo')) {
             if ($user->patient_photo_path) {
-                Storage::disk('public')->delete($user->patient_photo_path);
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->patient_photo_path);
             }
             $path = $request->file('patient_photo')->store('patient_photos', 'public');
             $user->patient_photo_path = $path;
             
             $user->residency_rejection_reason = null;
+            $user->admin_verified_at = null; // <-- This is what is crashing if the column doesn't exist yet!
         }
 
 

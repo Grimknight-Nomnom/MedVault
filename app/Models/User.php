@@ -112,14 +112,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(User::class, 'parent_id');
     }
 
-    public function parent()
+public function parent()
     {
         return $this->belongsTo(User::class, 'parent_id');
     }
     
+    // 1. ADD THIS NEW METHOD for multiple records
+    public function pregnancyRecords()
+    {
+        return $this->hasMany(PregnancyRecord::class);
+    }
+
+    // 2. UPDATE THIS to always fetch the most recent one
     public function pregnancyRecord()
     {
-        return $this->hasOne(PregnancyRecord::class);
+        return $this->hasOne(PregnancyRecord::class)->latestOfMany();
     }
 
     public function immunizationRecord()
