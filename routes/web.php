@@ -36,7 +36,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
+// <-- ADDED: Catch the verification notice and bounce them back to login
+Route::get('/email/verify', function () {
+    Auth::logout();
+    return redirect()->route('login')->withErrors([
+        'login_identifier' => 'You must verify your email address to access this page. Please check your inbox.'
+    ]);
+})->name('verification.notice');
+
+// <-- MODIFIED: Added 'signed' middleware
+Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])->middleware(['signed'])->name('verification.verify');
 Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->name('verification.resend'); 
 
 Route::controller(PasswordResetController::class)->group(function () {
@@ -49,7 +58,8 @@ Route::controller(PasswordResetController::class)->group(function () {
     Route::post('/reset-password', 'resetPassword')->name('password.update');
 });
 
-Route::middleware(['auth'])->group(function () {
+// <-- MODIFIED: Added 'verified' middleware here to protect the dashboard and internal pages
+Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -89,8 +99,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
 
-    Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
+    Route::prefix('admin')->middleware(['can:admin'])->group(function () {
         Route::post('/admin/patients/{id}/reject-residency', [App\Http\Controllers\AdminController::class, 'rejectResidency'])->name('admin.patients.reject_residency');
+        Route::post('/admin/patients/{id}/approve-residency', [App\Http\Controllers\AdminController::class, 'approveResidency'])->name('admin.patients.approve_residency');
         
         Route::post('/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
         Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
@@ -144,12 +155,10 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/patients/{id}/force-verify', 'verifyPatient')->name('admin.patients.verify');
             Route::delete('/patients/{id}/delete-id/{type}', 'deletePatientId')->name('admin.patients.delete_id');
             
-           // --- NEW ROUTES FOR SPECIAL RECORDS ---
             Route::post('/patients/{id}/pregnancy-record', 'createPregnancyRecord')->name('admin.patients.create_pregnancy');
             Route::put('/patients/{id}/pregnancy-record', 'updatePregnancyRecord')->name('admin.patients.update_pregnancy');
             
             Route::post('/patients/{id}/immunization-record', 'createImmunizationRecord')->name('admin.patients.create_immunization');
-            // ---> ADD THIS NEW ROUTE:
             Route::put('/patients/{id}/immunization-record', 'updateImmunizationRecord')->name('admin.patients.update_immunization');
         });
 

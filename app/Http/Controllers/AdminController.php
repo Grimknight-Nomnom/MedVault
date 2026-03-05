@@ -126,9 +126,9 @@ class AdminController extends Controller
             });
         }
         
-        if ($request->has('status') && $request->status === 'unverified') {
-            $query->whereNull('email_verified_at');
-        }
+if ($request->has('status') && $request->status === 'unverified') {
+    $query->whereNull('admin_verified_at');
+}
 
         $patients = $query->orderBy('created_at', 'desc')->paginate(10);
         return view('admin.patients.index', compact('patients'));
@@ -152,19 +152,32 @@ class AdminController extends Controller
         return redirect()->route('admin.patients.index')->with('success', 'Patient deleted.');
     }
 
-    public function verifyPatient($id)
+public function verifyPatient($id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
         
+        // Use 'email_verified_at' for both the check AND the update
         if (is_null($patient->email_verified_at)) {
-            $patient->update(['email_verified_at' => now()]);
+            $patient->update(['email_verified_at' => now()]); // <-- Change 'admin_verified_at' to 'email_verified_at' here!
             return redirect()->back()->with('success', "Patient {$patient->first_name} manually verified successfully.");
         }
 
         return redirect()->back()->with('info', 'Patient is already verified.');
     }
 
-    public function rejectResidency(Request $request, $id)
+    public function approveResidency($id)
+    {
+        $patient = User::findOrFail($id);
+
+        // Clear any previous rejection reasons to mark it as approved
+        $patient->update([
+            'residency_rejection_reason' => null
+        ]);
+
+        return back()->with('success', "Residency document approved for {$patient->first_name}.");
+    }
+
+public function rejectResidency(Request $request, $id)
     {
         $request->validate(['reason' => 'required|string|max:500']);
         $user = User::findOrFail($id);
@@ -173,9 +186,11 @@ class AdminController extends Controller
             Storage::disk('public')->delete($user->patient_photo_path);
         }
 
+        // REMOVE 'admin_verified_at' from this array!
         $user->update([
             'patient_photo_path' => null,
             'residency_rejection_reason' => $request->reason,
+            'email_verified_at' => null // Optional: this un-verifies them if they were previously verified and you reject a newly uploaded document
         ]);
 
         return back()->with('success', 'Document rejected. The patient has been notified to re-upload.');

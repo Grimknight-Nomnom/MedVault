@@ -2,16 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail; // <-- 1. ADD THIS IMPORT
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Carbon\Carbon;
 
-class User extends Authenticatable
+// 2. ADD "implements MustVerifyEmail" TO THE CLASS
+class User extends Authenticatable implements MustVerifyEmail 
 {
     use HasFactory, Notifiable;
 
     protected $fillable = [
+        // ... (Keep all your existing fillables!)
         'first_name',
         'middle_name',
         'last_name',
@@ -34,8 +37,9 @@ class User extends Authenticatable
         'is_philhealth_member',
         'is_senior_citizen_or_pwd',
         'parent_id', 
-        'has_pregnancy_record', // NEW
-        'has_immunization_record', // NEW
+        'has_pregnancy_record', 
+        'has_immunization_record', 
+        'admin_verified_at',
     ];
 
     protected $hidden = [
@@ -47,12 +51,13 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'admin_verified_at' => 'datetime',
             'password' => 'hashed',
             'date_of_birth' => 'date',
             'is_philhealth_member' => 'boolean',
             'is_senior_citizen_or_pwd' => 'boolean',
-            'has_pregnancy_record' => 'boolean', // NEW
-            'has_immunization_record' => 'boolean', // NEW
+            'has_pregnancy_record' => 'boolean', 
+            'has_immunization_record' => 'boolean', 
         ];
     }
 
@@ -111,17 +116,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(User::class, 'parent_id');
     }
-    // Add this right below your public function parent()
+    
     public function pregnancyRecord()
     {
         return $this->hasOne(PregnancyRecord::class);
     }
 
-    // ADD THIS NEW ONE:
     public function immunizationRecord()
     {
         return $this->hasOne(ImmunizationRecord::class);
     }
-
-    
 }

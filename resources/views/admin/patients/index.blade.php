@@ -76,24 +76,34 @@
                                         </form>
                                     @endif
 
-                                    {{-- View Residency Document Button --}}
+{{-- View Residency Document Button (DYNAMIC COLOR) --}}
                                     @if($patient->patient_photo_path)
-                                        <button type="button" 
-                                            onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route('admin.patients.reject_residency', $patient->id) }}')"
-                                            class="btn btn-info btn-sm rounded-pill px-3 fw-bold text-white" title="View Indigency / Residency">
-                                            <i class="fas fa-file-image"></i> Residency
-                                        </button>
+                                        @if(is_null($patient->email_verified_at))
+                                            {{-- RED: NOT APPROVED --}}
+                                            <button type="button" 
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/force-verify') }}')"
+                                                class="btn btn-danger btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
+                                                <i class="fas fa-file-image"></i> Not approve residency
+                                            </button>
+                                        @else
+                                            {{-- LIGHT BLUE: APPROVED --}}
+                                            <button type="button" 
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/force-verify') }}')"
+                                                class="btn btn-info btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
+                                                <i class="fas fa-file-image"></i> Approved residency
+                                            </button>
+                                        @endif
                                     @endif
 
                                     {{-- View Button --}}
-                                    <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
+                                    <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
                                         View
                                     </a>
                                     
                                     {{-- Delete Button --}}
                                     <button type="button" 
                                         onclick="openBootstrapDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
-                                        class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                                        class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -129,18 +139,18 @@
                 <p id="deleteModalBodyMessage">Are you sure you want to delete this record?</p>
             </div>
             <div class="modal-footer bg-light justify-content-center">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill shadow-sm" data-bs-dismiss="modal">Cancel</button>
                 <form id="bootstrapDeleteForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger px-4 fw-bold">Yes, Delete</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold rounded-pill shadow-sm">Yes, Delete</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-{{-- IMAGE VIEWER MODAL WITH REJECT BUTTON --}}
+{{-- IMAGE VIEWER MODAL WITH APPROVE & REJECT BUTTONS --}}
 <div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -149,24 +159,43 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 text-center bg-light">
-                <img id="viewerImage" src="" alt="Residency Document" class="img-fluid rounded shadow-sm border mb-4" style="max-height: 60vh; object-fit: contain;">
+                <img id="viewerImage" src="" alt="Residency Document" class="img-fluid rounded shadow-sm border mb-4" style="max-height: 50vh; object-fit: contain;">
                 
-                {{-- Reject Document Form --}}
-                <div class="card border-danger text-start shadow-sm">
-                    <div class="card-header bg-danger text-white fw-bold py-2">
-                        <i class="fas fa-exclamation-triangle me-1"></i> Reject Document
-                    </div>
-                    <div class="card-body py-3">
-                        <form id="rejectResidencyForm" method="POST" action="">
-                            @csrf
-                            <label class="form-label small fw-bold text-muted">Reason for Rejection (This will be shown to the patient)</label>
-                            <div class="input-group">
-                                <input type="text" name="reason" class="form-control" placeholder="e.g. The image is blurry, please retake in a well-lit area." required>
-                                <button class="btn btn-outline-danger fw-bold px-4" type="submit">Send Warning & Delete Image</button>
+                <div class="row g-3">
+                    {{-- Approve Document Card --}}
+                    <div class="col-md-6">
+                        <div class="card border-success text-start shadow-sm h-100">
+                            <div class="card-header bg-success text-white fw-bold py-2">
+                                <i class="fas fa-check-circle me-1"></i> Approve Document
                             </div>
-                        </form>
+                            <div class="card-body py-3 d-flex flex-column justify-content-center">
+                                <p class="small text-muted mb-3">If the document is valid, click below to verify the patient and allow them to book appointments.</p>
+                                <form id="approveResidencyForm" method="POST" action="">
+                                    @csrf
+                                    <button class="btn btn-success fw-bold w-100 shadow-sm" type="submit">Approve & Verify</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Reject Document Card --}}
+                    <div class="col-md-6">
+                        <div class="card border-danger text-start shadow-sm h-100">
+                            <div class="card-header bg-danger text-white fw-bold py-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i> Reject Document
+                            </div>
+                            <div class="card-body py-3">
+                                <form id="rejectResidencyForm" method="POST" action="">
+                                    @csrf
+                                    <label class="form-label small fw-bold text-muted mb-1">Reason for Rejection <span class="text-danger">*</span></label>
+                                    <textarea name="reason" class="form-control mb-3" rows="2" placeholder="e.g. The image is blurry, please retake..." required></textarea>
+                                    <button class="btn btn-outline-danger fw-bold w-100 shadow-sm" type="submit" onclick="return confirm('Are you sure you want to delete this document and send a warning?');">Send Warning & Delete</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -181,11 +210,14 @@
         deleteModal.show();
     }
 
-    // Image Modal logic
-    function openImageModal(imageUrl, patientName, rejectUrl) {
+    // Image Modal logic (Now accepts approveUrl)
+    function openImageModal(imageUrl, patientName, rejectUrl, approveUrl) {
         document.getElementById('viewerImage').src = imageUrl;
         document.getElementById('imageModalPatientName').innerText = patientName;
+        
+        // Bind the form URLs
         document.getElementById('rejectResidencyForm').action = rejectUrl;
+        document.getElementById('approveResidencyForm').action = approveUrl;
         
         var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
         imageModal.show();

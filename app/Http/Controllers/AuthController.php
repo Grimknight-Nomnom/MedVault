@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Events\Verified;
 
 class AuthController extends Controller
 {
@@ -33,9 +35,20 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             
+            // --- UNVERIFIED CHECK: Boots them out and shows the resend link ---
+            if (!Auth::user()->hasVerifiedEmail()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                
+                return back()->withErrors([
+                    'login_identifier' => 'You must verify your email address before logging in. Please check your inbox.',
+                ])->onlyInput('login_identifier')->with('show_resend_link', true);
+            }
+            // ------------------------------------------------------------------
+
             $request->session()->regenerate();
 
-            // NEW: Added a flash session variable to trigger the modal strictly after login
             if (Auth::user()->role === 'admin') {
                 return redirect()->intended('/admin/dashboard')->with('show_admin_alerts', true);
             }
@@ -70,6 +83,10 @@ class AuthController extends Controller
             'last_name'     => 'required|string|max:255',
             'date_of_birth' => 'required|date',
             'age'           => 'required|string|max:100',
+            // --- ADD THESE TWO NEW VALIDATION RULES ---
+            'gender'        => 'required|string|in:Male,Female',
+            'civil_status'  => 'required|string|in:Single,Married,Widowed,Separated',
+            // ------------------------------------------
             'phone'         => ['required', 'string', 'unique:users,phone', 'regex:/^\+639\d{9}$/'],
             'address'       => 'nullable|string|max:500',
             'email'         => 'required|string|email|max:255|unique:users',
@@ -114,6 +131,10 @@ class AuthController extends Controller
             'last_name'     => $validated['last_name'],
             'date_of_birth' => $validated['date_of_birth'],
             'age'           => $validated['age'],
+            // --- ADD THEM TO THE CREATE ARRAY ---
+            'gender'        => $validated['gender'],
+            'civil_status'  => $validated['civil_status'],
+            // ------------------------------------
             'phone'         => $validated['phone'],
             'address'       => $validated['address'],
             'email'         => $validated['email'],
@@ -123,7 +144,55 @@ class AuthController extends Controller
             'patient_photo_path' => $photoPath, 
         ]);
 
+        // Trigger verification email
+        event(new Registered($user));
+
         return redirect()->route('login')->with('success', 
-            "Registration successful! Your User Number is: {$randomNumber}. You can now sign in, but please wait for admin approval before you can book an appointment.");
+            "Registration successful! Your User Number is: {$randomNumber}. Please check your email to verify your account before logging in.");
+    }
+
+    // --- EMAIL VERIFICATION LOGIC ---
+
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $user = User::findOrFail($id);
+
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            abort(403, 'Invalid or expired verification link.');
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('login')->with('info', 'Your email is already verified. You can now log in.');
+        }
+
+        $user->markEmailAsVerified();
+        event(new Verified($user));
+
+        return redirect()->route('login')->with('success', 'Email successfully verified! You can now log in.');
+    }
+
+    // --- RESEND VERIFICATION LOGIC (NEW) ---
+    public function resendVerification(Request $request)
+    {
+        $request->validate([
+            'login_identifier' => 'required'
+        ]);
+
+        $input = $request->input('login_identifier');
+        $fieldType = filter_var($input, FILTER_VALIDATE_EMAIL) ? 'email' : 'usernumber';
+
+        $user = User::where($fieldType, $input)->first();
+
+        if (!$user) {
+            return back()->withErrors(['login_identifier' => 'No account found with that identifier.']);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('login')->with('info', 'Your email is already verified. You can now log in.');
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return back()->with('success', 'A new verification link has been sent to your email address.');
     }
 }

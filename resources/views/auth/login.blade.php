@@ -68,12 +68,25 @@
                         </div>
                     @endif
 
-                    @if($errors->any())
+@if($errors->any())
                         <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex flex-col gap-2">
                             @foreach($errors->all() as $error)
                                 <div class="flex items-start gap-3">
                                     <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <p class="text-sm text-red-800 font-medium">{{ $error }}</p>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-red-800 font-medium">{{ $error }}</p>
+                                        
+                                        @if(session('show_resend_link') && str_contains($error, 'verify your email'))
+                                            <form method="POST" action="{{ route('verification.resend') }}" class="mt-2 inline-block">
+                                                @csrf
+                                                <input type="hidden" name="login_identifier" value="{{ old('login_identifier') }}">
+                                                <button type="submit" class="text-red-700 hover:text-red-900 text-sm underline font-bold transition-colors bg-transparent border-none p-0 cursor-pointer">
+                                                    Click here to resend the verification link.
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

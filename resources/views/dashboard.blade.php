@@ -199,9 +199,9 @@
                                 <a href="{{ route('profile.edit') }}" class="btn btn-light text-danger fw-bold px-4 py-2 rounded-pill shadow-sm">
                                     <i class="fas fa-upload me-2"></i>Upload Residency Document
                                 </a>
-                            @elseif(!$isVerified)
+@elseif(!$isVerified)
                                 <button class="btn btn-secondary text-white fw-bold px-4 py-2 rounded-pill shadow-sm" disabled style="cursor: not-allowed;">
-                                    <i class="fas fa-lock me-2"></i>Pending Admin Approval
+                                    <i class="fas fa-lock me-2"></i>Pending admin verification
                                 </button>
                             @elseif($missingDemographics)
                                 <a href="{{ route('profile.edit') }}" class="btn btn-light text-warning fw-bold px-4 py-2 rounded-pill shadow-sm">

@@ -133,11 +133,42 @@
                                         placeholder="Select Date..."
                                         value="{{ old('date_of_birth') }}">
                                 </div>
+
+                                
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Age</label>
                                     <input type="text" name="age" id="age" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-100 text-gray-500 focus:outline-none sm:text-sm" value="{{ old('age') }}" readonly tabindex="-1">
                                 </div>
                             </div>
+
+                            
+                            <div class="space-y-1.5">
+    <label for="gender" class="block text-sm font-semibold text-gray-700">Gender</label>
+    <select id="gender" name="gender" required 
+        class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none sm:text-sm">
+        <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Select Gender</option>
+        <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
+        <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
+    </select>
+    @error('gender')
+        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+    @enderror
+</div>
+
+<div class="space-y-1.5">
+    <label for="civil_status" class="block text-sm font-semibold text-gray-700">Civil Status</label>
+    <select id="civil_status" name="civil_status" required 
+        class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none sm:text-sm">
+        <option value="" disabled {{ old('civil_status') ? '' : 'selected' }}>Select Civil Status</option>
+        <option value="Single" {{ old('civil_status') == 'Single' ? 'selected' : '' }}>Single</option>
+        <option value="Married" {{ old('civil_status') == 'Married' ? 'selected' : '' }}>Married</option>
+        <option value="Widowed" {{ old('civil_status') == 'Widowed' ? 'selected' : '' }}>Widowed</option>
+        <option value="Separated" {{ old('civil_status') == 'Separated' ? 'selected' : '' }}>Separated</option>
+    </select>
+    @error('civil_status')
+        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+    @enderror
+</div>
 
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Phone Number</label>

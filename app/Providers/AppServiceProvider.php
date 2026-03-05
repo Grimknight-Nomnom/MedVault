@@ -3,9 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Gate; // 1. Import Gate
-use App\Models\User; // 2. Import User model
-use Illuminate\Pagination\Paginator; // <--- NEW: Import the Paginator
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Gate; // <-- 1. Import Gate
+use App\Models\User;                 // <-- 2. Import User model
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,12 +23,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 3. Define the 'admin' gate
+        // --- ADD THIS: Define the 'admin' Gate ---
         Gate::define('admin', function (User $user) {
             return $user->role === 'admin';
         });
+        // -----------------------------------------
 
-        // 4. NEW: Force Bootstrap 5 Pagination Globally
-        Paginator::useBootstrapFive();
+        // Your custom email verification logic
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verify Your Account - MedVault')
+                ->view('emails.verify_account', [
+                    'url' => $url,
+                    'usernumber' => $notifiable->usernumber,
+                    'email' => $notifiable->email,
+                ]);
+        });
     }
 }

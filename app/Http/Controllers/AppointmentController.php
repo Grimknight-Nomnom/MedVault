@@ -100,6 +100,10 @@ class AppointmentController extends Controller
             return redirect()->route('dashboard')->with('error', 'Your account is pending admin verification. You cannot book an appointment yet.');
         }
 
+        if (is_null(Auth::user()->admin_verified_at)) {
+            return redirect()->route('dashboard')->with('error', 'Your Proof of Residency is pending admin verification. You cannot book an appointment until it is approved.');
+        }
+
         if ($this->isProfileIncomplete()) {
             if (Auth::user()->needs_own_residency) {
                 return redirect()->route('profile.edit')->with('error', 'You are now 18 or older. Please upload your own Proof of Residency to continue booking.');
@@ -231,6 +235,10 @@ class AppointmentController extends Controller
     {
         if (is_null(Auth::user()->email_verified_at)) {
             return redirect()->route('dashboard')->with('error', 'Your account is pending admin verification. You cannot book an appointment yet.');
+        }
+
+        if (is_null(Auth::user()->admin_verified_at)) {
+            return redirect()->route('dashboard')->with('error', 'Your Proof of Residency is pending admin verification. You cannot book an appointment until it is approved.');
         }
 
         if ($this->isProfileIncomplete()) {
