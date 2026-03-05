@@ -43,18 +43,20 @@
 
         <div class="d-flex flex-column flex-md-row align-items-center gap-3 w-100 w-md-auto">
             <div class="btn-group shadow-sm w-100 w-md-auto">
-                <a href="{{ route('admin.appointments.index', ['date' => $date->copy()->subMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary btn-sm flex-fill flex-md-grow-0">&larr; Prev</a>
+                <a href="{{ route(auth()->user()->role . '.appointments.index', ['date' => $date->copy()->subMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary btn-sm flex-fill flex-md-grow-0">&larr; Prev</a>
                 <span class="btn btn-outline-secondary disabled fw-bold text-dark px-3 bg-white flex-fill flex-md-grow-0">{{ $date->format('F Y') }}</span>
-                <a href="{{ route('admin.appointments.index', ['date' => $date->copy()->addMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary btn-sm flex-fill flex-md-grow-0">Next &rarr;</a>
+                <a href="{{ route(auth()->user()->role . '.appointments.index', ['date' => $date->copy()->addMonth()->format('Y-m-d')]) }}" class="btn btn-outline-secondary btn-sm flex-fill flex-md-grow-0">Next &rarr;</a>
             </div>
             
             <div class="d-flex gap-2 w-100 w-md-auto">
-                <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap" data-bs-toggle="modal" data-bs-target="#bulkSettingsModal">
-                    <i class="fas fa-layer-group me-2"></i> Bulk Settings
-                </button>
-                <a href="{{ route('admin.appointments.create') }}" class="btn primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap">
-                    <i class="fas fa-plus-circle me-2"></i> Book Patient
-                </a>
+                @if(auth()->user()->role === 'admin')
+                    <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap" data-bs-toggle="modal" data-bs-target="#bulkSettingsModal">
+                        <i class="fas fa-layer-group me-2"></i> Bulk Settings
+                    </button>
+                    <a href="{{ route('admin.appointments.create') }}" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm flex-fill flex-md-grow-0 text-nowrap">
+                        <i class="fas fa-plus-circle me-2"></i> Book Patient
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -101,20 +103,15 @@
                         $limit = $setting ? $setting->max_appointments : 30;
                         $customLabel = $setting ? $setting->label : null;
                         
-                        // 1. Determine Default Label
                         $labelText = 'Check-up';
                         if ($dayOfWeek == 0 || $dayOfWeek == 6) { $labelText = 'Area'; } 
                         elseif ($dayOfWeek == 2 || $dayOfWeek == 4) { $labelText = 'Pregnancy'; } 
                         elseif ($dayOfWeek == 3) { $labelText = 'Immunization'; }
 
-                        // 2. Override with custom label if set
-                        if ($customLabel) {
-                            $labelText = $customLabel;
-                        }
+                        if ($customLabel) { $labelText = $customLabel; }
 
-                        // 3. Smart Color Assignment
                         $lowerLabel = strtolower($labelText);
-                        $bgClass = 'bg-special'; // Default to yellow for random strings
+                        $bgClass = 'bg-special'; 
 
                         if (str_contains($lowerLabel, 'pregnancy')) { 
                             $bgClass = 'bg-pregnancy'; 
@@ -140,7 +137,7 @@
                                 @endif
                             </div>
                             <div class="d-flex flex-column align-items-end gap-2">
-                                @if(!$isPast)
+                                @if(!$isPast && auth()->user()->role === 'admin')
                                 <button class="btn btn-light btn-sm border rounded-circle shadow-sm" 
                                         style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
                                         onclick="event.stopPropagation(); editDaySettings('{{ $dayString }}', {{ $limit }}, '{{ $customLabel ?? '' }}')">
@@ -155,7 +152,7 @@
                             <div class="d-flex justify-content-between align-items-start w-100">
                                 <span class="fw-bold fs-5">{{ $day }} @if($isToday) <span class="badge bg-danger ms-1" style="font-size: 0.5rem;">TODAY</span> @endif</span>
                                 
-                                @if(!$isPast)
+                                @if(!$isPast && auth()->user()->role === 'admin')
                                 <button class="btn btn-link p-0 text-secondary opacity-50 hover-opacity-100" 
                                         onclick="event.stopPropagation(); editDaySettings('{{ $dayString }}', {{ $limit }}, '{{ $customLabel ?? '' }}')">
                                     <i class="fas fa-cog"></i>
@@ -176,8 +173,7 @@
     </div>
 </div>
 
-{{-- MODALS --}}
-
+@if(auth()->user()->role === 'admin')
 {{-- 1. INDIVIDUAL SETTINGS MODAL --}}
 <div class="modal fade" id="settingsModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -221,11 +217,6 @@
             <form action="{{ route('admin.appointments.bulk_limit') }}" method="POST">
                 @csrf
                 <div class="modal-body p-4">
-                    <div class="alert alert-info small mb-4 border-0 border-start border-4 border-info">
-                        <i class="fas fa-info-circle me-1"></i> This applies changes to the selected day of the week for the next <strong>12 months</strong>.
-                        Days that already have <strong>existing patient appointments</strong> will be automatically skipped.
-                    </div>
-                    
                     <div class="mb-3">
                         <label class="form-label fw-bold">Select Day of the Week</label>
                         <select name="day_of_week" class="form-select border-primary shadow-none" required>
@@ -265,8 +256,9 @@
         </div>
     </div>
 </div>
+@endif
 
-{{-- 3. DAY DETAILS / DIAGNOSE MODAL --}}
+{{-- 3. DAY DETAILS MODAL --}}
 <div class="modal fade" id="dayDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -287,6 +279,7 @@
     </div>
 </div>
 
+@if(auth()->user()->role === 'admin')
 {{-- 4. CANCEL APPOINTMENT MODAL --}}
 <div class="modal fade" id="cancelAppointmentModal" tabindex="-1" style="z-index: 1060;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -331,9 +324,12 @@
         </div>
     </div>
 </div>
+@endif
 
 <script>
     const allAppointments = @json($appointments);
+    const isAdmin = {{ auth()->user()->role === 'admin' ? 'true' : 'false' }};
+    const rolePrefix = isAdmin ? 'admin' : 'staff';
 
     function toggleBulkCustom(val) {
         const customInput = document.getElementById('bulkCustomLabel');
@@ -348,6 +344,7 @@
     }
 
     function editDaySettings(date, currentLimit, currentLabel) {
+        if(!isAdmin) return;
         document.getElementById('settingDateInput').value = date;
         document.getElementById('settingDateDisplay').innerText = date;
         document.getElementById('settingLimitInput').value = currentLimit;
@@ -355,15 +352,14 @@
         new bootstrap.Modal(document.getElementById('settingsModal')).show();
     }
     
-    // Function to show the warning modal for future appointments
     function showFutureWarningModal(url) {
-        // Set the link of the "Proceed" button to the intended URL
+        if(!isAdmin) return;
         document.getElementById('confirmFutureActionBtn').href = url;
         new bootstrap.Modal(document.getElementById('futureWarningModal')).show();
     }
 
-    // Function to open the Cancel Modal and set the correct form action
     function openCancelModal(id) {
+        if(!isAdmin) return;
         document.getElementById('cancelAppointmentForm').action = `/admin/appointments/${id}`;
         new bootstrap.Modal(document.getElementById('cancelAppointmentModal')).show();
     }
@@ -383,7 +379,6 @@
         const isPastDate = dateObj < today;
         const isFutureDate = dateObj > today;
         
-        // CHECK IF IT IS AN IMMUNIZATION OR PREGNANCY DAY
         const lowerLabel = (dayLabel || '').toLowerCase();
         const isImmunizationDay = lowerLabel.includes('immunization');
         const isPregnancyDay = lowerLabel.includes('pregnancy');
@@ -412,20 +407,26 @@
                 let actions = '';
                 
                 if (!isPastDate && app.status !== 'completed' && app.status !== 'cancelled') {
-                    // Show "View" and "Cancel" buttons next to "Diagnose"
+                    
+                    // Conditionally build buttons based on isAdmin
+                    let diagnoseBtn = isAdmin ? `<a href="/admin/appointments/${app.id}/diagnose" ${futureWarning} class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>` : '';
+                    let cancelBtn = isAdmin ? `<button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>` : '';
+                    let viewPatientBtn = `<a href="/${rolePrefix}/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>`;
+
                     if (isSpecialRecordDay) {
                         actions = `
                             <div class="d-flex gap-1 justify-content-end">
-                                <a href="/admin/appointments/${app.id}/diagnose" ${futureWarning} class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
-                                <a href="/admin/patients/${app.user_id}" ${futureWarning} class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>
-                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>
+                                ${diagnoseBtn}
+                                ${viewPatientBtn}
+                                ${cancelBtn}
                             </div>
                         `;
                     } else {
+                        // For regular days, staff doesn't need to see any buttons here unless you want them to 'View'
                         actions = `
                             <div class="d-flex gap-1 justify-content-end">
-                                <a href="/admin/appointments/${app.id}/diagnose" ${futureWarning} class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>
-                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>
+                                ${diagnoseBtn}
+                                ${isAdmin ? cancelBtn : viewPatientBtn}
                             </div>
                         `;
                     }

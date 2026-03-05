@@ -4,7 +4,7 @@
 <div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="{{ route('admin.patients.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
+        <a href="{{ route(auth()->user()->role . '.patients.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
             <i class="fas fa-arrow-left me-1"></i> Back to List
         </a>
         <div class="text-end">
@@ -65,6 +65,7 @@
                         </div>
                     </div>
                     
+                    @if(auth()->user()->role === 'admin')
                     <div class="mt-4 d-flex gap-2 border-top pt-4">
                         <a href="{{ route('admin.patients.edit', $patient->id) }}" class="btn btn-outline-success w-50 rounded-pill fw-bold shadow-sm" style="font-size: 0.9rem;">
                             <i class="fas fa-user-edit me-1"></i> Edit Info
@@ -73,6 +74,7 @@
                             <i class="fas fa-key me-1"></i> Password
                         </button>
                     </div>
+                    @endif
 
                     {{-- DYNAMIC BUTTONS: Specialized Record Buttons --}}
                     <div class="mt-3 d-flex flex-column gap-2 border-top pt-3">
@@ -83,7 +85,7 @@
                             $isUnderFour = $ageInYears < 4;
                         @endphp
 
-{{-- PREGNANCY RECORD LOGIC --}}
+                        {{-- PREGNANCY RECORD LOGIC --}}
                         @if($patient->has_pregnancy_record && $patient->pregnancyRecords->count() > 0)
                             @php
                                 $latestRecord = $patient->pregnancyRecord;
@@ -93,8 +95,8 @@
                                 <i class="fas fa-eye me-1"></i> View Latest Pregnancy
                             </button>
                             
-                            {{-- IF LATEST IS COMPLETED, SHOW ADD NEW BUTTON --}}
-                            @if($latestRecord->is_completed)
+                            {{-- IF LATEST IS COMPLETED AND USER IS ADMIN, SHOW ADD NEW BUTTON --}}
+                            @if($latestRecord->is_completed && auth()->user()->role === 'admin')
                                 <button type="button" class="btn btn-danger rounded-pill fw-bold shadow-sm w-100 mt-2" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#confirmPregnancyModal">
                                     <i class="fas fa-plus me-1"></i> Add New Pregnancy Term
                                 </button>
@@ -126,7 +128,7 @@
                             <button type="button" class="btn btn-secondary rounded-pill fw-bold shadow-sm w-100 opacity-50" style="font-size: 0.85rem;" disabled>
                                 <i class="fas fa-ban me-1"></i> Pregnancy N/A (< 4 yrs)
                             </button>
-                        @else
+                        @elseif(auth()->user()->role === 'admin')
                             <button type="button" class="btn btn-danger rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#confirmPregnancyModal">
                                 <i class="fas fa-baby me-1"></i> Create Pregnancy Record
                             </button>
@@ -141,7 +143,7 @@
                             <button type="button" class="btn btn-secondary rounded-pill fw-bold shadow-sm w-100 opacity-50" style="font-size: 0.85rem;" disabled>
                                 <i class="fas fa-ban me-1"></i> Immunization N/A (> 2 yrs)
                             </button>
-                        @else
+                        @elseif(auth()->user()->role === 'admin')
                             <button type="button" class="btn btn-primary rounded-pill fw-bold shadow-sm w-100" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#confirmImmunizationModal">
                                 <i class="fas fa-syringe me-1"></i> Create Immunization Record
                             </button>
@@ -169,6 +171,7 @@
                                         <a href="{{ asset('storage/' . $patient->philhealth_id_path) }}" target="_blank" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2" title="View ID" style="line-height: 1.2;">
                                             <i class="fas fa-eye" style="font-size: 0.75rem;"></i>
                                         </a>
+                                        @if(auth()->user()->role === 'admin')
                                         <form action="{{ route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'philhealth']) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this PhilHealth ID?');">
                                             @csrf
                                             @method('DELETE')
@@ -176,6 +179,7 @@
                                                 <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     @else
                                         <span class="badge bg-secondary text-white" style="font-size: 0.65rem;">No Image</span>
                                     @endif
@@ -190,6 +194,7 @@
                                         <a href="{{ asset('storage/' . $patient->senior_pwd_id_path) }}" target="_blank" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2" title="View ID" style="line-height: 1.2;">
                                             <i class="fas fa-eye" style="font-size: 0.75rem;"></i>
                                         </a>
+                                        @if(auth()->user()->role === 'admin')
                                         <form action="{{ route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'senior_pwd']) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this Senior/PWD ID?');">
                                             @csrf
                                             @method('DELETE')
@@ -197,6 +202,7 @@
                                                 <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     @else
                                         <span class="badge bg-secondary text-white" style="font-size: 0.65rem;">No Image</span>
                                     @endif
@@ -240,7 +246,6 @@
                 <div class="card-header bg-success text-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <h5 class="mb-0 fw-bold"><i class="fas fa-history me-2"></i>Clinic Consultation History</h5>
                     
-                    {{-- DYNAMIC HEADER VIEW BUTTONS --}}
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         @if($patient->has_pregnancy_record)
                             <button type="button" class="btn btn-sm btn-light text-danger fw-bold rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal">
@@ -277,9 +282,11 @@
                                         @if($apt->medicalRecord)
                                             <div class="d-flex justify-content-between align-items-start pe-2">
                                                 <span class="fw-bold text-primary">{{ $apt->medicalRecord->diagnosis }}</span>
+                                                @if(auth()->user()->role === 'admin')
                                                 <a href="{{ route('admin.records.edit', $apt->medicalRecord->id) }}" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2 shadow-sm" title="Edit Record">
                                                     <i class="fas fa-edit" style="font-size: 0.75rem;"></i> Edit
                                                 </a>
+                                                @endif
                                             </div>
                                         @else
                                             <span class="text-muted small fst-italic">No record filed</span>
@@ -321,6 +328,7 @@
     </div>
 </div>
 
+@if(auth()->user()->role === 'admin')
 {{-- MODAL: CONFIRM PREGNANCY CREATION --}}
 <div class="modal fade" id="confirmPregnancyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -367,16 +375,6 @@
     </div>
 </div>
 
-{{-- INCLUDE THE BIG MODALS FROM PARTIALS --}}
-@if($patient->has_pregnancy_record)
-    @include('admin.patients.Partials.pregnancy_modal')
-@endif
-
-@if($patient->has_immunization_record)
-    @include('admin.patients.Partials.immunization_modal')
-@endif
-
-
 {{-- CHANGE PASSWORD MODAL --}}
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -419,8 +417,19 @@
         </div>
     </div>
 </div>
+@endif
 
-{{-- RESIDENCY IMAGE MODAL --}}
+{{-- INCLUDE THE BIG MODALS FROM PARTIALS (View Only applies to partials based on forms inside) --}}
+@if($patient->has_pregnancy_record)
+    @include('admin.patients.Partials.pregnancy_modal')
+@endif
+
+@if($patient->has_immunization_record)
+    @include('admin.patients.Partials.immunization_modal')
+@endif
+
+
+{{-- RESIDENCY IMAGE MODAL (View Only for both roles) --}}
 <div class="modal fade" id="residencyImageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">

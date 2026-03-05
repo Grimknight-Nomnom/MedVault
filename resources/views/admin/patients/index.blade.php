@@ -17,18 +17,15 @@
         </div>
         
         <div class="d-flex flex-wrap align-items-center gap-2">
-            {{-- Filter Unverified Button --}}
-            <a href="{{ route('admin.patients.index', ['status' => 'unverified']) }}" class="btn btn-warning fw-bold text-dark shadow-sm">
+            <a href="{{ route(auth()->user()->role . '.patients.index', ['status' => 'unverified']) }}" class="btn btn-warning fw-bold text-dark shadow-sm">
                 <i class="fas fa-filter me-1"></i> Unverified Only
             </a>
 
-            {{-- Clear Filters (Appears if searching or filtering) --}}
             @if(request()->has('status') || request()->has('search') && request('search') != '')
-                <a href="{{ route('admin.patients.index') }}" class="btn btn-outline-secondary fw-bold shadow-sm">Clear Filter</a>
+                <a href="{{ route(auth()->user()->role . '.patients.index') }}" class="btn btn-outline-secondary fw-bold shadow-sm">Clear Filter</a>
             @endif
             
-            {{-- Search Bar --}}
-            <form action="{{ route('admin.patients.index') }}" method="GET" class="d-flex gap-2 ms-xl-3">
+            <form action="{{ route(auth()->user()->role . '.patients.index') }}" method="GET" class="d-flex gap-2 ms-xl-3">
                 <input type="text" name="search" class="form-control border-success shadow-none" 
                        placeholder="Search Name or ID..." value="{{ request('search') }}" style="width: 220px;">
                 <button type="submit" class="btn btn-success shadow-sm"><i class="fas fa-search"></i></button>
@@ -53,24 +50,20 @@
                     </thead>
                     <tbody>
                         @forelse($patients as $patient)
-                        {{-- Highlights row if EITHER email or residency is missing --}}
                         <tr class="{{ is_null($patient->admin_verified_at) || is_null($patient->email_verified_at) ? 'bg-danger-subtle' : '' }}">
                             <td class="ps-4 fw-bold text-success">#{{ $patient->usernumber }}</td>
                             <td>{{ $patient->first_name }} {{ $patient->last_name }}</td>
                             <td>
                                 <div class="d-flex flex-column align-items-start gap-1">
-                                    {{-- EMAIL STATUS BADGE --}}
                                     @if(is_null($patient->email_verified_at))
                                         <span class="badge bg-warning text-dark"><i class="fas fa-envelope"></i> Email Unverified</span>
                                     @else
                                         <span class="badge bg-success"><i class="fas fa-check-circle"></i> Email Verified</span>
                                     @endif
 
-                                    {{-- RESIDENCY STATUS BADGE --}}
                                     @if(is_null($patient->admin_verified_at))
                                         <span class="badge bg-danger"><i class="fas fa-id-card"></i> Residency Pending</span>
                                     @else
-                                        {{-- CHANGED TO GREEN (bg-success) --}}
                                         <span class="badge bg-success"><i class="fas fa-check-circle"></i> Residency Approved</span>
                                     @endif
                                 </div>
@@ -78,8 +71,8 @@
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
                                     
-                                    {{-- MANUAL VERIFY EMAIL BUTTON --}}
-                                    @if(is_null($patient->email_verified_at))
+                                    {{-- MANUAL VERIFY EMAIL BUTTON (ADMIN ONLY) --}}
+                                    @if(auth()->user()->role === 'admin' && is_null($patient->email_verified_at))
                                         <form action="{{ route('admin.patients.verify', $patient->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark shadow-sm" title="Manually Verify Email">
@@ -91,16 +84,14 @@
                                     {{-- VIEW RESIDENCY DOCUMENT BUTTON --}}
                                     @if($patient->patient_photo_path)
                                         @if(is_null($patient->admin_verified_at))
-                                            {{-- RED: NOT APPROVED --}}
                                             <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route('admin.patients.reject_residency', $patient->id) }}', '{{ route('admin.patients.approve_residency', $patient->id) }}')"
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.reject_residency', $patient->id).`'` : 'null' }}, {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.approve_residency', $patient->id).`'` : 'null' }})"
                                                 class="btn btn-danger btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
                                                 <i class="fas fa-file-image"></i> Not approved residency
                                             </button>
                                         @else
-                                            {{-- GREEN: APPROVED (btn-success) --}}
                                             <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ route('admin.patients.reject_residency', $patient->id) }}', '{{ route('admin.patients.approve_residency', $patient->id) }}')"
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.reject_residency', $patient->id).`'` : 'null' }}, {{ auth()->user()->role === 'admin' ? `'`.route('admin.patients.approve_residency', $patient->id).`'` : 'null' }})"
                                                 class="btn btn-success btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
                                                 <i class="fas fa-file-image"></i> Approved residency
                                             </button>
@@ -108,16 +99,18 @@
                                     @endif
 
                                     {{-- View Button --}}
-                                    <a href="{{ route('admin.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                                    <a href="{{ route(auth()->user()->role . '.patients.show', $patient->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
                                         View
                                     </a>
                                     
-                                    {{-- Delete Button --}}
-                                    <button type="button" 
-                                        onclick="openBootstrapDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
-                                        class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    {{-- Delete Button (ADMIN ONLY) --}}
+                                    @if(auth()->user()->role === 'admin')
+                                        <button type="button" 
+                                            onclick="openBootstrapDeleteModal('{{ route('admin.patients.delete', $patient->id) }}', 'Are you sure to delete this patient account? It will permanently delete their medical record.')"
+                                            class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -139,6 +132,7 @@
     </div>
 </div>
 
+@if(auth()->user()->role === 'admin')
 {{-- GLOBAL BOOTSTRAP DELETE MODAL --}}
 <div class="modal fade" id="bootstrapDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -161,8 +155,9 @@
         </div>
     </div>
 </div>
+@endif
 
-{{-- IMAGE VIEWER MODAL WITH APPROVE & REJECT BUTTONS --}}
+{{-- IMAGE VIEWER MODAL WITH DYNAMIC APPROVE/REJECT UI --}}
 <div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -173,8 +168,8 @@
             <div class="modal-body p-4 text-center bg-light">
                 <img id="viewerImage" src="" alt="Residency Document" class="img-fluid rounded shadow-sm border mb-4" style="max-height: 50vh; object-fit: contain;">
                 
-                <div class="row g-3">
-                    {{-- Approve Document Card --}}
+                @if(auth()->user()->role === 'admin')
+                <div id="adminResidencyControls" class="row g-3">
                     <div class="col-md-6">
                         <div class="card border-success text-start shadow-sm h-100">
                             <div class="card-header bg-success text-white fw-bold py-2">
@@ -190,7 +185,6 @@
                         </div>
                     </div>
 
-                    {{-- Reject Document Card --}}
                     <div class="col-md-6">
                         <div class="card border-danger text-start shadow-sm h-100">
                             <div class="card-header bg-danger text-white fw-bold py-2">
@@ -207,14 +201,13 @@
                         </div>
                     </div>
                 </div>
-
+                @endif
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Delete Modal logic
     function openBootstrapDeleteModal(actionUrl, message) {
         document.getElementById('bootstrapDeleteForm').action = actionUrl;
         document.getElementById('deleteModalBodyMessage').innerText = message;
@@ -222,14 +215,14 @@
         deleteModal.show();
     }
 
-    // Image Modal logic
     function openImageModal(imageUrl, patientName, rejectUrl, approveUrl) {
         document.getElementById('viewerImage').src = imageUrl;
         document.getElementById('imageModalPatientName').innerText = patientName;
         
-        // Bind the form URLs
-        document.getElementById('rejectResidencyForm').action = rejectUrl;
-        document.getElementById('approveResidencyForm').action = approveUrl;
+        if (rejectUrl && approveUrl) {
+            document.getElementById('rejectResidencyForm').action = rejectUrl;
+            document.getElementById('approveResidencyForm').action = approveUrl;
+        }
         
         var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
         imageModal.show();

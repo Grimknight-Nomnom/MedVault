@@ -134,41 +134,39 @@
                                         value="{{ old('date_of_birth') }}">
                                 </div>
 
-                                
                                 <div class="space-y-1.5">
                                     <label class="block text-sm font-semibold text-gray-700">Age</label>
                                     <input type="text" name="age" id="age" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-100 text-gray-500 focus:outline-none sm:text-sm" value="{{ old('age') }}" readonly tabindex="-1">
                                 </div>
                             </div>
 
-                            
                             <div class="space-y-1.5">
-    <label for="gender" class="block text-sm font-semibold text-gray-700">Gender</label>
-    <select id="gender" name="gender" required 
-        class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none sm:text-sm">
-        <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Select Gender</option>
-        <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
-        <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
-    </select>
-    @error('gender')
-        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-    @enderror
-</div>
+                                <label for="gender" class="block text-sm font-semibold text-gray-700">Gender</label>
+                                <select id="gender" name="gender" required 
+                                    class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none sm:text-sm">
+                                    <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Select Gender</option>
+                                    <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
+                                    <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
+                                </select>
+                                @error('gender')
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-<div class="space-y-1.5">
-    <label for="civil_status" class="block text-sm font-semibold text-gray-700">Civil Status</label>
-    <select id="civil_status" name="civil_status" required 
-        class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none sm:text-sm">
-        <option value="" disabled {{ old('civil_status') ? '' : 'selected' }}>Select Civil Status</option>
-        <option value="Single" {{ old('civil_status') == 'Single' ? 'selected' : '' }}>Single</option>
-        <option value="Married" {{ old('civil_status') == 'Married' ? 'selected' : '' }}>Married</option>
-        <option value="Widowed" {{ old('civil_status') == 'Widowed' ? 'selected' : '' }}>Widowed</option>
-        <option value="Separated" {{ old('civil_status') == 'Separated' ? 'selected' : '' }}>Separated</option>
-    </select>
-    @error('civil_status')
-        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-    @enderror
-</div>
+                            <div class="space-y-1.5">
+                                <label for="civil_status" class="block text-sm font-semibold text-gray-700">Civil Status</label>
+                                <select id="civil_status" name="civil_status" required 
+                                    class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none sm:text-sm">
+                                    <option value="" disabled {{ old('civil_status') ? '' : 'selected' }}>Select Civil Status</option>
+                                    <option value="Single" {{ old('civil_status') == 'Single' ? 'selected' : '' }}>Single</option>
+                                    <option value="Married" {{ old('civil_status') == 'Married' ? 'selected' : '' }}>Married</option>
+                                    <option value="Widowed" {{ old('civil_status') == 'Widowed' ? 'selected' : '' }}>Widowed</option>
+                                    <option value="Separated" {{ old('civil_status') == 'Separated' ? 'selected' : '' }}>Separated</option>
+                                </select>
+                                @error('civil_status')
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
 
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Phone Number</label>
@@ -192,38 +190,6 @@
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Address</label>
                                 <textarea name="address" rows="2" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm resize-none">{{ old('address') }}</textarea>
-                            </div>
-                        </div>
-
-                        <div class="space-y-5 pt-4">
-                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2">Residency Verification</h3>
-                            
-                            <div class="space-y-3">
-                                <label class="block text-sm font-semibold text-gray-700">Certificate of Indigency / Proof of Residence</label>
-                                
-                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-4">
-                                    <div class="relative group cursor-pointer flex-shrink-0" onclick="openImageModal()">
-                                        <img src="{{ asset('Image/image_ff8e08.png') }}" alt="Sample Document" class="w-20 h-20 rounded-lg object-cover border border-gray-300 shadow-sm bg-white group-hover:opacity-75 transition-opacity duration-200">
-                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                            <div class="bg-black/40 p-1.5 rounded-full">
-                                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="text-sm text-gray-600 flex-1">
-                                        <p class="font-medium text-gray-900 mb-1">Take a photo or upload a scan</p>
-                                        <p class="text-xs mb-1.5">Please upload a clear copy of your Barangay Indigency or Proof of Residence. (PNG/JPG, Max 5MB).</p>
-                                        <button type="button" onclick="openImageModal()" class="text-teal-600 hover:text-teal-700 text-xs font-semibold focus:outline-none flex items-center gap-1">
-                                            View sample document
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <input type="file" name="patient_photo" accept="image/jpeg, image/png, image/jpg, image/*" required 
-                                    class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-                                
-                                @error('patient_photo') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -282,35 +248,6 @@
                             </a>
                         </p>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="imageModal" class="fixed inset-0 z-50 hidden bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300 opacity-0" onclick="closeImageModal()">
-        <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="modalContent" onclick="event.stopPropagation()">
-            
-            <div class="absolute top-4 right-4 z-10">
-                <button type="button" onclick="closeImageModal()" class="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 focus:outline-none transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            
-            <div class="p-6 bg-gray-100 flex justify-center items-center">
-                <img src="{{ asset('Image/image_ff8e08.png') }}" alt="Sample Document Enlarged" class="w-auto h-auto max-w-full max-h-[50vh] object-contain rounded-lg shadow-md border border-gray-300 bg-white">
-            </div>
-            
-            <div class="p-5 bg-white border-t border-gray-100">
-                <h3 class="font-bold text-gray-900 text-lg">Acceptable Document Guidelines</h3>
-                <ul class="text-sm text-gray-500 mt-2 space-y-1 list-disc list-inside">
-                    <li>Ensure the document is well-lit and not blurry.</li>
-                    <li>Make sure your Name and Address are clearly readable.</li>
-                    <li>All four corners of the document should be visible.</li>
-                </ul>
-                <div class="mt-5 w-full">
-                    <button type="button" onclick="closeImageModal()" class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
-                        Got it
-                    </button>
                 </div>
             </div>
         </div>
@@ -423,33 +360,6 @@
                 input.type = 'password';
                 path.setAttribute('d', 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z');
             }
-        }
-
-        // --- Image Modal Logic ---
-        function openImageModal() {
-            const modal = document.getElementById('imageModal');
-            const modalContent = document.getElementById('modalContent');
-            
-            modal.classList.remove('hidden');
-            
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-            }, 10);
-        }
-
-        function closeImageModal() {
-            const modal = document.getElementById('imageModal');
-            const modalContent = document.getElementById('modalContent');
-            
-            modal.classList.add('opacity-0');
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
         }
     </script>
 </body>

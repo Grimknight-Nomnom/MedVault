@@ -9,25 +9,29 @@
             <p class="text-muted small mb-0">Manage stock, track expiry dates, and dispense medicines.</p>
         </div>
         <div class="d-flex gap-3 flex-wrap">
-            {{-- NEW EXPORT EXCEL BUTTON --}}
-            <a href="{{ route('admin.medicines.export_expired') }}" class="btn btn-success shadow-sm rounded-pill px-4">
-                <i class="fas fa-file-excel me-2"></i>Export Expired/0 Stock
-            </a>
+            {{-- ONLY ADMIN CAN EXPORT OR ADD --}}
+            @if(auth()->user()->role === 'admin')
+                <a href="{{ route('admin.medicines.export_expired') }}" class="btn btn-success shadow-sm rounded-pill px-4">
+                    <i class="fas fa-file-excel me-2"></i>Export Expired/0 Stock
+                </a>
+            @endif
 
-            <a href="{{ route('admin.medicines.history') }}" class="btn btn-secondary shadow-sm rounded-pill px-4">
+            <a href="{{ route(auth()->user()->role . '.medicines.history') }}" class="btn btn-secondary shadow-sm rounded-pill px-4">
                 <i class="fas fa-history me-2"></i>View History
             </a>
             
-            <a href="{{ route('admin.medicines.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
-                <i class="fas fa-plus me-2"></i>Add Medicine
-            </a>
+            @if(auth()->user()->role === 'admin')
+                <a href="{{ route('admin.medicines.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
+                    <i class="fas fa-plus me-2"></i>Add Medicine
+                </a>
+            @endif
         </div>
     </div>
 
     {{-- Search Card --}}
     <div class="card shadow-sm mb-4 border-0 rounded-4">
         <div class="card-body p-3">
-            <form action="{{ route('admin.medicines.index') }}" method="GET" class="d-flex gap-2 align-items-center">
+            <form action="{{ route(auth()->user()->role . '.medicines.index') }}" method="GET" class="d-flex gap-2 align-items-center">
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fas fa-search"></i></span>
                     <input type="text" name="search" class="form-control border-start-0 ps-2 shadow-none" 
@@ -36,7 +40,7 @@
                     <button class="btn btn-primary px-4" type="submit">Search</button>
                 </div>
                 @if(request()->filled('search'))
-                    <a href="{{ route('admin.medicines.index') }}" class="btn btn-light border text-muted" title="Clear Search">
+                    <a href="{{ route(auth()->user()->role . '.medicines.index') }}" class="btn btn-light border text-muted" title="Clear Search">
                         <i class="fas fa-times"></i>
                     </a>
                 @endif
@@ -87,78 +91,82 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                <div class="d-flex gap-2 flex-wrap justify-content-end">
-                                    {{-- Release Button --}}
-                                    <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#releaseModal{{ $medicine->id }}" title="Dispense">
-                                        <i class="fas fa-box-open"></i> Release
-                                    </button>
-                                    
-                                    {{-- Edit Button --}}
-                                    <a href="{{ route('admin.medicines.edit', $medicine->id) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    
-                                    {{-- Delete Button --}}
-                                    <button type="button" 
-                                        class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                        onclick="openBootstrapDeleteModal('{{ route('admin.medicines.delete', $medicine->id) }}', 'Are you sure to delete this medicine? It will permanently delete this medicine.')">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
+                                @if(auth()->user()->role === 'admin')
+                                    <div class="d-flex gap-2 flex-wrap justify-content-end">
+                                        {{-- Release Button --}}
+                                        <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#releaseModal{{ $medicine->id }}" title="Dispense">
+                                            <i class="fas fa-box-open"></i> Release
+                                        </button>
+                                        
+                                        {{-- Edit Button --}}
+                                        <a href="{{ route('admin.medicines.edit', $medicine->id) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        {{-- Delete Button --}}
+                                        <button type="button" 
+                                            class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                            onclick="openBootstrapDeleteModal('{{ route('admin.medicines.delete', $medicine->id) }}', 'Are you sure to delete this medicine? It will permanently delete this medicine.')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
 
-                                {{-- Release Modal (Inside Loop for ID context) --}}
-                                <div class="modal fade" id="releaseModal{{ $medicine->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content border-0 shadow">
-                                            <div class="modal-header bg-info text-white">
-                                                <h5 class="modal-title fw-bold"><i class="fas fa-hand-holding-medical me-2"></i>Dispense Medicine</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    {{-- Release Modal (Inside Loop for ID context) --}}
+                                    <div class="modal fade" id="releaseModal{{ $medicine->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow">
+                                                <div class="modal-header bg-info text-white">
+                                                    <h5 class="modal-title fw-bold"><i class="fas fa-hand-holding-medical me-2"></i>Dispense Medicine</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form action="{{ route('admin.medicines.release', $medicine->id) }}" method="POST">
+                                                    @csrf
+                                                    <div class="modal-body text-start p-4">
+                                                        <div class="mb-4 p-3 bg-light rounded border border-info border-opacity-25">
+                                                            <h6 class="fw-bold text-dark mb-1">{{ $medicine->name }}</h6>
+                                                            <small class="text-muted">Current Stock: <span class="badge bg-success">{{ $medicine->stock_quantity }}</span></small>
+                                                        </div>
+
+                                                        {{-- Select Staff Dropdown --}}
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold small text-uppercase text-secondary">Released By (Staff)</label>
+                                                            <select name="released_by" class="form-select" required>
+                                                                <option value="" disabled selected>Select staff member...</option>
+                                                                @foreach(isset($staffList) ? $staffList : [] as $staff)
+                                                                    <option value="{{ $staff->name }}">{{ $staff->name }} ({{ $staff->role }})</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold small text-uppercase text-secondary">Select Patient</label>
+                                                            <select name="patient_id" class="form-select" required>
+                                                                <option value="" disabled selected>Choose a patient...</option>
+                                                                @foreach($patients as $patient)
+                                                                    <option value="{{ $patient->id }}">
+                                                                        {{ $patient->first_name }} {{ $patient->last_name }} 
+                                                                        @if($patient->usernumber) (ID: {{ $patient->usernumber }}) @endif
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="mb-2">
+                                                            <label class="form-label fw-bold small text-uppercase text-secondary">Quantity</label>
+                                                            <input type="number" name="quantity" class="form-control" min="1" max="{{ $medicine->stock_quantity }}" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer bg-light border-top-0">
+                                                        <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-info text-white fw-bold px-4 rounded-pill">Confirm Release</button>
+                                                    </div>
+                                                </form>
                                             </div>
-                                            <form action="{{ route('admin.medicines.release', $medicine->id) }}" method="POST">
-                                                @csrf
-                                                <div class="modal-body text-start p-4">
-                                                    <div class="mb-4 p-3 bg-light rounded border border-info border-opacity-25">
-                                                        <h6 class="fw-bold text-dark mb-1">{{ $medicine->name }}</h6>
-                                                        <small class="text-muted">Current Stock: <span class="badge bg-success">{{ $medicine->stock_quantity }}</span></small>
-                                                    </div>
-
-                                                    {{-- Select Staff Dropdown --}}
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold small text-uppercase text-secondary">Released By (Staff)</label>
-                                                        <select name="released_by" class="form-select" required>
-                                                            <option value="" disabled selected>Select staff member...</option>
-                                                            @foreach(isset($staffList) ? $staffList : [] as $staff)
-                                                                <option value="{{ $staff->name }}">{{ $staff->name }} ({{ $staff->role }})</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold small text-uppercase text-secondary">Select Patient</label>
-                                                        <select name="patient_id" class="form-select" required>
-                                                            <option value="" disabled selected>Choose a patient...</option>
-                                                            @foreach($patients as $patient)
-                                                                <option value="{{ $patient->id }}">
-                                                                    {{ $patient->first_name }} {{ $patient->last_name }} 
-                                                                    @if($patient->usernumber) (ID: {{ $patient->usernumber }}) @endif
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="mb-2">
-                                                        <label class="form-label fw-bold small text-uppercase text-secondary">Quantity</label>
-                                                        <input type="number" name="quantity" class="form-control" min="1" max="{{ $medicine->stock_quantity }}" required>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer bg-light border-top-0">
-                                                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-info text-white fw-bold px-4 rounded-pill">Confirm Release</button>
-                                                </div>
-                                            </form>
                                         </div>
                                     </div>
-                                </div>
+                                @else
+                                    <span class="badge bg-secondary rounded-pill px-3">View Only</span>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -183,6 +191,7 @@
     </div>
 </div>
 
+@if(auth()->user()->role === 'admin')
 {{-- GLOBAL DELETE MODAL (BOOTSTRAP VERSION) --}}
 <div class="modal fade" id="bootstrapDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -212,18 +221,13 @@
 
 <script>
     function openBootstrapDeleteModal(actionUrl, message) {
-        // Set the form action dynamically
         document.getElementById('bootstrapDeleteForm').action = actionUrl;
-        
-        // Set the message dynamically
         if(message) {
             document.getElementById('deleteModalBodyMessage').innerText = message;
         }
-        
-        // Show the modal using Bootstrap API
         var deleteModal = new bootstrap.Modal(document.getElementById('bootstrapDeleteModal'));
         deleteModal.show();
     }
 </script>
-
+@endif
 @endsection

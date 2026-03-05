@@ -61,6 +61,25 @@ Route::controller(PasswordResetController::class)->group(function () {
 // <-- MODIFIED: Added 'verified' middleware here to protect the dashboard and internal pages
 Route::middleware(['auth', 'verified'])->group(function () {
 
+// Add this inside the main `middleware(['auth', 'verified'])` block, next to the admin prefix
+
+// --- STAFF ROUTES ---
+Route::prefix('staff')->middleware(['auth', 'verified', 'can:staff'])->group(function () {
+    // Staff Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\StaffController::class, 'dashboard'])->name('staff.dashboard');
+
+    // RESTRICTED ACCOUNT VIEWING (Read-Only)
+    Route::get('/patients', [\App\Http\Controllers\AdminController::class, 'indexPatients'])->name('staff.patients.index');
+    Route::get('/patients/{id}', [\App\Http\Controllers\AdminController::class, 'showPatient'])->name('staff.patients.show');
+
+    // MEDICINE INVENTORY (Read-Only)
+    Route::get('/medicines', [\App\Http\Controllers\MedicineController::class, 'index'])->name('staff.medicines.index');
+    Route::get('/medicines/history', [\App\Http\Controllers\MedicineController::class, 'history'])->name('staff.medicines.history');
+
+    // APPOINTMENTS (Read-Only)
+    Route::get('/appointments', [\App\Http\Controllers\AppointmentController::class, 'adminIndex'])->name('staff.appointments.index');
+});
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile/delete-id/{type}', [ProfileController::class, 'deleteIdImage'])->name('profile.delete_id');
