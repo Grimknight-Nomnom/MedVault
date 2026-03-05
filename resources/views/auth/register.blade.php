@@ -103,7 +103,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('register.post') }}" enctype="multipart/form-data" class="space-y-6">
+                    <form method="POST" action="{{ route('register.post') }}" class="space-y-6">
                         @csrf
 
                         <div class="space-y-5">

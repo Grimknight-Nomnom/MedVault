@@ -75,6 +75,23 @@ class ProfileController extends Controller
             $user->residency_rejection_reason = null;
         }
 
+
+        // 2. Add this block BEFORE $user->save();
+        if ($request->hasFile('patient_photo')) {
+            // Delete the old photo if it exists
+            if ($user->patient_photo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->patient_photo_path);
+            }
+            
+            // Store new photo
+            $path = $request->file('patient_photo')->store('patient_photos', 'public');
+            $user->patient_photo_path = $path;
+            
+            // Reset verification status so the Admin can review the new document!
+            $user->residency_rejection_reason = null;
+            $user->admin_verified_at = null; 
+        }
+
         $user->fill($validated);
         $user->save();
 

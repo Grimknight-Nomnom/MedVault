@@ -156,13 +156,13 @@ public function verifyPatient($id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
         
-        // Use 'email_verified_at' for both the check AND the update
+        // This is for the manual Email Verification button
         if (is_null($patient->email_verified_at)) {
-            $patient->update(['email_verified_at' => now()]); // <-- Change 'admin_verified_at' to 'email_verified_at' here!
-            return redirect()->back()->with('success', "Patient {$patient->first_name} manually verified successfully.");
+            $patient->update(['email_verified_at' => now()]);
+            return redirect()->back()->with('success', "Patient {$patient->first_name}'s email manually verified successfully.");
         }
 
-        return redirect()->back()->with('info', 'Patient is already verified.');
+        return redirect()->back()->with('info', 'Patient email is already verified.');
     }
 
     public function approveResidency($id)

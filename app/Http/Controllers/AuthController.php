@@ -83,19 +83,13 @@ class AuthController extends Controller
             'last_name'     => 'required|string|max:255',
             'date_of_birth' => 'required|date',
             'age'           => 'required|string|max:100',
-            // --- ADD THESE TWO NEW VALIDATION RULES ---
             'gender'        => 'required|string|in:Male,Female',
             'civil_status'  => 'required|string|in:Single,Married,Widowed,Separated',
-            // ------------------------------------------
             'phone'         => ['required', 'string', 'unique:users,phone', 'regex:/^\+639\d{9}$/'],
             'address'       => 'nullable|string|max:500',
             'email'         => 'required|string|email|max:255|unique:users',
             'password'      => 'required|string|min:8|confirmed',
-            'patient_photo' => 'required|image|mimes:jpeg,png,jpg|max:5120', 
-        ], [
-            'patient_photo.image' => 'The uploaded file must be a valid image format.',
-            'patient_photo.mimes' => 'The document must be a file of type: jpeg, png, jpg.',
-            'patient_photo.max' => 'The document may not be greater than 5 Megabytes.',
+            // patient_photo validation removed!
         ]);
 
         $duplicateUser = User::where('first_name', $validated['first_name'])
@@ -116,11 +110,6 @@ class AuthController extends Controller
             ])->withInput();
         }
 
-        $photoPath = null;
-        if ($request->hasFile('patient_photo')) {
-            $photoPath = $request->file('patient_photo')->store('patient_photos', 'public');
-        }
-
         do {
             $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
         } while (User::where('usernumber', $randomNumber)->exists());
@@ -131,21 +120,19 @@ class AuthController extends Controller
             'last_name'     => $validated['last_name'],
             'date_of_birth' => $validated['date_of_birth'],
             'age'           => $validated['age'],
-            // --- ADD THEM TO THE CREATE ARRAY ---
             'gender'        => $validated['gender'],
             'civil_status'  => $validated['civil_status'],
-            // ------------------------------------
             'phone'         => $validated['phone'],
             'address'       => $validated['address'],
             'email'         => $validated['email'],
             'password'      => Hash::make($validated['password']),
             'usernumber'    => $randomNumber,
             'role'          => 'user',
-            'patient_photo_path' => $photoPath, 
+            'patient_photo_path' => null, // Left empty on registration
         ]);
 
         // Trigger verification email
-        event(new Registered($user));
+        event(new \Illuminate\Auth\Events\Registered($user));
 
         return redirect()->route('login')->with('success', 
             "Registration successful! Your User Number is: {$randomNumber}. Please check your email to verify your account before logging in.");

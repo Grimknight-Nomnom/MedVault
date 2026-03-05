@@ -45,8 +45,9 @@
 @php
     $user = Auth::user();
     
-    // Check various account flags
-    $isVerified = !is_null($user->email_verified_at);
+    // --- CHANGED: Now checks admin_verified_at instead of email_verified_at ---
+    $isVerified = !is_null($user->admin_verified_at);
+    
     $missingPhoto = empty($user->patient_photo_path);
     $hasRejection = !empty($user->residency_rejection_reason);
 
@@ -199,7 +200,7 @@
                                 <a href="{{ route('profile.edit') }}" class="btn btn-light text-danger fw-bold px-4 py-2 rounded-pill shadow-sm">
                                     <i class="fas fa-upload me-2"></i>Upload Residency Document
                                 </a>
-@elseif(!$isVerified)
+                            @elseif(!$isVerified)
                                 <button class="btn btn-secondary text-white fw-bold px-4 py-2 rounded-pill shadow-sm" disabled style="cursor: not-allowed;">
                                     <i class="fas fa-lock me-2"></i>Pending admin verification
                                 </button>

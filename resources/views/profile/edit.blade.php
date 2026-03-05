@@ -94,6 +94,8 @@
                                     <input type="text" name="address" class="form-control" value="{{ old('address', $user->address) }}" required placeholder="House No., Street, Barangay, City">
                                 </div>
 
+                                
+
                                 {{-- RESTORED: Proof of Residency / Indigency --}}
                                 <div class="col-md-12 mt-4">
                                     <label class="form-label fw-bold">Proof of Residency / Indigency <span class="text-danger">*</span></label>

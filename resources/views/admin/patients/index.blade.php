@@ -53,42 +53,53 @@
                     </thead>
                     <tbody>
                         @forelse($patients as $patient)
-                        <tr class="{{ is_null($patient->email_verified_at) ? 'bg-danger-subtle' : '' }}">
+                        {{-- Highlights row if EITHER email or residency is missing --}}
+                        <tr class="{{ is_null($patient->admin_verified_at) || is_null($patient->email_verified_at) ? 'bg-danger-subtle' : '' }}">
                             <td class="ps-4 fw-bold text-success">#{{ $patient->usernumber }}</td>
                             <td>{{ $patient->first_name }} {{ $patient->last_name }}</td>
                             <td>
-                                @if(is_null($patient->email_verified_at))
-                                    <span class="badge bg-danger">Unverified</span>
-                                @else
-                                    <span class="badge bg-success">Verified</span>
-                                @endif
+                                <div class="d-flex flex-column align-items-start gap-1">
+                                    {{-- EMAIL STATUS BADGE --}}
+                                    @if(is_null($patient->email_verified_at))
+                                        <span class="badge bg-warning text-dark"><i class="fas fa-envelope"></i> Email Unverified</span>
+                                    @else
+                                        <span class="badge bg-success"><i class="fas fa-check-circle"></i> Email Verified</span>
+                                    @endif
+
+                                    {{-- RESIDENCY STATUS BADGE --}}
+                                    @if(is_null($patient->admin_verified_at))
+                                        <span class="badge bg-danger"><i class="fas fa-id-card"></i> Residency Pending</span>
+                                    @else
+                                        <span class="badge bg-info text-white"><i class="fas fa-check-circle"></i> Residency Approved</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
                                     
-                                    {{-- MANUAL VERIFY BUTTON --}}
+                                    {{-- MANUAL VERIFY EMAIL BUTTON --}}
                                     @if(is_null($patient->email_verified_at))
                                         <form action="{{ route('admin.patients.verify', $patient->id) }}" method="POST" class="d-inline">
                                             @csrf
-                                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold" title="Manually Verify">
-                                                <i class="fas fa-check-circle"></i> Verify
+                                            <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark shadow-sm" title="Manually Verify Email">
+                                                <i class="fas fa-envelope-circle-check"></i> Verify Email
                                             </button>
                                         </form>
                                     @endif
 
-{{-- View Residency Document Button (DYNAMIC COLOR) --}}
+                                    {{-- VIEW RESIDENCY DOCUMENT BUTTON --}}
                                     @if($patient->patient_photo_path)
-                                        @if(is_null($patient->email_verified_at))
+                                        @if(is_null($patient->admin_verified_at))
                                             {{-- RED: NOT APPROVED --}}
                                             <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/force-verify') }}')"
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/approve-residency') }}')"
                                                 class="btn btn-danger btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
-                                                <i class="fas fa-file-image"></i> Not approve residency
+                                                <i class="fas fa-file-image"></i> Not approved residency
                                             </button>
                                         @else
                                             {{-- LIGHT BLUE: APPROVED --}}
                                             <button type="button" 
-                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/force-verify') }}')"
+                                                onclick="openImageModal('{{ asset('storage/' . $patient->patient_photo_path) }}', '{{ addslashes($patient->first_name . ' ' . $patient->last_name) }}', '{{ url('/admin/patients/' . $patient->id . '/reject-residency') }}', '{{ url('/admin/patients/' . $patient->id . '/approve-residency') }}')"
                                                 class="btn btn-info btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" title="View Indigency / Residency">
                                                 <i class="fas fa-file-image"></i> Approved residency
                                             </button>
