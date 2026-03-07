@@ -26,6 +26,7 @@ class ProfileController extends Controller
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
+            'suffix' => 'nullable|string|max:50',
             'date_of_birth' => 'required|date',
             'age' => 'required|string|max:50',
             'gender' => 'required|string|in:Male,Female,Other',
@@ -64,35 +65,23 @@ class ProfileController extends Controller
             $user->senior_pwd_id_path = $path;
         }
 
-if ($request->hasFile('patient_photo')) {
-            if ($user->patient_photo_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->patient_photo_path);
-            }
-            $path = $request->file('patient_photo')->store('patient_photos', 'public');
-            $user->patient_photo_path = $path;
-            
-            $user->residency_rejection_reason = null;
-            $user->admin_verified_at = null; // <-- This is what is crashing if the column doesn't exist yet!
-        }
-
-
-        // 2. Add this block BEFORE $user->save();
         if ($request->hasFile('patient_photo')) {
-            // Delete the old photo if it exists
             if ($user->patient_photo_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->patient_photo_path);
+                Storage::disk('public')->delete($user->patient_photo_path);
             }
             
-            // Store new photo
             $path = $request->file('patient_photo')->store('patient_photos', 'public');
             $user->patient_photo_path = $path;
             
-            // Reset verification status so the Admin can review the new document!
             $user->residency_rejection_reason = null;
             $user->admin_verified_at = null; 
         }
 
         $user->fill($validated);
+        
+        // Explicitly set suffix just in case it wasn't added to $fillable
+        $user->suffix = $validated['suffix'] ?? null; 
+        
         $user->save();
 
         return redirect()->route('dashboard')->with('success', 'Personal records updated successfully. You may now book an appointment.');
@@ -106,17 +95,16 @@ if ($request->hasFile('patient_photo')) {
             Storage::disk('public')->delete($user->philhealth_id_path);
             $user->philhealth_id_path = null;
             $user->save();
-            return back()->with('success', 'PhilHealth ID deleted successfully. Please upload a new one if you are still a member.');
+            return back()->with('success', 'PhilHealth ID deleted successfully.');
         }
 
         if ($type === 'senior_pwd' && $user->senior_pwd_id_path) {
             Storage::disk('public')->delete($user->senior_pwd_id_path);
             $user->senior_pwd_id_path = null;
             $user->save();
-            return back()->with('success', 'Senior/PWD ID deleted successfully. Please upload a new one if you are still a member.');
+            return back()->with('success', 'Senior/PWD ID deleted successfully.');
         }
         
-        // Restored Residency delete logic
         if ($type === 'residency' && $user->patient_photo_path) {
             Storage::disk('public')->delete($user->patient_photo_path);
             $user->patient_photo_path = null;
@@ -135,11 +123,11 @@ if ($request->hasFile('patient_photo')) {
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
+            'suffix' => 'nullable|string|max:50',
             'date_of_birth' => 'required|date|before_or_equal:today',
             'gender' => 'required|string|in:Male,Female,Other',
         ]);
 
-        // STRICT AGE CALCULATION
         $dob = Carbon::parse($validated['date_of_birth']);
         $diff = $dob->diff(Carbon::now());
         
@@ -157,30 +145,27 @@ if ($request->hasFile('patient_photo')) {
             $randomNumber = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
         } while (User::where('usernumber', $randomNumber)->exists());
 
-        // Create the child account
-        User::create([
+        $child = User::create([
             'parent_id' => $parent->id,
             'first_name' => $validated['first_name'],
-            'middle_name' => $validated['middle_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
             'last_name' => $validated['last_name'],
             'date_of_birth' => $validated['date_of_birth'],
             'gender' => $validated['gender'],
             'age' => $ageString,
             'civil_status' => 'Single',
-            
-            // Format a cleaner dummy email just in case
             'email' => strtolower(str_replace(' ', '', $validated['first_name'])) . '_' . $randomNumber . '@dependent.local', 
-            
-            // Securely copy the parent's hashed password
             'password' => $parent->password, 
-            
             'phone' => $parent->phone, 
             'address' => $parent->address, 
             'role' => 'user',
             'usernumber' => $randomNumber,
             'email_verified_at' => $parent->email_verified_at, 
-            'patient_photo_path' => $parent->patient_photo_path, // Restored child inheriting parent's residency
+            'patient_photo_path' => $parent->patient_photo_path,
         ]);
+
+        $child->suffix = $validated['suffix'] ?? null;
+        $child->save();
 
         return back()->with('success', "Child account added! They can log in using their User ID (#{$randomNumber}) and your password.");
     }
@@ -193,16 +178,14 @@ if ($request->hasFile('patient_photo')) {
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
+            'suffix' => 'nullable|string|max:50',
             'date_of_birth' => 'required|date|before_or_equal:today',
             'gender' => 'required|string|in:Male,Female,Other',
-            
-            // Medical History is strictly required for dependents
             'allergies' => 'required|string',
             'current_medication' => 'required|string',
             'existing_medical_conditions' => 'required|string',
         ]);
 
-        // STRICT AGE CALCULATION
         $dob = Carbon::parse($validated['date_of_birth']);
         $diff = $dob->diff(Carbon::now());
         
@@ -218,7 +201,7 @@ if ($request->hasFile('patient_photo')) {
 
         $child->update([
             'first_name' => $validated['first_name'],
-            'middle_name' => $validated['middle_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
             'last_name' => $validated['last_name'],
             'date_of_birth' => $validated['date_of_birth'],
             'gender' => $validated['gender'],
@@ -227,6 +210,9 @@ if ($request->hasFile('patient_photo')) {
             'current_medication' => $validated['current_medication'],
             'existing_medical_conditions' => $validated['existing_medical_conditions'],
         ]);
+
+        $child->suffix = $validated['suffix'] ?? null;
+        $child->save();
 
         return back()->with('success', "Dependent profile for {$child->first_name} updated successfully.");
     }

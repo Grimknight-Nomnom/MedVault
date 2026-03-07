@@ -138,7 +138,7 @@
 
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold small text-uppercase text-secondary">Select Patient</label>
-                                                            <select name="patient_id" class="form-select" required>
+                                                            <select name="patient_id" class="form-select select2-patient" style="width: 100%;" required>
                                                                 <option value="" disabled selected>Choose a patient...</option>
                                                                 @foreach($patients as $patient)
                                                                     <option value="{{ $patient->id }}">
@@ -228,4 +228,33 @@
     }
 </script>
 @endif
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<style>
+    /* Styling to blend with your Bootstrap Modal */
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 0.375rem !important;
+        padding: 5px;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 AFTER the modal is shown to avoid Bootstrap focus trap issues
+        $('.modal').on('shown.bs.modal', function () {
+            $(this).find('.select2-patient').select2({
+                dropdownParent: $(this), // This is essential so the search input can be typed into inside the modal
+                placeholder: "Choose a patient...",
+                width: '100%',
+                allowClear: true
+            });
+        });
+    });
+</script>
 @endsection

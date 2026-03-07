@@ -34,17 +34,29 @@
                             </h5>
                             
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">First Name <span class="text-danger">*</span></label>
                                     <input type="text" name="first_name" class="form-control" value="{{ old('first_name', $patient->first_name) }}" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">Middle Name</label>
                                     <input type="text" name="middle_name" class="form-control" value="{{ old('middle_name', $patient->middle_name) }}">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">Last Name <span class="text-danger">*</span></label>
                                     <input type="text" name="last_name" class="form-control" value="{{ old('last_name', $patient->last_name) }}" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Suffix</label>
+                                    <select name="suffix" class="form-select">
+                                        <option value="" {{ old('suffix', $patient->suffix) == '' ? 'selected' : '' }}>None</option>
+                                        <option value="Jr." {{ old('suffix', $patient->suffix) == 'Jr.' ? 'selected' : '' }}>Jr.</option>
+                                        <option value="Sr." {{ old('suffix', $patient->suffix) == 'Sr.' ? 'selected' : '' }}>Sr.</option>
+                                        <option value="II" {{ old('suffix', $patient->suffix) == 'II' ? 'selected' : '' }}>II</option>
+                                        <option value="III" {{ old('suffix', $patient->suffix) == 'III' ? 'selected' : '' }}>III</option>
+                                        <option value="IV" {{ old('suffix', $patient->suffix) == 'IV' ? 'selected' : '' }}>IV</option>
+                                        <option value="V" {{ old('suffix', $patient->suffix) == 'V' ? 'selected' : '' }}>V</option>
+                                    </select>
                                 </div>
 
                                 <div class="col-md-4">

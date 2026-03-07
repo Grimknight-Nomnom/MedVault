@@ -120,9 +120,27 @@
                                 </div>
                             </div>
 
-                            <div class="space-y-1.5">
-                                <label class="block text-sm font-semibold text-gray-700">Last Name</label>
-                                <input type="text" name="last_name" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('last_name') }}">
+                            {{-- LAST NAME & SUFFIX GRID --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="space-y-1.5">
+                                    <label class="block text-sm font-semibold text-gray-700">Last Name</label>
+                                    <input type="text" name="last_name" required class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none sm:text-sm" value="{{ old('last_name') }}">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="block text-sm font-semibold text-gray-700">Suffix <span class="font-normal text-gray-400">(Optional)</span></label>
+                                    <select name="suffix" class="block w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 outline-none sm:text-sm">
+                                        <option value="" {{ old('suffix') == '' ? 'selected' : '' }}>None</option>
+                                        <option value="Jr." {{ old('suffix') == 'Jr.' ? 'selected' : '' }}>Jr.</option>
+                                        <option value="Sr." {{ old('suffix') == 'Sr.' ? 'selected' : '' }}>Sr.</option>
+                                        <option value="II" {{ old('suffix') == 'II' ? 'selected' : '' }}>II</option>
+                                        <option value="III" {{ old('suffix') == 'III' ? 'selected' : '' }}>III</option>
+                                        <option value="IV" {{ old('suffix') == 'IV' ? 'selected' : '' }}>IV</option>
+                                        <option value="V" {{ old('suffix') == 'V' ? 'selected' : '' }}>V</option>
+                                    </select>
+                                    @error('suffix')
+                                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

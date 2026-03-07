@@ -223,6 +223,8 @@ public function rejectResidency(Request $request, $id)
         return view('admin.patients.edit', compact('patient'));
     }
 
+// ... (Keep dashboard, indexPatients, showPatient, etc. untouched)
+
     public function updatePatient(Request $request, $id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
@@ -231,6 +233,7 @@ public function rejectResidency(Request $request, $id)
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
+            'suffix' => 'nullable|string|max:50', // Added Suffix Validation
             'date_of_birth' => 'required|date',
             'age' => 'required|string|max:50',
             'gender' => 'required|string|in:Male,Female,Other',
@@ -265,10 +268,16 @@ public function rejectResidency(Request $request, $id)
         }
 
         $patient->fill($validated);
+        
+        // Explicitly set suffix to ensure it saves 
+        $patient->suffix = $validated['suffix'] ?? null;
+        
         $patient->save();
 
         return redirect()->route('admin.patients.show', $patient->id)->with('success', 'Patient information updated successfully.');
     }
+
+    // ... (Keep the rest of AdminController untouched)
 
     public function changePatientPassword(Request $request, $id)
     {

@@ -78,6 +78,112 @@
                                     <i class="fas fa-users me-1"></i> Patients
                                 </a>
                             </li>
+
+                            {{-- ========================================== --}}
+                            {{-- NOTIFICATION BELL (Admin & Staff)          --}}
+                            {{-- ========================================== --}}
+                            @php
+                                // Existing Checks
+                                $notifAnnouncements = \App\Models\Announcement::where('is_active', true)->count();
+                                $notifLowStock = \App\Models\Medicine::where('stock_quantity', '<', 10)->count();
+                                $notifExpiring = \App\Models\Medicine::where('expiry_date', '<=', now()->addDays(30))->count();
+                                
+                                // NEW 1: Appointments ONLY for today that are pending
+                                $notifTodayAppointments = \App\Models\Appointment::whereDate('appointment_date', \Carbon\Carbon::today())
+                                    ->where('status', 'pending')
+                                    ->count();
+
+                                // NEW 2: Users who uploaded residency photo but are not yet verified
+                                $notifPendingAccounts = \App\Models\User::where('role', 'user')
+                                    ->whereNotNull('patient_photo_path')
+                                    ->whereNull('admin_verified_at')
+                                    ->count();
+
+                                // Total Notification Count
+                                $totalNotifs = $notifAnnouncements + $notifLowStock + $notifExpiring + $notifTodayAppointments + $notifPendingAccounts;
+                            @endphp
+                            
+                            <li class="nav-item dropdown ms-2 me-2 border-start ps-3 d-flex align-items-center">
+                                <a class="nav-link position-relative" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-bell fs-5 text-secondary"></i>
+                                    @if($totalNotifs > 0)
+                                        <span class="position-absolute top-25 start-75 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 10px; height: 10px; margin-top: 5px;">
+                                            <span class="visually-hidden">New alerts</span>
+                                        </span>
+                                    @endif
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="notifDropdown" style="min-width: 280px; max-height: 400px; overflow-y: auto;">
+                                    <li><h6 class="dropdown-header fw-bold text-dark border-bottom pb-2 mb-1">Notifications</h6></li>
+                                    
+                                    @if($totalNotifs == 0)
+                                        <li><span class="dropdown-item text-muted small py-3 text-center">No new notifications</span></li>
+                                    @else
+                                        
+                                        {{-- Today's Appointments Alert --}}
+                                        @if($notifTodayAppointments > 0)
+                                            <li>
+                                                <a class="dropdown-item py-2 d-flex align-items-center" href="{{ route($rolePrefix . '.appointments.index') }}">
+                                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3"><i class="fas fa-calendar-day text-primary"></i></div>
+                                                    <div>
+                                                        <p class="mb-0 small fw-bold">{{ $notifTodayAppointments }} New Appointment(s) Today</p>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Pending Account Verification Alert --}}
+                                        @if($notifPendingAccounts > 0)
+                                            <li>
+                                                <a class="dropdown-item py-2 d-flex align-items-center" href="{{ route($rolePrefix . '.patients.index') }}">
+                                                    <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3"><i class="fas fa-user-check text-success"></i></div>
+                                                    <div>
+                                                        <p class="mb-0 small fw-bold">{{ $notifPendingAccounts }} Account(s) Need Verification</p>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Low Stock Alert --}}
+                                        @if($notifLowStock > 0)
+                                            <li>
+                                                <a class="dropdown-item py-2 d-flex align-items-center" href="{{ route($rolePrefix . '.medicines.index') }}">
+                                                    <div class="bg-danger bg-opacity-10 p-2 rounded-circle me-3"><i class="fas fa-exclamation-triangle text-danger"></i></div>
+                                                    <div>
+                                                        <p class="mb-0 small fw-bold">{{ $notifLowStock }} Low Stock Item(s)</p>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Expiry Alert --}}
+                                        @if($notifExpiring > 0)
+                                            <li>
+                                                <a class="dropdown-item py-2 d-flex align-items-center" href="{{ route($rolePrefix . '.medicines.index') }}">
+                                                    <div class="bg-info bg-opacity-10 p-2 rounded-circle me-3"><i class="fas fa-hourglass-half text-info"></i></div>
+                                                    <div>
+                                                        <p class="mb-0 small fw-bold">{{ $notifExpiring }} Expiring Medicine(s)</p>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Announcements Alert --}}
+                                        @if($notifAnnouncements > 0)
+                                            <li>
+                                                <a class="dropdown-item py-2 d-flex align-items-center" href="{{ route($rolePrefix . '.announcements.index') }}">
+                                                    <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3"><i class="fas fa-bullhorn text-warning"></i></div>
+                                                    <div>
+                                                        <p class="mb-0 small fw-bold">{{ $notifAnnouncements }} Active Announcement(s)</p>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                    @endif
+                                </ul>
+                            </li>
+                            {{-- ========================================== --}}
+
                         @else
                             {{-- PATIENT LINKS --}}
                             <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}"><i class="fas fa-home me-1"></i> Home</a></li>

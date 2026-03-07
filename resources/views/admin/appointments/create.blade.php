@@ -2,8 +2,21 @@
 
 @section('content')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <style>
     .flatpickr-day.selected { background: #0d6efd !important; border-color: #0d6efd !important; }
+    
+    /* Tweaks to match Bootstrap 5 inputs for Select2 */
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 0 0.375rem 0.375rem 0 !important;
+        padding: 5px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+    }
 </style>
 
 <div class="container py-4">
@@ -101,7 +114,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
+    $(document).ready(function() {
+        // Initialize Select2 on the Patient dropdown
+        $('#user_id').select2({
+            placeholder: "-- Choose a Patient --",
+            width: '100%',
+            allowClear: true
+        });
+    });
+
     flatpickr("#appointment_date", {
         dateFormat: "Y-m-d",
         minDate: "today", 

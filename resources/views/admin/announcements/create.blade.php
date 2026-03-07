@@ -10,7 +10,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="mb-3">
-                <a href="{{ route('admin.announcements.index') }}" class="text-decoration-none text-muted fw-bold small">
+                <a href="{{ route(auth()->user()->role . '.announcements.index') }}" class="text-decoration-none text-muted fw-bold small">
                     <i class="fas fa-arrow-left me-1"></i> Back to List
                 </a>
             </div>
@@ -20,7 +20,7 @@
                     <h5 class="mb-0 fw-bold"><i class="fas fa-bullhorn me-2"></i>Create New Announcement</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('admin.announcements.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route(auth()->user()->role . '.announcements.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         
                         <div class="mb-3">

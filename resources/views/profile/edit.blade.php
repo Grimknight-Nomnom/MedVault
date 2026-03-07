@@ -34,17 +34,29 @@
                             </h5>
                             
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">First Name <span class="text-danger">*</span></label>
                                     <input type="text" name="first_name" class="form-control" value="{{ old('first_name', $user->first_name) }}" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">Middle Name</label>
                                     <input type="text" name="middle_name" class="form-control" value="{{ old('middle_name', $user->middle_name) }}" placeholder="Optional">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">Last Name <span class="text-danger">*</span></label>
                                     <input type="text" name="last_name" class="form-control" value="{{ old('last_name', $user->last_name) }}" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Suffix</label>
+                                    <select name="suffix" class="form-select">
+                                        <option value="" {{ old('suffix', $user->suffix) == '' ? 'selected' : '' }}>None</option>
+                                        <option value="Jr." {{ old('suffix', $user->suffix) == 'Jr.' ? 'selected' : '' }}>Jr.</option>
+                                        <option value="Sr." {{ old('suffix', $user->suffix) == 'Sr.' ? 'selected' : '' }}>Sr.</option>
+                                        <option value="II" {{ old('suffix', $user->suffix) == 'II' ? 'selected' : '' }}>II</option>
+                                        <option value="III" {{ old('suffix', $user->suffix) == 'III' ? 'selected' : '' }}>III</option>
+                                        <option value="IV" {{ old('suffix', $user->suffix) == 'IV' ? 'selected' : '' }}>IV</option>
+                                        <option value="V" {{ old('suffix', $user->suffix) == 'V' ? 'selected' : '' }}>V</option>
+                                    </select>
                                 </div>
 
                                 <div class="col-md-4">
@@ -94,9 +106,6 @@
                                     <input type="text" name="address" class="form-control" value="{{ old('address', $user->address) }}" required placeholder="House No., Street, Barangay, City">
                                 </div>
 
-                                
-
-                                {{-- RESTORED: Proof of Residency / Indigency --}}
                                 <div class="col-md-12 mt-4">
                                     <label class="form-label fw-bold">Proof of Residency / Indigency <span class="text-danger">*</span></label>
                                     <div class="p-4 bg-light rounded border shadow-sm">
@@ -243,7 +252,6 @@
                         </div>
                     </form>
 
-                    {{-- Hidden Forms for Deleting IDs --}}
                     <form id="delete-philhealth-form" action="{{ route('profile.delete_id', 'philhealth') }}" method="POST" class="d-none">
                         @csrf
                         @method('DELETE')
@@ -252,7 +260,6 @@
                         @csrf
                         @method('DELETE')
                     </form>
-                    {{-- RESTORED: Form for Deleting Residency ID --}}
                     <form id="delete-residency-form" action="{{ route('profile.delete_id', 'residency') }}" method="POST" class="d-none">
                         @csrf
                         @method('DELETE')
@@ -272,20 +279,18 @@
                             @foreach($user->children as $child)
                                 <li class="list-group-item d-flex justify-content-between align-items-center p-3">
                                     <div>
-                                        <h6 class="fw-bold mb-0 text-dark">{{ $child->first_name }} {{ $child->last_name }}</h6>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ $child->first_name }} {{ $child->last_name }} {{ $child->suffix }}</h6>
                                         <small class="text-muted">Age: {{ $child->age }} | Gender: {{ $child->gender }} | ID: #{{ $child->usernumber }}</small>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="badge bg-info rounded-pill px-3 py-2 d-none d-sm-inline"><i class="fas fa-link me-1"></i>Linked</span>
                                         
-                                        {{-- MODAL TRIGGER: View / Edit Child Button --}}
                                         <button type="button" 
                                                 class="btn btn-outline-primary btn-sm rounded-circle d-flex justify-content-center align-items-center shadow-sm" 
                                                 style="width: 32px; height: 32px; padding: 0;" title="View/Edit Child" data-bs-toggle="modal" data-bs-target="#viewChildModal{{ $child->id }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
-                                        {{-- MODAL TRIGGER: Remove Child Button --}}
                                         <button type="button" 
                                                 onclick="openDependentDeleteModal('{{ route('profile.dependent.destroy', $child->id) }}', '{{ addslashes($child->first_name . ' ' . $child->last_name) }}')"
                                                 class="btn btn-outline-danger btn-sm rounded-circle d-flex justify-content-center align-items-center shadow-sm" 
@@ -308,23 +313,36 @@
                             <form action="{{ route('profile.dependent.store') }}" method="POST">
                                 @csrf
                                 <div class="row g-3">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label fw-bold small">First Name <span class="text-danger">*</span></label>
                                         <input type="text" name="first_name" class="form-control" required>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label fw-bold small">Middle Name</label>
                                         <input type="text" name="middle_name" class="form-control">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label fw-bold small">Last Name <span class="text-danger">*</span></label>
                                         <input type="text" name="last_name" class="form-control" value="{{ $user->last_name }}" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold small">Suffix</label>
+                                        <select name="suffix" class="form-select">
+                                            <option value="" selected>None</option>
+                                            <option value="Jr.">Jr.</option>
+                                            <option value="Sr.">Sr.</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                            <option value="V">V</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mt-3">
                                         <label class="form-label fw-bold small">Date of Birth <span class="text-danger">*</span></label>
                                         <input type="date" name="date_of_birth" class="form-control" required max="{{ date('Y-m-d') }}">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mt-3">
                                         <label class="form-label fw-bold small">Gender <span class="text-danger">*</span></label>
                                         <select name="gender" class="form-select" required>
                                             <option value="">Select...</option>
@@ -362,24 +380,37 @@
                     
                     <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">Basic Information</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">First Name</label>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">First Name <span class="text-danger">*</span></label>
                             <input type="text" name="first_name" class="form-control bg-white" value="{{ $child->first_name }}" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-bold">Middle Name</label>
                             <input type="text" name="middle_name" class="form-control bg-white" value="{{ $child->middle_name }}">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Last Name</label>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Last Name <span class="text-danger">*</span></label>
                             <input type="text" name="last_name" class="form-control bg-white" value="{{ $child->last_name }}" required>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Suffix</label>
+                            <select name="suffix" class="form-select bg-white">
+                                <option value="" {{ $child->suffix == '' ? 'selected' : '' }}>None</option>
+                                <option value="Jr." {{ $child->suffix == 'Jr.' ? 'selected' : '' }}>Jr.</option>
+                                <option value="Sr." {{ $child->suffix == 'Sr.' ? 'selected' : '' }}>Sr.</option>
+                                <option value="II" {{ $child->suffix == 'II' ? 'selected' : '' }}>II</option>
+                                <option value="III" {{ $child->suffix == 'III' ? 'selected' : '' }}>III</option>
+                                <option value="IV" {{ $child->suffix == 'IV' ? 'selected' : '' }}>IV</option>
+                                <option value="V" {{ $child->suffix == 'V' ? 'selected' : '' }}>V</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Date of Birth</label>
+                            <label class="form-label small fw-bold">Date of Birth <span class="text-danger">*</span></label>
                             <input type="date" name="date_of_birth" class="form-control bg-white" value="{{ $child->date_of_birth ? $child->date_of_birth->format('Y-m-d') : '' }}" required max="{{ date('Y-m-d') }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Gender</label>
+                            <label class="form-label small fw-bold">Gender <span class="text-danger">*</span></label>
                             <select name="gender" class="form-select bg-white" required>
                                 <option value="Male" {{ $child->gender == 'Male' ? 'selected' : '' }}>Male</option>
                                 <option value="Female" {{ $child->gender == 'Female' ? 'selected' : '' }}>Female</option>
@@ -416,7 +447,6 @@
     </div>
 </div>
 @endforeach
-
 
 {{-- IMAGE VIEWER MODAL --}}
 <div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true">
@@ -459,7 +489,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    // --- Image Viewer Modal Logic ---
     function openImageModal(imageUrl, title) {
         document.getElementById('viewerImage').src = imageUrl;
         document.getElementById('imageModalTitle').innerText = title;
@@ -467,7 +496,6 @@
         imageModal.show();
     }
 
-    // --- Dependent Delete Modal Logic ---
     function openDependentDeleteModal(actionUrl, childName) {
         document.getElementById('dependentDeleteForm').action = actionUrl;
         document.getElementById('deleteChildName').innerText = childName;
@@ -475,7 +503,6 @@
         deleteModal.show();
     }
 
-    // --- Program Checkbox Logic ---
     document.querySelectorAll('.program-toggle').forEach(toggle => {
         toggle.addEventListener('change', function() {
             const targetBox = document.getElementById(this.getAttribute('data-target'));
@@ -492,7 +519,6 @@
         });
     });
 
-    // --- Date Picker Logic ---
     flatpickr("#date_of_birth", {
         dateFormat: "Y-m-d",
         maxDate: "today",
@@ -524,7 +550,6 @@
         }
     });
 
-    // --- STRICT AGE CALCULATOR (FOR PARENT UI) ---
     function calculateAge(dobInput) {
         if (!dobInput) {
             document.getElementById('age').value = "";

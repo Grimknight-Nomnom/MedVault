@@ -4,19 +4,6 @@
 <style>
     .bg-primary-opacity { background-color: rgba(13, 110, 253, 0.1); }
     .bg-danger-opacity { background-color: rgba(220, 53, 69, 0.1); }
-    
-    /* Bell Animation */
-    .bell-shake { animation: shake 1s cubic-bezier(.36,.07,.19,.97) both; transform-origin: top center; }
-    @keyframes shake {
-        0% { transform: rotate(0); }
-        15% { transform: rotate(15deg); }
-        30% { transform: rotate(-15deg); }
-        45% { transform: rotate(10deg); }
-        60% { transform: rotate(-10deg); }
-        75% { transform: rotate(5deg); }
-        85% { transform: rotate(-5deg); }
-        100% { transform: rotate(0); }
-    }
 </style>
 
 <div class="container py-4">
@@ -27,23 +14,7 @@
         </div>
         
         <div class="d-flex align-items-center gap-3">
-            {{-- NOTIFICATION BELL --}}
-            @php
-                // Count how many patients have uploaded a photo but are NOT verified yet
-                $pendingCount = \App\Models\User::where('role', 'user')->whereNull('admin_verified_at')->whereNotNull('patient_photo_path')->count();
-            @endphp
-            
-            <button type="button" class="btn btn-light position-relative border shadow-sm rounded-circle p-2" data-bs-toggle="modal" data-bs-target="#adminAlertsModal" style="width: 45px; height: 45px;">
-                <i class="fas fa-bell text-secondary fs-5 {{ $pendingCount > 0 ? 'bell-shake text-danger' : '' }}"></i>
-                @if($pendingCount > 0)
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light">
-                        {{ $pendingCount }}
-                        <span class="visually-hidden">unread messages</span>
-                    </span>
-                @endif
-            </button>
-
-            <span class="text-muted border-start ps-3"><i class="far fa-clock me-1"></i> {{ date('F d, Y') }}</span>
+            <span class="text-muted"><i class="far fa-clock me-1"></i> {{ date('F d, Y') }}</span>
         </div>
     </div>
 
@@ -263,38 +234,37 @@
             </div>
             <div class="modal-body p-4">
                 
-                {{-- Unverified Accounts --}}
+                {{-- PENDING APPOINTMENTS --}}
+                @php
+                    $pendingAppts = \App\Models\Appointment::where('status', 'Pending')->get();
+                @endphp
                 <div class="mb-4">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
-                        <i class="fas fa-id-card text-warning me-2"></i>Residency Pending Approval ({{ $pendingCount }})
+                        <i class="fas fa-calendar-alt text-primary me-2"></i>Pending Appointments ({{ $pendingAppts->count() }})
                     </h6>
-                    @php
-                        $pendingPatients = \App\Models\User::where('role', 'user')->whereNull('admin_verified_at')->whereNotNull('patient_photo_path')->get();
-                    @endphp
-                    
-                    @if($pendingPatients->count() > 0)
+                    @if($pendingAppts->count() > 0)
                         <ul class="list-group list-group-flush mb-2">
-                            @foreach($pendingPatients->take(5) as $patient)
+                            @foreach($pendingAppts->take(5) as $appt)
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
                                     <div>
-                                        <strong>{{ $patient->first_name }} {{ $patient->last_name }}</strong>
-                                        <span class="text-muted ms-2 small">ID: #{{ $patient->usernumber }}</span>
+                                        <strong>{{ optional($appt->user)->first_name }} {{ optional($appt->user)->last_name }}</strong>
+                                        <span class="text-muted ms-2 small">Date: {{ \Carbon\Carbon::parse($appt->appointment_date)->format('M d, Y') }}</span>
                                     </div>
-                                    <a href="{{ route('admin.patients.index') }}?search=%23{{ $patient->usernumber }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Review Document</a>
+                                    <a href="{{ route('admin.appointments.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Manage Schedule</a>
                                 </li>
                             @endforeach
                         </ul>
-                        @if($pendingPatients->count() > 5)
-                            <div class="text-end mt-2"><a href="{{ route('admin.patients.index', ['status' => 'unverified']) }}" class="small fw-bold text-decoration-none">View all pending accounts &rarr;</a></div>
+                        @if($pendingAppts->count() > 5)
+                            <div class="text-end mt-2"><a href="{{ route('admin.appointments.index') }}" class="small fw-bold text-decoration-none">View all appointments &rarr;</a></div>
                         @endif
                     @else
-                        <p class="text-muted small mb-0 mt-2"><i class="fas fa-check-circle text-success me-1"></i>All uploaded residency documents have been verified.</p>
+                        <p class="text-muted small mb-0 mt-2"><i class="fas fa-check-circle text-success me-1"></i>No pending appointments.</p>
                     @endif
                 </div>
 
-                {{-- Out of Stock (Derived from $lowStock) --}}
+                {{-- OUT OF STOCK MEDICINES --}}
                 @php
-                    $zeroStockMeds = $lowStock->where('stock_quantity', '<=', 0);
+                    $zeroStockMeds = collect($lowStock ?? [])->where('stock_quantity', '<=', 0);
                 @endphp
                 <div class="mb-4">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
@@ -310,16 +280,44 @@
                             @endforeach
                         </ul>
                         @if($zeroStockMeds->count() > 5)
-                            <div class="text-end"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
+                            <div class="text-end mt-2"><a href="{{ route('admin.medicines.index') }}" class="small fw-bold text-decoration-none">View all inventory &rarr;</a></div>
                         @endif
                     @else
                         <p class="text-muted small mb-0 mt-2"><i class="fas fa-check-circle text-success me-1"></i>No out-of-stock medicines.</p>
                     @endif
                 </div>
 
-                {{-- Expired Meds (Derived from $expiringSoon) --}}
+                {{-- UNVERIFIED ACCOUNTS --}}
                 @php
-                    $alreadyExpiredMeds = $expiringSoon->where('expiry_date', '<', now());
+                    $pendingPatients = \App\Models\User::where('role', 'user')->whereNull('admin_verified_at')->whereNotNull('patient_photo_path')->get();
+                @endphp
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark border-bottom pb-2">
+                        <i class="fas fa-id-card text-warning me-2"></i>Residency Pending Approval ({{ $pendingPatients->count() }})
+                    </h6>
+                    @if($pendingPatients->count() > 0)
+                        <ul class="list-group list-group-flush mb-2">
+                            @foreach($pendingPatients->take(5) as $patient)
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                    <div>
+                                        <strong>{{ $patient->first_name }} {{ $patient->last_name }}</strong>
+                                        <span class="text-muted ms-2 small">ID: #{{ $patient->usernumber }}</span>
+                                    </div>
+                                    <a href="{{ route('admin.patients.index') }}?search=%23{{ $patient->usernumber }}" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold text-dark">Review Document</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if($pendingPatients->count() > 5)
+                            <div class="text-end mt-2"><a href="{{ route('admin.patients.index', ['status' => 'unverified']) }}" class="small fw-bold text-decoration-none">View all pending accounts &rarr;</a></div>
+                        @endif
+                    @else
+                        <p class="text-muted small mb-0 mt-2"><i class="fas fa-check-circle text-success me-1"></i>All uploaded residency documents have been verified.</p>
+                    @endif
+                </div>
+
+                {{-- EXPIRED MEDS --}}
+                @php
+                    $alreadyExpiredMeds = collect($expiringSoon ?? [])->where('expiry_date', '<', now());
                 @endphp
                 <div class="mb-2">
                     <h6 class="fw-bold text-dark border-bottom pb-2">
@@ -352,8 +350,8 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Auto-show modal ONLY if it's explicitly called from session
-        @if(session('show_admin_alerts'))
+        // Auto-show modal if it's explicitly called from session OR query string (from navbar bell click)
+        @if(session('show_admin_alerts') || request()->has('show_alerts'))
             var myModal = new bootstrap.Modal(document.getElementById('adminAlertsModal'), {
                 keyboard: false
             });

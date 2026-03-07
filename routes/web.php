@@ -23,6 +23,15 @@ Route::get('/run-migrations', function () {
     }
 });
 
+Route::get('/link-storage', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        return "Storage link created successfully!";
+    } catch (\Exception $e) {
+        return "Failed to create storage link: " . $e->getMessage();
+    }
+});
+
 Route::get('/', function () {
     $announcements = Announcement::where('is_active', true)->latest()->get();
     $staff = Staff::all();
@@ -235,6 +244,8 @@ Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'crea
         // Appointments (Read-Only)
         Route::get('/appointments', [AppointmentController::class, 'adminIndex'])->name('staff.appointments.index');
     });
+
+
     // ---------------------------------------
 
 }); // <-- End of auth, verified group

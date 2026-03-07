@@ -18,6 +18,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'first_name',
         'middle_name',
         'last_name',
+        'suffix',
         'age',
         'usernumber',
         'email',
@@ -61,9 +62,13 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    public function getFullNameAttribute()
+public function getFullNameAttribute()
     {
-        return "{$this->first_name} " . ($this->middle_name ? "{$this->middle_name} " : "") . $this->last_name;
+        $name = "{$this->first_name} " . ($this->middle_name ? "{$this->middle_name} " : "") . $this->last_name;
+        if ($this->suffix) {
+            $name .= " {$this->suffix}";
+        }
+        return $name;
     }
 
     public function getAgeAttribute($value)
