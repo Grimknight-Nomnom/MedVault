@@ -126,9 +126,9 @@
                                     <div class="card-body bg-light">
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-4">
-                                                <label class="form-label small fw-bold text-muted mb-1">Date of Visit</label>
-                                                <input type="date" name="log_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}">
-                                            </div>
+    <label class="form-label small fw-bold text-muted mb-1">Date of Visit <span class="text-danger">*</span></label>
+    <input type="date" name="log_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
+</div>
                                             <div class="col-md-2">
                                                 <label class="form-label small fw-bold text-muted mb-1">Age (Mo/Wk)</label>
                                                 <input type="text" name="log_age" class="form-control form-control-sm" placeholder="e.g. 2 mo">
@@ -162,16 +162,16 @@
                                             </div>
                                         </div>
 
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label small fw-bold text-muted mb-1">Type of Vaccine / Bakuna</label>
-                                                <input type="text" name="log_bakuna" class="form-control form-control-sm" placeholder="e.g. BCG, OPV, Penta 1...">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label small fw-bold text-muted mb-1">Next Visit Date (Optional)</label>
-                                                <input type="date" name="log_next_visit" class="form-control form-control-sm">
-                                            </div>
-                                        </div>
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <label class="form-label small fw-bold text-muted mb-1">Type of Vaccine / Bakuna <span class="text-danger">*</span></label>
+        <input type="text" name="log_bakuna" class="form-control form-control-sm" placeholder="e.g. BCG, OPV, Penta 1..." required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small fw-bold text-muted mb-1">Next Visit Date <span class="text-danger">*</span></label>
+        <input type="date" name="log_next_visit" class="form-control form-control-sm" required>
+    </div>
+</div>
                                         
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold text-muted mb-1">Doctor's Instructions / Notes</label>

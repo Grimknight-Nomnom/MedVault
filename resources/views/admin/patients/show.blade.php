@@ -248,7 +248,7 @@
                     
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         @if($patient->has_pregnancy_record)
-                            <button type="button" class="btn btn-sm btn-light text-danger fw-bold rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal">
+                            <button type="button" class="btn btn-sm btn-light text-danger fw-bold rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#viewPregnancyModal_{{ $patient->pregnancyRecord->id ?? '' }}">
                                 <i class="fas fa-eye me-1"></i> Pregnancy
                             </button>
                         @endif

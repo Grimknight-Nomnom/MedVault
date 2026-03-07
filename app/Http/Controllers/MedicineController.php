@@ -155,7 +155,7 @@ class MedicineController extends Controller
         ]);
     }
 
-    public function index(Request $request)
+public function index(Request $request)
     {
         $query = Medicine::query();
 
@@ -167,7 +167,12 @@ class MedicineController extends Controller
 
         $medicines = $query->get();
         $patients = User::where('role', 'user')->orderBy('first_name')->get();
-        $staffList = Staff::orderBy('name')->get(); 
+        
+        // OLD: $staffList = Staff::orderBy('name')->get(); 
+        // NEW: Change the $staffList line to this:
+        $staffList = Staff::whereIn('role', ['Doctor', 'Nurse', 'doctor', 'nurse', 'DOCTOR', 'NURSE'])
+                          ->orderBy('name')
+                          ->get(); 
 
         return view('admin.medicines.index', compact('medicines', 'patients', 'staffList'));
     }
