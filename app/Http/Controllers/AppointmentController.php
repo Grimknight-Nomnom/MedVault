@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str; 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 
 class AppointmentController extends Controller
 {
@@ -286,22 +288,38 @@ class AppointmentController extends Controller
             return redirect()->route('dashboard')->with('error', "{$targetPatient->first_name} already has an active appointment.");
         }
 
-        $count = Appointment::where('appointment_date', $date)->where('status', '!=', 'cancelled')->count();
-        $maxLimit = $this->getMaxSlots($date);
+        // Create a lock specific to the date to prevent race conditions
+        $lock = Cache::lock('book_appointment_' . $date, 10); // Lock for 10 seconds max
 
-        if ($count >= $maxLimit) {
-            return back()->withErrors(['msg' => 'Date is fully booked.']);
+        try {
+            // Wait up to 5 seconds to acquire the lock before failing
+            $lock->block(5); 
+            
+            // Re-check count inside the lock to ensure we don't overbook if someone else just took the last slot
+            $count = Appointment::where('appointment_date', $date)->where('status', '!=', 'cancelled')->count();
+            $maxLimit = $this->getMaxSlots($date);
+
+            if ($count >= $maxLimit) {
+                return back()->withErrors(['msg' => 'Date is fully booked.']);
+            }
+
+            $maxQueue = Appointment::where('appointment_date', $date)->where('status', '!=', 'cancelled')->max('queue_number') ?? 0;
+            
+            Appointment::create([
+                'user_id' => $patientId,
+                'appointment_date' => $date,
+                'queue_number' => $maxQueue + 1,
+                'reason' => $request->reason,
+                'status' => 'pending'
+            ]);
+
+        } catch (LockTimeoutException $e) {
+            // Lock timeout means too many people are booking at this exact second
+            return back()->withErrors(['msg' => 'High traffic detected. Please try booking again.']);
+        } finally {
+            // Always release the lock when done
+            $lock?->release();
         }
-
-        $maxQueue = Appointment::where('appointment_date', $date)->where('status', '!=', 'cancelled')->max('queue_number') ?? 0;
-        
-        Appointment::create([
-            'user_id' => $patientId,
-            'appointment_date' => $date,
-            'queue_number' => $maxQueue + 1,
-            'reason' => $request->reason,
-            'status' => 'pending'
-        ]);
 
         return redirect()->route('appointments.index')->with('success', "Booked successfully for {$targetPatient->first_name}!");
     }
@@ -438,15 +456,18 @@ public function destroy(Appointment $appointment)
         return view('appointments.index', compact('appointments'));
     }
     
-    public function updateStatus(Request $request, $id) {
+public function updateStatus(Request $request, $id) {
         $appointment = Appointment::findOrFail($id);
         
         $data = ['status' => $request->status];
         
-        if ($request->status === 'cancelled' && $request->has('cancellation_reason')) {
-            $data['cancellation_reason'] = $request->cancellation_reason;
-            $data['queue_number'] = 0;
-        }
+  if ($request->status === 'cancelled' && $request->has('cancellation_reason')) {
+    $data['cancellation_reason'] = $request->cancellation_reason;
+    
+    // Instead of using 0, it uses -ID (e.g., -10)
+    // This guarantees a unique number for the database constraint.
+    $data['queue_number'] = -$appointment->id; 
+}
 
         $appointment->update($data);
         

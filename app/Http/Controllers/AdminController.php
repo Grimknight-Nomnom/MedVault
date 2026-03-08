@@ -134,7 +134,8 @@ if ($request->has('status') && $request->status === 'unverified') {
         return view('admin.patients.index', compact('patients'));
     }
 
-    public function showPatient($id)
+// Add "Request $request" to the parameters
+    public function showPatient(Request $request, $id)
     {
         $patient = User::where('role', 'user')->findOrFail($id);
         $consultations = Appointment::where('user_id', $id)
@@ -142,7 +143,13 @@ if ($request->has('status') && $request->status === 'unverified') {
             ->with('medicalRecord')
             ->orderBy('appointment_date', 'desc')
             ->get();
-        return view('admin.patients.show', compact('patient', 'consultations'));
+            
+        // Catch the URL parameters
+        $fromCalendar = $request->query('from') === 'calendar';
+        $calendarDate = $request->query('date');
+
+        // Pass them to the view
+        return view('admin.patients.show', compact('patient', 'consultations', 'fromCalendar', 'calendarDate'));
     }
 
     public function destroy($id)

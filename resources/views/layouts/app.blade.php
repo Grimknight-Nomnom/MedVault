@@ -107,7 +107,8 @@
                                 <a class="nav-link position-relative" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-bell fs-5 text-secondary"></i>
                                     @if($totalNotifs > 0)
-                                        <span class="position-absolute top-25 start-75 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 10px; height: 10px; margin-top: 5px;">
+                                        <span id="notifBadge" data-count="{{ $totalNotifs }}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65em; margin-left: -5px; margin-top: 5px;">
+                                            {{ $totalNotifs }}
                                             <span class="visually-hidden">New alerts</span>
                                         </span>
                                     @endif
@@ -248,5 +249,28 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const bellIcon = document.getElementById('notifDropdown');
+            const badge = document.getElementById('notifBadge');
+            
+            if (bellIcon && badge) {
+                const currentCount = badge.getAttribute('data-count');
+                const lastSeenCount = localStorage.getItem('lastSeenNotifCount');
+                
+                // If the user has already clicked the bell for this exact number of notifications, hide the badge
+                if (lastSeenCount === currentCount) {
+                    badge.style.display = 'none';
+                }
+                
+                // When the bell is clicked, save the current count as "read" and hide the badge immediately
+                bellIcon.addEventListener('click', function() {
+                    localStorage.setItem('lastSeenNotifCount', currentCount);
+                    badge.style.display = 'none';
+                });
+            }
+        });
+    </script>
 </body>
 </html>

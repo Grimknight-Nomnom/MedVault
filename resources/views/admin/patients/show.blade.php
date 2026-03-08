@@ -4,9 +4,18 @@
 <div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="{{ route(auth()->user()->role . '.patients.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
-            <i class="fas fa-arrow-left me-1"></i> Back to List
-        </a>
+        
+        {{-- Conditionally show Back to Calendar or Back to List --}}
+        @if(isset($fromCalendar) && $fromCalendar)
+            <a href="{{ route(auth()->user()->role . '.appointments.index', ['date' => $calendarDate]) }}" class="btn btn-outline-primary rounded-pill btn-sm px-3 shadow-sm">
+                <i class="fas fa-calendar-alt me-1"></i> Back to Calendar
+            </a>
+        @else
+            <a href="{{ route(auth()->user()->role . '.patients.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm px-3 shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to List
+            </a>
+        @endif
+
         <div class="text-end">
             <span class="badge bg-success fs-6">
                 User ID: #{{ $patient->usernumber }}
@@ -168,18 +177,9 @@
                                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">PhilHealth Member</span>
                                     
                                     @if($patient->philhealth_id_path)
-                                        <a href="{{ asset('storage/' . $patient->philhealth_id_path) }}" target="_blank" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2" title="View ID" style="line-height: 1.2;">
-                                            <i class="fas fa-eye" style="font-size: 0.75rem;"></i>
-                                        </a>
-                                        @if(auth()->user()->role === 'admin')
-                                        <form action="{{ route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'philhealth']) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this PhilHealth ID?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-light border text-danger rounded-pill py-0 px-2" title="Delete ID" style="line-height: 1.2;">
-                                                <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
-                                            </button>
-                                        </form>
-                                        @endif
+                                        <button type="button" onclick="openIdModal('{{ asset('storage/' . $patient->philhealth_id_path) }}', 'PhilHealth ID', '{{ auth()->user()->role === 'admin' ? route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'philhealth']) : '' }}')" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2 shadow-sm" style="font-size: 0.75rem;">
+                                            <i class="fas fa-id-card me-1"></i> View ID
+                                        </button>
                                     @else
                                         <span class="badge bg-secondary text-white" style="font-size: 0.65rem;">No Image</span>
                                     @endif
@@ -191,18 +191,9 @@
                                     <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">Senior / PWD</span>
                                     
                                     @if($patient->senior_pwd_id_path)
-                                        <a href="{{ asset('storage/' . $patient->senior_pwd_id_path) }}" target="_blank" class="btn btn-sm btn-light border text-primary rounded-pill py-0 px-2" title="View ID" style="line-height: 1.2;">
-                                            <i class="fas fa-eye" style="font-size: 0.75rem;"></i>
-                                        </a>
-                                        @if(auth()->user()->role === 'admin')
-                                        <form action="{{ route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'senior_pwd']) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this Senior/PWD ID?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-light border text-danger rounded-pill py-0 px-2" title="Delete ID" style="line-height: 1.2;">
-                                                <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
-                                            </button>
-                                        </form>
-                                        @endif
+                                        <button type="button" onclick="openIdModal('{{ asset('storage/' . $patient->senior_pwd_id_path) }}', 'Senior / PWD ID', '{{ auth()->user()->role === 'admin' ? route('admin.patients.delete_id', ['id' => $patient->id, 'type' => 'senior_pwd']) : '' }}')" class="btn btn-sm btn-outline-warning text-dark border-warning rounded-pill py-0 px-2 shadow-sm" style="font-size: 0.75rem;">
+                                            <i class="fas fa-id-card me-1"></i> View ID
+                                        </button>
                                     @else
                                         <span class="badge bg-secondary text-white" style="font-size: 0.65rem;">No Image</span>
                                     @endif
@@ -444,11 +435,57 @@
     </div>
 </div>
 
+{{-- PROGRAM ID MODAL (Viewing & Deleting) --}}
+<div class="modal fade" id="programIdModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold" id="programIdModalTitle"><i class="fas fa-id-card me-2"></i>View ID</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center bg-light">
+                <img id="programIdViewerImage" src="" alt="Program ID" class="img-fluid rounded shadow-sm border" style="max-height: 65vh; object-fit: contain;">
+            </div>
+            
+            @if(auth()->user()->role === 'admin')
+            <div class="modal-footer bg-light border-0 justify-content-center pt-0 pb-4">
+                <form id="deleteProgramIdForm" action="" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this ID image?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="fas fa-trash-alt me-2"></i> Delete This ID
+                    </button>
+                </form>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
 <script>
     function openResidencyModal(imageUrl) {
         document.getElementById('residencyViewerImage').src = imageUrl;
         var imageModal = new bootstrap.Modal(document.getElementById('residencyImageModal'));
         imageModal.show();
+    }
+
+    function openIdModal(imageUrl, title, deleteUrl) {
+        document.getElementById('programIdViewerImage').src = imageUrl;
+        document.getElementById('programIdModalTitle').innerHTML = '<i class="fas fa-id-card me-2"></i>' + title;
+        
+        // Handle the dynamic delete action if the user is an admin
+        let deleteForm = document.getElementById('deleteProgramIdForm');
+        if (deleteForm) {
+            if (deleteUrl) {
+                deleteForm.action = deleteUrl;
+                deleteForm.style.display = 'block';
+            } else {
+                deleteForm.style.display = 'none';
+            }
+        }
+        
+        var idModal = new bootstrap.Modal(document.getElementById('programIdModal'));
+        idModal.show();
     }
 </script>
 @endsection

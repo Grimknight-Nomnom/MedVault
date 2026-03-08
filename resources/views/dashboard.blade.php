@@ -229,38 +229,43 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 border-start border-5 border-primary shadow-sm">
-                    <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="fw-bold text-primary mb-1 d-flex align-items-center">
-                                <i class="fas fa-calendar-check me-2"></i>Active Appointment
+                    {{-- THIS IS THE FIXED BOOTSTRAP 5 RESPONSIVE SECTION --}}
+                    <div class="card-body p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        
+                        <div class="w-100">
+                            <h5 class="fw-bold text-primary mb-1 d-flex flex-wrap align-items-center gap-2">
+                                <div><i class="fas fa-calendar-check me-1"></i>Active Appointment</div>
                                 
                                 @if($appt->user_id === Auth::id())
-                                    <span class="badge bg-success ms-2 small">For Me</span>
+                                    <span class="badge bg-success small">For Me</span>
                                 @else
-                                    <span class="badge bg-info text-dark ms-2 small"><i class="fas fa-child me-1"></i>For {{ $appt->user->first_name }}</span>
+                                    <span class="badge bg-info text-dark small"><i class="fas fa-child me-1"></i>For {{ $appt->user->first_name }}</span>
                                 @endif
                             </h5>
-                            <p class="mb-0 text-muted">
+                            <p class="mb-3 text-muted">
                                 Scheduled for: <strong>{{ \Carbon\Carbon::parse($appt->appointment_date)->format('F d, Y') }}</strong>
                             </p>
-                            <div class="mt-2 d-flex align-items-center gap-3">
-                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
+                            
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 py-1">
                                     Status: {{ ucfirst($appt->status) }}
                                 </span>
                                 
-                                <form action="{{ route('appointments.destroy', $appt->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                <form action="{{ route('appointments.destroy', $appt->id) }}" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
-                                        <i class="fas fa-trash-alt me-1"></i> Cancel Appointment
+                                        <i class="fas fa-trash-alt me-1"></i> Cancel
                                     </button>
                                 </form>
                             </div>
                         </div>
-                        <div class="text-center">
+
+                        <div class="text-center text-md-end bg-light bg-md-transparent rounded p-3 p-md-0 w-100 w-md-auto mt-2 mt-md-0" style="min-width: 140px;">
                             <small class="text-uppercase text-muted fw-bold d-block">Queue Number</small>
-                            <h2 class="display-4 fw-bold text-primary mb-0">#{{ str_pad($appt->queue_number, 3, '0', STR_PAD_LEFT) }}</h2>
+                            <h2 class="display-5 fw-bold text-primary mb-0">#{{ str_pad($appt->queue_number, 3, '0', STR_PAD_LEFT) }}</h2>
                         </div>
+                        
                     </div>
                 </div>
             </div>

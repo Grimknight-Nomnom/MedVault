@@ -411,7 +411,8 @@
                     // The "View Patient" button is now restricted to admin only, just like Diagnose and Cancel
                     let diagnoseBtn = isAdmin ? `<a href="/admin/appointments/${app.id}/diagnose" ${futureWarning} class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm"><i class="fas fa-stethoscope me-1"></i>Diagnose</a>` : '';
                     let cancelBtn = isAdmin ? `<button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="openCancelModal(${app.id})"><i class="fas fa-times me-1"></i>Cancel</button>` : '';
-                    let viewPatientBtn = isAdmin ? `<a href="/admin/patients/${app.user_id}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>` : '';
+                    // UPDATED LINE: Added ?from=calendar&date=${dateString}
+                    let viewPatientBtn = isAdmin ? `<a href="/admin/patients/${app.user_id}?from=calendar&date=${dateString}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"><i class="fas fa-eye me-1"></i>View</a>` : '';
 
                     if (isSpecialRecordDay) {
                         actions = `
