@@ -7,15 +7,19 @@
 </style>
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark">Admin Dashboard</h2>
             <p class="text-muted">Overview of clinic operations.</p>
         </div>
         
         <div class="d-flex align-items-center gap-3">
+            <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-info shadow-sm rounded-pill px-4">
+                <i class="fas fa-clipboard-list me-2"></i>Audit Logs
+            </a>
             <span class="text-muted"><i class="far fa-clock me-1"></i> {{ date('F d, Y') }}</span>
         </div>
+    </div>
     </div>
 
     {{-- STATS ROW --}}

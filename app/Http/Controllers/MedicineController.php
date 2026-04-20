@@ -12,6 +12,7 @@ use App\Models\MedicalRecord;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Services\AuditLogService;
 
 class MedicineController extends Controller
 {

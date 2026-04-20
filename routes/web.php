@@ -228,6 +228,8 @@ Route::post('/staff/{id}/reactivate', [\App\Http\Controllers\AdminAnnouncementCo
 
 Route::get('/appointments/{id}/diagnose', [MedicalRecordController::class, 'create'])->name('admin.records.create');
         Route::post('/appointments/{id}/diagnose', [MedicalRecordController::class, 'store'])->name('admin.records.store');
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
+Route::get('/audit-logs/export', [AuditLogController::class, 'export'])->name('admin.audit-logs.export');
         Route::get('/records/{record}/edit', [MedicalRecordController::class, 'edit'])->name('admin.records.edit');
         Route::put('/records/{record}', [MedicalRecordController::class, 'update'])->name('admin.records.update');
     }); // <-- End of admin group
