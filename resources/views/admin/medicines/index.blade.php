@@ -9,6 +9,10 @@
             <p class="text-muted small mb-0">Manage stock, track expiry dates, and dispense medicines.</p>
         </div>
         <div class="d-flex gap-3 flex-wrap">
+
+        <a href="{{ route('admin.medicines.expired') }}" class="btn btn-danger shadow-sm rounded-pill px-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>Manage Expired
+</a>
                 <a href="{{ route('admin.medicines.export_expired') }}" class="btn btn-success shadow-sm rounded-pill px-4">
                     <i class="fas fa-file-excel me-2"></i>Export Expired/0 Stock
                 </a>

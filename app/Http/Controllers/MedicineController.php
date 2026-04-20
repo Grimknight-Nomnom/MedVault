@@ -192,6 +192,7 @@ public function index(Request $request)
             'expiry_date' => 'required', 
         ]);
 
+        // Format to first day of month (e.g., 2026-04-01)
         $expiryDate = $request->expiry_date . '-01';
 
         $medicine = Medicine::create([
@@ -319,7 +320,44 @@ public function index(Request $request)
             });
         }
 
-        $history = $query->orderBy('performed_at', 'desc')->get();
+        $history = $query->orderBy('performed_at', 'desc')
+                        ->get()
+                        ->map(function($item) {
+                            // Format date with time
+                            $item->formatted_date = \Carbon\Carbon::parse($item->performed_at)->format('F d, Y');
+                            $item->formatted_time = \Carbon\Carbon::parse($item->performed_at)->format('h:i A');
+                            
+                            // Format description based on action type
+                            if ($item->action_type === 'Added') {
+                                $item->display_description = 'Initial stock added.';
+                            } elseif ($item->action_type === 'Deleted') {
+                                $item->display_description = 'Medicine removed from inventory.';
+                            } elseif ($item->action_type === 'Edited') {
+                                $item->display_description = 'Medicine details updated.';
+                            } elseif ($item->action_type === 'Released') {
+                                $item->display_description = $item->description; // e.g., "Released 5 items to Patient: John Doe (By: Dr. Smith)"
+                            } elseif ($item->action_type === 'Expired') {
+                                if ($item->action_taken) {
+                                    $actionLabel = ucfirst($item->action_taken);
+                                    $item->display_description = "Medicine expired on " . \Carbon\Carbon::parse($item->performed_at)->format('F Y') . " - {$actionLabel}";
+                                    $item->status = "Expired - {$actionLabel}";
+                                } else {
+                                    $item->display_description = "Medicine expired on " . \Carbon\Carbon::parse($item->performed_at)->format('F Y');
+                                    $item->status = "Expired";
+                                }
+                            } else {
+                                $item->display_description = $item->description;
+                                $item->status = $item->action_type;
+                            }
+                            
+                            // Set status if not already set
+                            if (!isset($item->status)) {
+                                $item->status = $item->action_type;
+                            }
+                            
+                            return $item;
+                        });
+
         return view('admin.medicines.history', compact('history'));
     }
 
@@ -472,5 +510,45 @@ public function index(Request $request)
             'description' => $desc,
             'performed_at' => now(),
         ]);
+    }
+
+    /**
+     * Display all expired medicines that need action
+     */
+    public function expiredMedicines()
+    {
+        $expiredRecords = MedicineHistory::where('action_type', 'Expired')
+            ->orderBy('performed_at', 'desc')
+            ->get()
+            ->map(function($record) {
+                // Format the date to show only Month and Year
+                $record->formatted_date = \Carbon\Carbon::parse($record->performed_at)->format('F Y');
+                return $record;
+            });
+
+        return view('admin.medicines.expired', compact('expiredRecords'));
+    }
+
+    /**
+     * Record action taken on an expired medicine
+     */
+    public function recordAction(Request $request, $id)
+    {
+        $request->validate([
+            'action_taken' => 'required|in:disposed,returned,donated,destroyed',
+            'action_notes' => 'nullable|string|max:500',
+        ]);
+
+        $history = MedicineHistory::findOrFail($id);
+
+        $history->update([
+            'action_taken' => $request->action_taken,
+            'action_notes' => $request->action_notes,
+        ]);
+
+        // After recording action, redirect to inventory history
+        $actionLabel = ucfirst($request->action_taken);
+        return redirect()->route('admin.medicines.history')
+                        ->with('success', "Medicine marked as {$actionLabel}. View history below.");
     }
 }

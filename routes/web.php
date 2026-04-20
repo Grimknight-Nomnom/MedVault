@@ -203,6 +203,8 @@ Route::post('/staff/{id}/reactivate', [\App\Http\Controllers\AdminAnnouncementCo
             Route::put('/medicines/{id}', 'update')->name('admin.medicines.update');
             Route::delete('/medicines/{id}', 'destroy')->name('admin.medicines.delete');
             Route::post('/medicines/{id}/release', 'release')->name('admin.medicines.release');
+                Route::get('/medicines/expired-manage', 'expiredMedicines')->name('admin.medicines.expired');
+    Route::post('/medicine-history/{id}/record-action', 'recordAction')->name('admin.medicine-history.record-action');
         });
 
         Route::controller(AdminController::class)->group(function () {

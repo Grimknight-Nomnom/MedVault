@@ -15,6 +15,8 @@ class MedicineHistory extends Model
         'quantity_changed',
         'description',
         'performed_at',
+        'action_taken',      // NEW
+        'action_notes',      // NEW
     ];
 
     protected $casts = [
