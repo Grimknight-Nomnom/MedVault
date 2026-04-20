@@ -162,8 +162,10 @@ Route::post('/patients/{id}/reject-residency', [App\Http\Controllers\AdminContro
         Route::post('/patients/{id}/approve-residency', [App\Http\Controllers\AdminController::class, 'approveResidency'])->name('admin.patients.approve_residency');
         
         Route::post('/staff', [\App\Http\Controllers\AdminAnnouncementController::class, 'storeStaff'])->name('admin.staff.store');
-        Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
-        Route::delete('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'destroyStaff'])->name('admin.staff.destroy');
+Route::put('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'updateStaff'])->name('admin.staff.update');
+Route::delete('/staff/{staff}', [\App\Http\Controllers\AdminAnnouncementController::class, 'destroyStaff'])->name('admin.staff.destroy');
+Route::post('/staff/{id}/deactivate', [\App\Http\Controllers\AdminAnnouncementController::class, 'deactivateStaff'])->name('admin.staff.deactivate');
+Route::post('/staff/{id}/reactivate', [\App\Http\Controllers\AdminAnnouncementController::class, 'reactivateStaff'])->name('admin.staff.reactivate');
 
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 

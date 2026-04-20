@@ -83,4 +83,37 @@ class StaffController extends Controller
             'calendar', 'date', 'appointments', 'appointmentsByDate', 'settings'
         ));
     }
+    
+       public function deactivate(Request $request, $id)
+    {
+        $request->validate([
+            'inactive_reason' => 'required|string|max:1000',
+        ]);
+
+        $staff = Staff::findOrFail($id);
+
+        $staff->update([
+            'is_active' => false,
+            'inactive_reason' => $request->inactive_reason,
+            'deactivated_at' => now(),
+        ]);
+
+        return back()->with('success', "Staff member '{$staff->name}' has been deactivated.");
+    }
+
+    /**
+     * Reactivate a staff member
+     */
+    public function reactivate($id)
+    {
+        $staff = Staff::findOrFail($id);
+
+        $staff->update([
+            'is_active' => true,
+            'inactive_reason' => null,
+            'deactivated_at' => null,
+        ]);
+
+        return back()->with('success', "Staff member '{$staff->name}' has been reactivated.");
+    }
 }

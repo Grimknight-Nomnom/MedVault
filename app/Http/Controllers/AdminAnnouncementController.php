@@ -99,6 +99,7 @@ class AdminAnnouncementController extends Controller
         ]);
 
         $data = $request->only(['name', 'role']);
+        $data['is_active'] = true; // NEW: Default to active
 
         if ($request->hasFile('picture')) {
             $path = $request->file('picture')->store('staff_pictures', 'public');
@@ -112,6 +113,11 @@ class AdminAnnouncementController extends Controller
 
     public function updateStaff(Request $request, Staff $staff)
     {
+        // NEW: Check if staff is inactive
+        if (!$staff->is_active) {
+            return back()->with('error', "Cannot edit an inactive staff member. Please reactivate them first.");
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|string|max:255',
@@ -141,5 +147,41 @@ class AdminAnnouncementController extends Controller
         $staff->delete();
 
         return redirect()->route('admin.announcements.index')->with('success', 'Staff member removed successfully.');
+    }
+
+    /**
+     * Deactivate a staff member
+     */
+    public function deactivateStaff(Request $request, $id)
+    {
+        $request->validate([
+            'inactive_reason' => 'required|string|max:1000',
+        ]);
+
+        $staff = Staff::findOrFail($id);
+
+        $staff->update([
+            'is_active' => false,
+            'inactive_reason' => $request->inactive_reason,
+            'deactivated_at' => now(),
+        ]);
+
+        return back()->with('success', "Staff member '{$staff->name}' has been deactivated.");
+    }
+
+    /**
+     * Reactivate a staff member
+     */
+    public function reactivateStaff($id)
+    {
+        $staff = Staff::findOrFail($id);
+
+        $staff->update([
+            'is_active' => true,
+            'inactive_reason' => null,
+            'deactivated_at' => null,
+        ]);
+
+        return back()->with('success', "Staff member '{$staff->name}' has been reactivated.");
     }
 }

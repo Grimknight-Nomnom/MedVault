@@ -13,6 +13,7 @@ class PregnancyRecord extends Model
         'user_id',
         'lmp',
         'edc',
+        'edd',
         'gravida',
         'para',
         'fetal_heart_beat',
